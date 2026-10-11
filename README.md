@@ -132,7 +132,7 @@ Configure `SECRET_KEY`, `ENVIRONMENT` e `DATABASE_URL` como variáveis de ambien
 ![Print BackLog](docs/sprints/BackLog.jpg)
 
 ### Quadro do 1º Sprint
-![Print do Quadro de sprints](dosc/sprints/Sprint1.jpg)
+![Print do Quadro de sprints](docs/sprints/Sprint1.jpg)
 
 
 ## Entrega 02:
