@@ -1,70 +1,127 @@
-# 🌿 Projeto Verdigis
+# Verdigis
 
-> **Desafio Proposto pela Deloitte:** Como aumentar a percepção de importância e impulsionar a aplicação de práticas ESG nas Pequenas e Médias Empresas (PMEs)?
+Plataforma web para aumentar a percepção de valor e a adoção de práticas ESG em pequenas e médias empresas (PMEs). Projeto desenvolvido a partir de um desafio proposto pela Deloitte.
 
----
+**Site:** https://projeto-verdigis.onrender.com
 
-## 📌 Visão Geral do Projeto
+## Sobre o projeto
 
-O **Projeto Verdigis** foi desenvolvido a partir de um desafio corporativo apresentado pela **Deloitte**. O objetivo principal é criar estratégias e soluções para ampliar a conscientização, desmistificar e acelerar a adoção das diretrizes **ESG** (*Environmental, Social, and Governance*) no ambiente das pequenas e médias empresas.
+A pergunta do desafio: como aumentar a percepção de importância e impulsionar a aplicação de práticas ESG nas PMEs?
 
-Embora o ESG tenha se tornado indispensável no mercado corporativo global, grande parte das PMEs ainda enxerga essas práticas como um custo inacessível ou algo exclusivo de grandes corporações. Este projeto busca mudar essa perspectiva, demonstrando o valor estratégico e financeiro da sustentabilidade corporativa.
+Muitas PMEs já adotam práticas sustentáveis e sociais sem reconhecê-las como ESG, e tendem a ver o tema como custo, não como vantagem competitiva. O Verdigis busca traduzir os pilares ESG para a realidade dessas empresas, mostrar o que elas já fazem e evidenciar o retorno dessas práticas.
 
----
+### Contexto
 
-## 📊 Contexto e Panorama do Mercado
+- As micro, pequenas e médias empresas respondem por 26,5% do PIB e por cerca de 80% dos empregos no país.
+- 67% delas não conhecem formalmente o significado da sigla ESG.
+- Investidores, instituições financeiras e grandes empresas passaram a considerar critérios ESG em decisões de crédito, aporte e contratação de fornecedores.
 
-As PMEs representam a espinha dorsal da economia, contudo enfrentam uma grande lacuna de informação e maturidade sobre ESG:
+### Barreiras identificadas
 
-- 📈 **26,5% do PIB Nacional:** Impacto econômico direto gerado pelas micro, pequenas e médias empresas.
-- 💼 **80% dos Empregos Gerados:** Maior força empregadora do mercado de trabalho.
-- ❓ **67% sem Conhecimento Formal:** Não sabem o significado da sigla ESG, embora **já exerçam práticas sustentáveis e sociais em seu dia a dia** de forma intuitiva.
+- Percepção de ESG como custo sem retorno garantido
+- Foco em caixa e operação de curto prazo
+- Falta de direcionamento prático sobre por onde começar
+- Dificuldade em mensurar o retorno das ações
+- Impressão de que a exigência recai apenas sobre grandes empresas
 
-### Por que o ESG deixou de ser opcional?
+### Riscos da não adoção
 
-A régua de decisão do mercado mudou radicalmente nos últimos anos:
+Perda de contratos, crédito mais caro, exposição reputacional e dificuldade de atrair e reter profissionais.
 
-1. **Investidores Globais:** Fundos de investimento utilizam rigorosos critérios ESG para alocação de aportes.
-2. **Instituições Financeiras:** Bancos oferecem **linhas de crédito com condições e taxas de juros mais favoráveis** para empresas sustentáveis.
-3. **Grandes Corporações:** Passaram a exigir conformidade ESG em toda a sua cadeia de **fornecedores e parceiros**.
-4. **Consumidores:** Priorizam marcas transparentes, éticas e com responsabilidade ambiental e social.
+## Funcionalidades
 
----
+- Páginas institucionais: início, quem somos, sobre o projeto e fale conosco
+- Apresentação dos pilares ESG (Ambiental, Social e Governança) com práticas associadas a cada um
+- Formulário de contato com registro das mensagens no banco de dados
+- Conteúdo, equipe, pilares e tecnologias editáveis pelo painel administrativo do Django, sem alteração de código
 
-## ⚠️ Dores, Barreiras e Riscos das PMEs
-
-### Barreiras para a Adoção:
-* **Custo Percebido:** Impressão de que ESG é apenas um custo extra sem retorno garantido.
-* **Sobrevivência em 1º Lugar:** Foco total na gestão de caixa de curto prazo e emergências diárias.
-* **Falta de Conhecimento e Complexidade:** Ausência de direcionamento prático sobre por onde começar.
-* **Retorno "Invisível":** Dificuldade em mensurar o ROI (Retorno sobre Investimento) das ações socioambientais.
-* **Ausência de Exigência Direta Percebida:** Acreditar que a cobrança recai apenas sobre multinacionais.
-
-### Riscos da Não-Adoção (Consequências para o Negócio):
-* 📉 **Contratos Perdidos:** Desqualificação em concorrências e perda de grandes clientes.
-* 💸 **Crédito Mais Caro:** Dificuldade em obter financiamentos competitivos.
-* ⚠️ **Reputação Exposta:** Vulnerabilidade a sanções e crises de imagem.
-* 🚪 **Fuga de Talentos:** Perda de atratividade para novos profissionais e lideranças.
+| Rota | Descrição |
+| --- | --- |
+| `/` | Página inicial |
+| `/quem-somos/` | Equipe e apresentação do grupo |
+| `/sobre-projeto/` | Objetivos, pilares, práticas e tecnologias |
+| `/fale-conosco/` | Formulário de contato |
+| `/admin/` | Painel administrativo |
 
 ---
 
-## 🎯 Objetivos do Projeto
+## Stack
 
-- [x] **Traduzir e Desmistificar:** Converter os pilares ESG em linguagem simples e aplicável à realidade das PMEs.
-- [x] **Mapear Práticas Intuitivas:** Ajudar empresários a reconhecer, mensurar e valorizar ações que já realizam no cotidiano.
-- [x] **Evidenciar Retorno:** Demonstrar os ganhos em reputação, acesso a capital, eficiência operacional e novos contratos.
+| Camada | Tecnologia |
+| --- | --- |
+| Back-end | Python, Django 6.1 |
+| Front-end | HTML, CSS, JavaScript (templates Django) |
+| Banco de dados | SQLite (desenvolvimento), PostgreSQL (produção) |
+| Servidor | Gunicorn, WhiteNoise (arquivos estáticos) |
+| Hospedagem | Render |
+
+## Executando localmente
+
+Requisitos: Python 3.12 ou superior e Git.
+
+```bash
+git clone https://github.com/jpedrosmenezes/Projeto-Verdigis.git
+cd Projeto-Verdigis
+
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt
+```
+
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+SECRET_KEY=<uma-chave-secreta-qualquer>
+ENVIRONMENT=development
+```
+
+Aplique as migrações, crie um superusuário e inicie o servidor:
+
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+A aplicação ficará disponível em http://127.0.0.1:8000. O conteúdo das páginas é cadastrado em http://127.0.0.1:8000/admin/.
+
+### Variáveis de ambiente
+
+| Variável | Obrigatória | Descrição |
+| --- | --- | --- |
+| `SECRET_KEY` | Sim | Chave secreta do Django |
+| `ENVIRONMENT` | Sim | `development` usa SQLite local; qualquer outro valor usa PostgreSQL |
+| `DATABASE_URL` | Em produção | URL de conexão do PostgreSQL |
+
+## Deploy
+
+O deploy é feito no Render. O script `build.sh` instala as dependências, coleta os arquivos estáticos e aplica as migrações:
+
+```bash
+./build.sh
+```
+
+Configure `SECRET_KEY`, `ENVIRONMENT` e `DATABASE_URL` como variáveis de ambiente do serviço e use `gunicorn verdigis.wsgi` como comando de inicialização.
 
 ---
 
-## 🛠️ Tecnologias e Ferramentas
+## Estrutura do repositório
 
-*(Ajuste com a stack técnica exata do seu projeto)*
-
-- **Linguagens / Análise de Dados:** HTML, CSS, Javascript, Python (Django), SQL
-- **Ambiente de Desenvolvimento:** VS Code
-- **Documentação:** Markdown / LaTeX
+```
+.
+├── verdigis/       Configuração do projeto Django (settings, urls, wsgi)
+├── forum/          App principal: models, views, templates e admin
+├── hello/          App inicial de teste
+├── docs/           Documentação (benchmark de concorrentes)
+├── sprint/         Capturas de backlog, sprints e bug tracker
+├── staticfiles/    Saída do collectstatic
+├── build.sh        Script de build para deploy
+└── requirements.txt
+```
 
 ---
+
 ## Entrega 01:
 
 * [Benchmark - Análise de Competidores](./docs/analisedecompetidores.md)
@@ -72,16 +129,16 @@ A régua de decisão do mercado mudou radicalmente nos últimos anos:
 ---
 
 ### BackLog
-![Print BackLog](sprint/BackLog.jpg)
+![Print BackLog](docs/sprints/BackLog.jpg)
 
 ### Quadro do 1º Sprint
-![Print do Quadro de sprints](sprint/Sprint1.jpg)
+![Print do Quadro de sprints](dosc/sprints/Sprint1.jpg)
 
 
 ## Entrega 02:
 
 ### Quadro do 2º Sprint
-![Print do Quadro de sprints](sprint/Sprint2.jpeg)
+![Print do Quadro de sprints](docs/sprints/Sprint2.jpeg)
 
 ### Link do Site: 
 [Link para o site](https://projeto-verdigis.onrender.com)
@@ -90,32 +147,21 @@ A régua de decisão do mercado mudou radicalmente nos últimos anos:
 [Link para o vídeo](https://youtu.be/IaMJn3oHWg4)
 (Legendas disponíveis no YouTube)
 
-### Screencast do Deployment
-[Link para o vídeo](https://youtu.be/w_VHeL16tqk)
-(Legendas disponíveis no YouTube)
+---
 
-### Issue/Bug Tracker
-![Print do Bug Tracker](sprint/issue.jpeg)
+## Equipe
 
-## Entrega 03:
+Estudantes de Ciências da Computação, CESAR School.
 
-## Entrega 04:
+- Ana Luiza Carvalho Xavier
+- Carlos Henrique Corrêa de Araújo Soares de Sousa
+- Carlos Vinicius Encarnação do Nascimento
+- João Marcelo Franca da Costa Casado
+- João Pedro dos Santos Menezes
+- Lucas de Moura Mattos
+- Matheus Raulino de Souza Moreira
+- Pétala Kiara da Silva
+- Thácio Soares Miranda dos Santos
+- Vitória de Assis Seabra
 
-## ✒️ Grupo e Créditos
-
-### Integrantes:
-| Nome | E-mail |
-| :--- | :--- |
-| Ana Luiza Carvalho Xavier | alcx@cesar.school |
-| Carlos Henrique Corrêa de Araújo Soares de Sousa | chcass@cesar.school |
-| Carlos Vinicius Encarnação do Nascimento | cven@cesar.school |
-| João Pedro dos Santos Menezes | jpsm4@cesar.school |
-| João Marcelo Franca da Costa Casado | jmfcc@cesar.school |
-| Lucas de Moura Mattos | lmm7@cesar.school |
-| Matheus Raulino de Souza Moreira | mrsm@cesar.school |
-| Pétala Kiara da Silva | pks@cesar.school |
-| Thácio Soares Miranda dos Santos | tsms2@cesar.school |
-| Vitória de Assis Seabra | vas4@cesar.school |
-
-### Parceiro do Desafio:
-- **Deloitte**
+Parceiro do desafio: Deloitte
