@@ -207,3 +207,4 @@ class EmployeeLoginForm(LoginForm):
             ):
                 raise forms.ValidationError('Dados de acesso da empresa inválidos.')
         return cleaned
+    
