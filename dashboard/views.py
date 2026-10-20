@@ -4,6 +4,7 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+from urllib3 import request
 
 from accounts.models import Company, Funcionario
 from .forms import FormsMetas, RelatoSocialForm
@@ -44,8 +45,8 @@ def fabrica_metas_view(request):
     company = _obter_empresa_usuario(request.user)
 
     if not company:
-        messages.error(request, "Usuário não está associado a nenhuma empresa!")
-        return redirect('home')
+        messages.error(request, "Cadastre sua empresa antes de usar a Fábrica de Metas.")
+        return redirect('company_register')
 
     # Filtra a lista de acordo com o tipo de usuario
     if hasattr(request.user, 'FUNCIONARIO'): #esse hasattr serve justamente pra verificar se é funcionario ou geral
