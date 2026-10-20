@@ -21,8 +21,7 @@ def _normalizar_cnpj(valor):
 class SignupForm(UserCreationForm):
     email = forms.EmailField(label='E-mail')
     # Novos campos adicionados ao cadastro do usuário:
-    # CPF, CNPJ, número de telefone e identificação de funcionário.
-    cpf = forms.CharField(label='CPF', max_length=14, required=True)
+    # CNPJ, número de telefone e identificação de funcionário.
     cnpj = forms.CharField(label='CNPJ', max_length=18, required=False)
     telefone = forms.CharField(label='Número de Telefone', max_length=20, required=True)
     funcionario = forms.BooleanField(label='Sou funcionário da empresa', required=False)
@@ -30,14 +29,12 @@ class SignupForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
         # Inclusão dos novos campos no formulário de cadastro.
-        fields = ('username', 'email', 'cpf', 'cnpj', 'telefone', 'funcionario')
+        fields = ('username', 'email', 'cnpj', 'telefone', 'funcionario')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs['placeholder'] = 'Digite seu nome de usuário'
         self.fields['email'].widget.attrs['placeholder'] = 'seuemail@exemplo.com'
-        self.fields['cpf'].widget.attrs['data-mask'] = 'cpf'
-        self.fields['cpf'].widget.attrs['placeholder'] = '000.000.000-00'
         self.fields['cnpj'].widget.attrs['data-mask'] = 'cnpj'
         self.fields['cnpj'].widget.attrs['placeholder'] = '00.000.000/0000-00'
         self.fields['telefone'].widget.attrs['data-mask'] = 'telefone'
@@ -50,13 +47,6 @@ class SignupForm(UserCreationForm):
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('Já existe uma conta cadastrada com este e-mail.')
         return email
-
-    def clean_cpf(self):
-        cpf = re.sub(r'\D', '', self.cleaned_data['cpf'])
-        validate_cpf(cpf)
-        if UserProfile.objects.filter(cpf=cpf).exists():
-            raise forms.ValidationError('Já existe uma conta cadastrada com este CPF.')
-        return cpf
 
     def clean_cnpj(self):
         cnpj = _normalizar_cnpj(self.cleaned_data.get('cnpj'))
@@ -76,7 +66,7 @@ class SignupForm(UserCreationForm):
             UserProfile.objects.update_or_create(
                 user=user,
                 defaults={
-                    'cpf': self.cleaned_data['cpf'],
+                    'cpf': self.cleaned_data.get('cpf', ''),
                     'telefone': self.cleaned_data['telefone'],
                     'cnpj': self.cleaned_data.get('cnpj', ''),
                     'email': user.email,
@@ -238,18 +228,30 @@ class CompanyForm(forms.ModelForm):
 
 class EmployeeSignupForm(SignupForm):
     #Adicionado required=True explícito para garantir preenchimento
+    # O CPF não é pedido no cadastro de empresa, só no de funcionário.
+    cpf = forms.CharField(label='CPF', max_length=14, required=True)
     cnpj = forms.CharField(label='CNPJ da empresa', required=True)
     senha_empresa = forms.CharField(
         label='Senha da empresa', strip=False, widget=forms.PasswordInput(), required=True
     )
+    class Meta(SignupForm.Meta):
+        fields = ('username', 'email', 'cpf', 'cnpj', 'telefone', 'funcionario')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.company = None
+        self.fields['cpf'].widget.attrs['data-mask'] = 'cpf'
+        self.fields['cpf'].widget.attrs['placeholder'] = '000.000.000-00'
         self.fields['cnpj'].widget.attrs['data-mask'] = 'cnpj'
         self.fields['cnpj'].widget.attrs['placeholder'] = '00.000.000/0000-00'
         self.fields['senha_empresa'].widget.attrs['placeholder'] = 'Senha fornecida pela empresa'
 
+    def clean_cpf(self):
+        cpf = re.sub(r'\D', '', self.cleaned_data['cpf'])
+        validate_cpf(cpf)
+        if UserProfile.objects.filter(cpf=cpf).exists():
+            raise forms.ValidationError('Já existe uma conta cadastrada com este CPF.')
+        return cpf
    
     def clean_cnpj(self):
         return _normalizar_cnpj(self.cleaned_data.get('cnpj'))
