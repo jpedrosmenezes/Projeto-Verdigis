@@ -50,11 +50,13 @@
         {% block messages %}
         {% endblock messages %}
         {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
+            <div class="avisos-django">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
 
         {% block content %}
@@ -68,6 +70,16 @@
                 <li><a href="{% url 'fale_conosco' %}">Fale Conosco</a></li>
             </ul>
     </footer>
+
+    <script>
+        document.querySelectorAll('.avisos-django .alert').forEach(function (aviso) {
+            setTimeout(function () {
+                aviso.style.transition = 'opacity 0.5s';
+                aviso.style.opacity = '0';
+                setTimeout(function () { aviso.remove(); }, 500);
+            }, 4000);
+        });
+    </script>
 
 </body>
 
