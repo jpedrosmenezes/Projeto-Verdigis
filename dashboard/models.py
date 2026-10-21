@@ -76,12 +76,30 @@ class RelatoSocialVerdigis(models.Model):
     tema_esg = models.CharField(max_length=20, choices=TEMA_ESG_CHOICES)
     sentimento = models.CharField(max_length=10, choices=IMPACTO_CHOICES)
     data_registro = models.DateTimeField(auto_now_add=True)
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='relatos',
+        verbose_name="Autor",
+    )
     
     eh_anonimo = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = "Relato Social ESG"
         verbose_name_plural = "Relatos Sociais ESG"
+
+    company = models.ForeignKey(
+        'accounts.Company',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='relatos',
+        verbose_name="Empresa",
+    )
 
     def __str__(self):
         return f"Relato {self.get_tema_esg_display()} - {self.get_sentimento_display()}"

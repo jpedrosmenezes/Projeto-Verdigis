@@ -1196,3 +1196,14 @@ textarea::placeholder {
   }
 }
 
+.profile-info-dates{
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.profile-info-date{
+    color: #444;
+    opacity: 0.8;
+    font-size: 0.8rem;
+}

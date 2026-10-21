@@ -57,8 +57,18 @@ class RelatoSocialForm(forms.ModelForm):
             'sentimento': forms.Select(attrs={'class': 'form-control'}),
             'mensagem': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
         }
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, company=None, **kwargs):
+        self.user = user
+        self.company = company
         super().__init__(*args, **kwargs)
         self.fields['tema_esg'].choices = [('', 'Selecione o tema')] + list(self.fields['tema_esg'].choices)[1:]
         self.fields['sentimento'].choices = [('', 'Selecione o tipo')] + list(self.fields['sentimento'].choices)[1:]
 
+    def save(self, commit=True):
+        relato = super().save(commit=False)
+        autenticado = self.user is not None and self.user.is_authenticated
+        relato.usuario = self.user if (autenticado and not relato.eh_anonimo) else None
+        relato.company = self.company
+        if commit:
+            relato.save()
+        return relato

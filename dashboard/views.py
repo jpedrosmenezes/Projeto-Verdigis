@@ -4,11 +4,13 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django.utils import timezone
-from urllib3 import request
 
 from accounts.models import Company, Funcionario
+from verdigis import settings
 from .forms import FormsMetas, RelatoSocialForm
 from .models import Meta, RelatoSocialVerdigis
+from functools import wraps
+
 
 
 def _obter_empresa_usuario(user):
@@ -16,6 +18,18 @@ def _obter_empresa_usuario(user):
     if not company and hasattr(user, 'FUNCIONARIO'):
         company = user.FUNCIONARIO.company
     return company
+
+def gestor_required(view):
+    """Só o responsável por uma empresa passa. Os demais voltam ao dashboard com aviso."""
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        company = _obter_empresa_usuario(request.user)
+        if company is None or hasattr(request.user, 'FUNCIONARIO'):
+            messages.error(request, 'Apenas o responsável pela empresa pode ver os relatos.')
+            return redirect('dashboard:dashboard')
+        request.company = company
+        return view(request, *args, **kwargs)
+    return wrapper
 
 @login_required
 def home(request):
@@ -149,7 +163,9 @@ def deletar_meta_view(request, meta_id):
 
 
 @login_required
+@gestor_required
 def dashboard_social_verdigis(request):
+    base = RelatoSocialVerdigis.objects.filter(company=request.company)
     tema = request.GET.get('tema', '')
     sentimento = request.GET.get('sentimento', 'NEGATIVO')
     if sentimento not in ('POSITIVO', 'NEGATIVO', 'NEUTRO'):
@@ -181,12 +197,21 @@ def dashboard_social_verdigis(request):
 
 
 @login_required
+@gestor_required
 def detalhe_relato_view(request, relato_id):
-    relato = get_object_or_404(RelatoSocialVerdigis, id=relato_id)
-    return render(request, 'dashboard/avaliacao_detalhe.html', {'relato': relato})
+    relato = RelatoSocialVerdigis.objects.filter(id=relato_id, company=request.company).first()
+    if relato is None:
+        messages.error(request, 'Relato não encontrado.')
+        return redirect('dashboard:dashboard_social')
+    return render(request, 'dashboard/avaliacao_detalhe.html', {'relato': relato})  
 
 @login_required
 def adicionar_avaliacao(request):
+    company = _obter_empresa_usuario(request.user)
+    if not company:
+        messages.error(request, 'Você precisa estar vinculado a uma empresa para enviar avaliações.')
+        return redirect(settings.LOGIN_REDIRECT_URL)
+
     if request.method == 'POST':
         form = RelatoSocialForm(request.POST)
         if form.is_valid():
@@ -195,4 +220,21 @@ def adicionar_avaliacao(request):
             return redirect('dashboard:adicionar_avaliacao')
     else:
         form = RelatoSocialForm()
+    return render(request, 'dashboard/adicionar.html', {'form': form})
+
+@login_required
+def adicionar_avaliacao(request):
+    company = _obter_empresa_usuario(request.user)
+    if not company:
+        messages.error(request, 'Você precisa estar vinculado a uma empresa para enviar avaliações.')
+        return redirect(settings.LOGIN_REDIRECT_URL)  # importe settings
+
+    if request.method == 'POST':
+        form = RelatoSocialForm(request.POST, user=request.user, company=company)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Sua avaliação foi enviada com sucesso!')
+            return redirect('dashboard:adicionar_avaliacao')
+    else:
+        form = RelatoSocialForm(user=request.user, company=company)
     return render(request, 'dashboard/adicionar.html', {'form': form})
