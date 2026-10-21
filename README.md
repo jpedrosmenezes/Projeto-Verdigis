@@ -1,5 +1,6 @@
 <div align=center>
-  <img width="472,5" height="324,75" alt="logo readme2" src="https://github.com/user-attachments/assets/b49361b4-7813-4214-b947-b2e2e8aefaad" />
+  <img width="472,5" height="324,75" alt="logo readme2" src="https://github.com/user-attachments/assets/561b4865-47a9-43d0-a905-254a732766e9" />
+
 
 Plataforma web para aumentar a percepção de valor e a adoção de práticas ESG em pequenas e médias empresas (PMEs). Projeto desenvolvido a partir de um desafio proposto pela Deloitte.
 
