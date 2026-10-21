@@ -1,5 +1,6 @@
 {% extends "forum/base.html" %}
 {% load static %}
+{% load formats %}
 
 {% block title %}Perfil - Verdigis{% endblock %}
 {% block fundo %}fundo-2{% endblock %}
@@ -10,41 +11,47 @@
   <div class="profile-header">
     <img class="profile-avatar" src="{{ user.profile.avatar_url }}" alt="Avatar de {{ user.username }}">
     <div>
-      <h1>{{ user.get_full_name|default:user.username }}</h1>
+      <h1>{{ user.profile.nome|default:user.username }}</h1>
       <p>@{{ user.username }}</p>
     </div>
   </div>
   <dl class="profile-info">
-  <dt>E-mail</dt>
+  <dt>E-mail:</dt>
   <dd>{{ user.email|default:"Não informado" }}</dd>
-
-  <dt>Membro desde</dt>
-  <dd>{{ user.date_joined|date:"d/m/Y" }}</dd>
-
-  <dt>Último acesso</dt>
-  <dd>{{ user.last_login|date:"d/m/Y H:i"|default:"—" }}</dd>
-
-  {% if user.profile.bio %}
-    <dt>Bio</dt>
-    <dd>{{ user.profile.bio|linebreaksbr }}</dd>
-  {% endif %}
 
   {% if user.profile.tipo == "EMPRESA" %}
     {% if user.profile.nome_empresa %}
-      <dt>Nome da empresa</dt>
+      <dt>Nome da empresa:</dt>
       <dd>{{ user.profile.nome_empresa }}</dd>
     {% endif %}
 
     {% if user.profile.cnpj %}
-      <dt>CNPJ</dt>
+      <dt>CNPJ:</dt>
       <dd>{{ user.profile.cnpj }}</dd>
     {% endif %}
   {% endif %}
 
   {% if user.profile.telefone %}
-    <dt>Telefone</dt>
-    <dd>{{ user.profile.telefone }}</dd>
+    <dt>Telefone:</dt>
+    <dd>{{ user.profile.telefone|telefone_br }}</dd>
   {% endif %}
+
+  {% if user.profile.bio %}
+    <dt>Bio:</dt>
+    <dd>{{ user.profile.bio|linebreaksbr }}</dd>
+  {% endif %}
+
+  <div class="profile-info-dates">
+    <div class="profile-info-date">
+    <dt>Membro desde:</dt>
+    <dd>{{ user.date_joined|date:"d/m/Y" }}</dd>
+    </div>
+    <div class="profile-info-date">  
+    <dt>Último acesso:</dt>
+    <dd>{{ user.last_login|date:"d/m/Y H:i"|default:"—" }}</dd>
+    </div>
+  </div>
+
 </dl>
   <button class="btn-submit" onclick="window.location.href='{% url 'edit_profile' %}'">Editar Perfil</button>
   <button type="submit" form="form-sair" class="btn-submit btn-logout">Sair</button>

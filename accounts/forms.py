@@ -147,14 +147,14 @@ class CompanyForm(forms.ModelForm):
 
     class Meta:
         model = Company
-        exclude = ('responsavel', 'created_at')
+        exclude = ('responsavel', 'created_at', 'cnpj') 
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
         super().__init__(*args, **kwargs)
         placeholders = {
             'razao_social': 'Razão Social da empresa',
             'nome_fantasia': 'Nome Fantasia',
-            'cnpj': '00.000.000/0000-00',
             'inscricao_estadual': 'Inscrição Estadual (opcional)',
             'inscricao_municipal': 'Inscrição Municipal (opcional)',
             'cep': '00000-000',
@@ -180,7 +180,6 @@ class CompanyForm(forms.ModelForm):
             self.fields['niche'].empty_label = 'Selecione o nicho'
 
         mascaras = {
-            'cnpj': 'cnpj',
             'cep': 'cep',
             'telefone_fixo': 'telefone',
             'celular_whatsapp': 'telefone',
@@ -192,9 +191,24 @@ class CompanyForm(forms.ModelForm):
         for field in self.fields.values():
             field.widget.attrs.setdefault('class', 'form-control')
 
-    def clean_cnpj(self):
-        # normaliza antes da checagem de unicidade (ignora máscara)
-        return _normalizar_cnpj(self.cleaned_data['cnpj'])
+    def _cnpj_do_responsavel(self):
+        if self.user is None:
+            return None
+        profile = UserProfile.objects.filter(user=self.user).first()
+        return profile.cnpj if profile else None
+
+    def clean(self):
+            cleaned = super().clean()
+            if self.user is not None and not self.instance.pk:
+                cnpj = self._cnpj_do_responsavel()
+                if not cnpj:
+                    raise forms.ValidationError(
+                        'Seu perfil não tem CNPJ. Informe o CNPJ no perfil antes de cadastrar a empresa.'
+                    )
+                if Company.objects.filter(cnpj=cnpj).exists():
+                    raise forms.ValidationError('Já existe uma empresa cadastrada com este CNPJ.')
+            return cleaned
+
 
     def clean_cep(self):
         cep = re.sub(r'\D', '', self.cleaned_data['cep'])
@@ -209,6 +223,9 @@ class CompanyForm(forms.ModelForm):
     # mas não a gravava no objeto Company. Agora chama o set_senha_acesso(senha) para criptografar e salvar no banco.
     def save(self, commit=True):
         company = super().save(commit=False)
+        cnpj = self._cnpj_do_responsavel()
+        if cnpj:
+            company.cnpj = cnpj
         senha_raw = self.cleaned_data.get('senha_funcionarios')
         if senha_raw:
             company.set_senha_acesso(senha_raw)

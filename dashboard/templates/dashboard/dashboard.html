@@ -35,7 +35,11 @@
  <div class="moldura-vidro">
   <section class="dash-corpo">
     <nav class="dash-menu" aria-label="Menu principal">
-      <a class="dash-botao" href="{% url 'dashboard:dashboard_social' %}">Central de Avaliações</a>
+      {% if user.FUNCIONARIO %}
+        <a class="dash-botao" href='{% url 'dashboard:adicionar_avaliacao' %}'>Adicione uma nova avaliação</a>
+      {% else %}
+        <a class="dash-botao" href="{% url 'dashboard:dashboard_social' %}">Central de Avaliações</a>
+      {% endif %}
       <a class="dash-botao" href="{% url 'dashboard:fabrica_metas' %}">Fábrica de metas</a>
       <a class="dash-botao" href="#">Diagnóstico de compatibilidade</a>
       <a class="dash-botao" href="#">Práticas da empresa</a>
