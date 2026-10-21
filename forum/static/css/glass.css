@@ -12,6 +12,14 @@
     --card-raio: 32px;                            /* canto do card sólido */
     --moldura-tinta: rgba(255, 255, 255, 0.18);   /* leve véu branco no vidro */
 }
+html {
+    overscroll-behavior: none;
+    background: linear-gradient(to bottom, var(--primary-color) 50%, #525fa2 50%);
+}
+body {
+    overscroll-behavior: none;
+    background: transparent;
+}
 
 /* 2. IMAGENS DE FUNDO ---------------------------------------------------
    Imagens em forum/static/img/. Cada página escolhe a sua com
