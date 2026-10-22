@@ -115,7 +115,7 @@ def company_register(request):
         messages.error(request, 'Funcionários não podem cadastrar empresas.')
         return redirect(settings.LOGIN_REDIRECT_URL)
 
-    form = CompanyForm(_dados_post(request))
+    form = CompanyForm(_dados_post(request), user=request.user)
     if request.method == 'POST':
         if form.is_valid():
             try:

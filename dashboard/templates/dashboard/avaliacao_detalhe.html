@@ -27,7 +27,7 @@
     <p class="av-detalhe__mensagem">{{ relato.mensagem|linebreaksbr }}</p>
 
     <p class="av-detalhe__rodape">
-      {% if relato.eh_anonimo %}Anônimo{% else %}Identificado{% endif %}
+      {% if relato.eh_anonimo %}Anônimo{% else %}{{ relato.usuario }}{% endif %}
       · {{ relato.data_registro|date:"d/m/Y H:i" }}
     </p>
   </article>
