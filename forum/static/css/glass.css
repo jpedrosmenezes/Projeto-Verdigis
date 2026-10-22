@@ -133,3 +133,8 @@ body::before {
 .moldura-vidro > .secao-conteudo{
     margin-bottom: 0;
 }
+
+.moldura-vidro > .profile-card{
+    margin-bottom: 0;
+    margin-top: 0;
+}
