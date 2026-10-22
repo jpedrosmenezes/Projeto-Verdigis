@@ -39,6 +39,7 @@ class SignupForm(UserCreationForm):
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('Já existe uma conta cadastrada com este e-mail.')
         return email
+    
 
 
 class LoginForm(AuthenticationForm):
