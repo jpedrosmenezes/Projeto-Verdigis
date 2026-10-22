@@ -1,0 +1,48 @@
+{% extends "forum/base.html" %}
+{% load static %}
+{% load formats %}
+
+{% comment %}
+  Lista de funcionários da empresa (view funcionarios_view). Exige login. Método: GET.
+  Só o responsável pela empresa acessa.
+  Contexto: company (a empresa do responsável) e funcionarios (queryset de Funcionario, por ordem de usuário).
+{% endcomment %}
+
+{% block title %}Funcionários - Verdigis{% endblock %}
+{% block fundo %}fundo-6{% endblock %}
+
+{% block head %}<h1 class="dash-banner">FUNCIONÁRIOS</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="dash-corpo av-corpo">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+
+    <div class="av-painel av-painel--positivo">
+      <h2 class="av-painel__titulo">Funcionários de {{ company.nome_fantasia }}</h2>
+
+      <div class="av-painel__corpo">
+        {% with total=funcionarios|length %}
+          <p class="av-painel__total">{{ total }} funcionário{{ total|pluralize }}</p>
+        {% endwith %}
+
+        <div class="av-itens">
+          {% for f in funcionarios %}
+            <div class="av-item">
+              <span class="av-item__autor">{{ f.user.profile.nome|default:f.user.username }}</span>
+              <span class="av-item__texto">@{{ f.user.username }}{% if f.user.email %} | {{ f.user.email }}{% endif %}</span>
+              <span class="av-item__texto">{% if f.user.profile.telefone %}{{ f.user.profile.telefone|telefone_br }} | {% endif %}Vinculado em {{ f.created_at|date:"d/m/Y" }}</span>
+            </div>
+          {% empty %}
+            <p class="av-vazio">Nenhum funcionário vinculado à empresa ainda.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

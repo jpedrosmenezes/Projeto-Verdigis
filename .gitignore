@@ -11,6 +11,9 @@ staticfiles/
 # Banco de dados local
 db.sqlite3
 
+# Arquivos enviados por usuários (fotos de perfil)
+media/
+
 # Arquivos de sistema
 .DS_Store
 Thumbs.db

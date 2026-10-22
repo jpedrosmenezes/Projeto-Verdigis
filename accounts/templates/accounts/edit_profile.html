@@ -1,0 +1,37 @@
+{% extends "forum/base.html" %}
+
+{% block title %}Editar Perfil - Verdigis{% endblock %}
+
+{% block content %}
+<div class="moldura-vidro">
+    <section class="secao-form">
+        <h1>EDITAR PERFIL</h1>
+        <p>Atualize suas informações abaixo.</p>
+
+        <form method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data" class="form-contato">
+            {% csrf_token %}
+
+            {% if form.non_field_errors or company_form.non_field_errors %}
+                <div class="alert alert-error" role="alert">
+                    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                    {% for error in company_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+
+            {% if company_form %}
+                <h3>Dados da empresa</h3>
+                {% for field in company_form %}
+                    {% include 'accounts/_campo.html' with field=field %}
+                {% endfor %}
+                <h3>Seu perfil</h3>
+            {% endif %}
+
+            {% for field in form %}
+                {% include 'accounts/_campo.html' with field=field %}
+            {% endfor %}
+
+            <button class="btn-submit" type="submit">Salvar</button>
+        </form>
+    </section>
+</div>
+{% endblock %}

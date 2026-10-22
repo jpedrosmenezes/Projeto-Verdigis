@@ -1,0 +1,23 @@
+{% load static %}
+<div class="form-group">
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {% if field.field.widget.input_type == 'password' %}
+        <div class="campo-senha">
+            {{ field }}
+            <button type="button" class="btn-olho" aria-label="Mostrar senha" data-olho-aberto="{% static 'img/olho_aberto.png' %}" data-olho-fechado="{% static 'img/olho_fechado.png' %}" onclick="const c = this.previousElementSibling; const oculta = c.type === 'password'; c.type = oculta ? 'text' : 'password'; this.querySelector('img').src = oculta ? this.dataset.olhoFechado : this.dataset.olhoAberto; this.setAttribute('aria-label', oculta ? 'Ocultar senha' : 'Mostrar senha');"><img src="{% static 'img/olho_aberto.png' %}" alt=""></button>
+        </div>
+    {% else %}
+        {{ field }}
+    {% endif %}
+    {% if dica %}
+        <small>{{ dica }}</small>
+    {% endif %}
+    {% if field.help_text %}
+        <small>{{ field.help_text }}</small>
+    {% endif %}
+    {% if field.errors %}
+        <div class="alert alert-error">
+            {% for erro in field.errors %}{{ erro }}{% endfor %}
+        </div>
+    {% endif %}
+</div>

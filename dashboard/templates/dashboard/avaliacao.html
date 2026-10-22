@@ -1,0 +1,83 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% comment %}
+  Central de avaliações (view dashboard_social_verdigis). Exige login. Método: GET.
+  Filtros opcionais na URL: ?tema=SAUDE_MENTAL (ou outro tema) e ?sentimento=POSITIVO, NEGATIVO ou NEUTRO.
+  Sem sentimento na URL, mostra os negativos.
+  Contexto: relatos (já filtrados, mais recentes primeiro), temas (lista de dicts com codigo, nome e total),
+  tema_atual (código ou vazio), tema_atual_nome e sentimento_atual.
+  Cada relato leva para {% url 'dashboard:detalhe_relato' 0 %} (com o id do relato).
+{% endcomment %}
+
+{% block title %}Central de Avaliações - Verdigis{% endblock %}
+{% block fundo %}fundo-6{% endblock %}
+
+{% block head %}<h1 class="dash-banner">CENTRAL DE AVALIAÇÕES</h1>{% endblock head %}
+
+{% block content %}
+  <div class="moldura-vidro">
+  <section class="dash-corpo av-corpo">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+    <!-- Coluna dos temas (com um tema escolhido, só ele aparece) -->
+    <div class="av-temas">
+      {% for t in temas %}
+        {% if not tema_atual or t.codigo == tema_atual %}
+          <article class="av-tema{% if t.codigo == tema_atual %} av-tema--ativo{% endif %}">
+            {% if t.codigo == tema_atual %}
+              <a class="av-tema__voltar" href="{% url 'dashboard:dashboard_social' %}?sentimento={{ sentimento_atual }}" aria-label="Voltar para todos os temas">←</a>
+            {% endif %}
+
+            <a class="av-tema__titulo" href="{% url 'dashboard:dashboard_social' %}?tema={{ t.codigo }}&sentimento={{ sentimento_atual }}">{{ t.nome }}</a>
+            <p class="av-tema__total">{{ t.total }} Avaliaç{{ t.total|pluralize:"ão,ões" }}</p>
+
+            <div class="av-tema__rodape">
+              <details class="av-filtrar">
+                <summary>Filtrar por</summary>
+                <div class="av-filtrar__opcoes">
+                  <a href="{% url 'dashboard:dashboard_social' %}?tema={{ t.codigo }}&sentimento=POSITIVO">Avaliações positivas</a>
+                  <a href="{% url 'dashboard:dashboard_social' %}?tema={{ t.codigo }}&sentimento=NEGATIVO">Avaliações negativas</a>
+                  <a href="{% url 'dashboard:dashboard_social' %}?tema={{ t.codigo }}&sentimento=NEUTRO">Avaliações neutras</a>
+                </div>
+              </details>
+            </div>
+          </article>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- Painel das avaliações -->
+    <div class="av-painel av-painel--{{ sentimento_atual|lower }}">
+      <h2 class="av-painel__titulo">
+        {% if sentimento_atual == 'NEGATIVO' %}Reclamações{% elif sentimento_atual == 'POSITIVO' %}Elogios{% else %}Sugestões{% endif %}
+        {% if tema_atual %}sobre {{ tema_atual_nome|lower }}{% endif %}
+      </h2>
+
+      <div class="av-painel__corpo">
+        {% with total=relatos|length %}
+          <p class="av-painel__total">
+            {{ total }} avaliaç{{ total|pluralize:"ão,ões" }}
+            {% if sentimento_atual == 'NEGATIVO' %}negativa{{ total|pluralize }}{% elif sentimento_atual == 'POSITIVO' %}positiva{{ total|pluralize }}{% else %}neutra{{ total|pluralize }}{% endif %}
+          </p>
+        {% endwith %}
+
+        <div class="av-itens">
+          {% for relato in relatos %}
+            <a class="av-item" href="{% url 'dashboard:detalhe_relato' relato.id %}">
+              <span class="av-item__autor">{% if relato.eh_anonimo %}Anônimo{% else %}Identificado{% endif %}</span>
+              <span class="av-item__texto">{{ relato.mensagem|truncatechars:70 }}</span>
+              <span class="av-item__seta" aria-hidden="true">→</span>
+            </a>
+          {% empty %}
+            <p class="av-vazio">Nenhuma avaliação encontrada.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -16,3 +16,18 @@ def validate_cnpj(value):
     d2 = dv(cnpj[:12] + d1)
     if cnpj[12:] != d1 + d2:
         raise ValidationError("CNPJ inválido.")
+
+
+def validate_cpf(value):
+    cpf = re.sub(r"\D", "", value or "")
+    if len(cpf) != 11 or cpf == cpf[0] * 11:
+        raise ValidationError("CPF inválido.")
+
+    def dv(base):
+        soma = sum(int(d) * p for d, p in zip(base, range(len(base) + 1, 1, -1)))
+        return str((soma * 10) % 11 % 10)
+
+    d1 = dv(cpf[:9])
+    d2 = dv(cpf[:9] + d1)
+    if cpf[9:] != d1 + d2:
+        raise ValidationError("CPF inválido.")

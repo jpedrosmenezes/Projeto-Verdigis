@@ -1,0 +1,189 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% comment %}
+  Fábrica de metas (view fabrica_metas_view). Exige login. Métodos: GET e POST (cria meta).
+  Contexto: form (FormsMetas), metas (metas do usuário logado, pendentes primeiro)
+  e hoje (date, usado para marcar metas atrasadas).
+  Todo formulário POST precisa de {% csrf_token %}.
+  Por meta: editar (GET) em {% url 'dashboard:editar_meta' meta.id %};
+  concluir/reabrir e excluir são somente POST em
+  {% url 'dashboard:alternar_conclusao' meta.id %} e {% url 'dashboard:deletar_meta' meta.id %}.
+  A criação de meta acontece num <dialog> aberto pelo botão "+".
+{% endcomment %}
+
+{% block title %}Fábrica de Metas - Verdigis{% endblock %}
+{% block fundo %}fundo-5{% endblock %}
+
+{% block head %}<h1 class="dash-banner">FÁBRICA DE METAS</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="dash-corpo fm-corpo">
+      <div class="av-topo">
+        <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+          <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+        </a>
+      </div>
+    <!-- Lista de metas -->
+    <div class="fm-lista">
+      {% for meta in metas %}
+        <article class="fm-card fm-card--{{ meta.prioridade|lower }}{% if meta.completo %} fm-card--concluida{% endif %}">
+          <h3 class="fm-card__titulo">{{ meta.nome }}</h3>
+
+          <div class="fm-card__corpo">
+            <div class="fm-card__tags">
+              <span class="fm-badge" title="{{ meta.get_pilar_esg_display }}">{{ meta.pilar_esg }}</span>
+              <span class="fm-tag"><b>Prazo:</b> {{ meta.deadline|date:"d/m/Y" }}</span>
+              <span class="fm-tag"><b>Prioridade:</b> {{ meta.get_prioridade_display|lower }}</span>
+              
+              <!-- Badges para Tipo e Funcionário -->
+              <span class="fm-tag"><strong>{{ meta.get_tipo_display }}</strong></span>
+
+              {% if meta.tipo == 'INDIVIDUAL' and meta.funcionario %}
+                <span class="fm-tag fm-tag--user"> {{ meta.funcionario.user.get_full_name|default:meta.funcionario.user.username }}</span>
+              {% endif %}
+
+              {% if meta.completo %}
+                <span class="fm-tag fm-tag--ok">Concluída</span>
+              {% elif meta.deadline < hoje %}
+                <span class="fm-tag fm-tag--atraso">Atrasada</span>
+              {% endif %}
+            </div>
+
+            {% for linha in meta.resumo.splitlines %}
+              {% if linha.strip %}
+                <p class="fm-item">{{ linha }}</p>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <details class="fm-menu">
+            <summary>Editar</summary>
+            <div class="fm-menu__opcoes">
+              <a href="{% url 'dashboard:editar_meta' meta.id %}">Editar meta</a>
+
+              <form method="post" action="{% url 'dashboard:alternar_conclusao' meta.id %}">
+                {% csrf_token %}
+                <button type="submit">{% if meta.completo %}Reabrir meta{% else %}Concluir meta{% endif %}</button>
+              </form>
+
+              <form method="post" action="{% url 'dashboard:deletar_meta' meta.id %}"
+                    onsubmit="return confirm('Excluir a meta &quot;{{ meta.nome|escapejs }}&quot;?');">
+                {% csrf_token %}
+                <button type="submit" class="btn-excluir">Excluir meta</button>
+              </form>
+            </div>
+          </details>
+        </article>
+      {% empty %}
+        <p class="fm-vazio">Nenhuma meta cadastrada até o momento. Clique no + para começar.</p>
+      {% endfor %}
+    </div>
+
+    <!-- Botão de nova meta -->
+    <div class="fm-nova">
+      <button type="button" class="fm-mais" onclick="document.getElementById('modal-meta').showModal()">
+        <span class="fm-mais__sinal">+</span>
+        <span class="fm-mais__texto">Adicione uma nova meta</span>
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- Janela: criar nova meta -->
+<dialog id="modal-meta" class="fm-modal" onclick="if (event.target === this) this.close()">
+  <h2 class="fm-modal__topo">Adicione:</h2>
+
+  <form method="post" class="fm-modal__corpo" id="form-meta">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-error" role="alert">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <!-- Seleção exclusiva pelos Botões ESG (campo 'pilar_esg') -->
+    <div class="fm-esg" role="radiogroup" aria-label="Pilar ESG">
+      <input type="radio" name="pilar_esg" id="esg-E" value="E" required {% if form.pilar_esg.value == 'E' %}checked{% endif %}>
+      <label for="esg-E" title="Ambiental">E</label>
+
+      <input type="radio" name="pilar_esg" id="esg-S" value="S" {% if form.pilar_esg.value == 'S' %}checked{% endif %}>
+      <label for="esg-S" title="Social">S</label>
+
+      <input type="radio" name="pilar_esg" id="esg-G" value="G" {% if form.pilar_esg.value == 'G' %}checked{% endif %}>
+      <label for="esg-G" title="Governança">G</label>
+    </div>
+    <p class="fm-dica">Escolha o pilar da sua meta!</p>
+    {% for erro in form.pilar_esg.errors %}
+      <div class="alert alert-error" role="alert">{{ erro }}</div>
+    {% endfor %}
+
+    <!-- Renderização dos demais campos (oculta 'pilar_esg' para evitar duplicação) -->
+    {% for campo in form %}
+      {% if campo.name != 'pilar_esg' %}
+        <div class="form-group" {% if campo.name == 'funcionario' %}id="campo-funcionario-container"{% endif %}>
+          <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+          {{ campo }}
+          {% for erro in campo.errors %}
+            <div class="alert alert-error" role="alert">{{ erro }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    <div class="fm-modal__acoes">
+      <button type="submit">Criar meta</button>
+      <button type="button" class="fm-cancelar" onclick="this.closest('dialog').close()">Cancelar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- JavaScript para exibição condicional do Funcionário -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const selectTipo = document.getElementById('id_tipo') || document.querySelector('select[name="tipo"]');
+    const containerFuncionario = document.getElementById('campo-funcionario-container');
+    const selectFuncionario = containerFuncionario ? containerFuncionario.querySelector('select') : null;
+    const formMeta = document.getElementById('form-meta');
+
+    function alternarExibicaoFuncionario() {
+      if (!selectTipo || !containerFuncionario) return;
+
+      if (selectTipo.value === 'INDIVIDUAL') {
+        containerFuncionario.style.display = 'block';
+        if (selectFuncionario) {
+          selectFuncionario.required = true;
+        }
+      } else {
+        containerFuncionario.style.display = 'none';
+        if (selectFuncionario) {
+          selectFuncionario.required = false;
+          selectFuncionario.value = ''; // Limpa o ID selecionado para não enviar valor residual no POST
+        }
+      }
+    }
+
+    if (selectTipo) {
+      selectTipo.addEventListener('change', alternarExibicaoFuncionario);
+      // Executa na carga inicial da página
+      alternarExibicaoFuncionario();
+    }
+
+    // Se o formulário for resetado, reavalia a visibilidade
+    if (formMeta) {
+      formMeta.addEventListener('reset', function() {
+        setTimeout(alternarExibicaoFuncionario, 10);
+      });
+    }
+
+    // Caso existam erros de validação retornados pelo Django, abre o modal e ajusta os campos
+    {% if form.errors %}
+      const modalMeta = document.getElementById('modal-meta');
+      if (modalMeta) {
+        modalMeta.showModal();
+        alternarExibicaoFuncionario();
+      }
+    {% endif %}
+  });
+</script>
+{% endblock %}

@@ -1,99 +1,43 @@
 {% extends 'forum/base.html' %}
 
-{% comment %}
-  Cadastro (accounts.views.signup) - frontend a ser implementado.
-
-  URL: {% url 'signup' %}  |  Métodos: GET (exibe) e POST (envia)
-  Contexto: form (SignupForm) com os campos
-    username, email, password1, password2
-  O formulário precisa de {% csrf_token %} e deve enviar POST para a mesma URL.
-  Erros: form.errors / form.<campo>.errors. Sucesso: login automático + redirect.
-{% endcomment %}
-
-
 {% block title %}Criar Conta - Verdigis{% endblock %}
+{% block fundo %}fundo-1{% endblock %}
 
 {% block content %}
+<div class="moldura-vidro">
 <section class="secao-form">
     <h1>CRIAR CONTA</h1>
-    <p>Preencha os dados abaixo para se cadastrar na plataforma.</p>
+    <p>Escolha como você vai usar a plataforma.</p>
 
-    <form method="POST" action="{% url 'signup' %}" class="form-contato" id="form-cadastro">
-        {% csrf_token %}
+    {% include 'accounts/_seletor_tipo.html' with pagina='signup' ativo='empresa' %}
 
-        <div class="form-group">
-            <label for="tipo_conta">Você está se cadastrando como:</label>
-            <select id="tipo_conta">
-                <option value="funcionario" selected>Funcionário</option>
-                <option value="empresa">Empresa</option>
-            </select>
-        </div>
+    <p>Crie a sua conta. Depois, use o botão "Cadastrar empresa" do menu para informar os dados da empresa.</p>
 
-        <div class="bloco-tipo" data-tipo="funcionario">
-            {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}
-                        <small>{{ field.help_text }}</small>
-                    {% endif %}
-                    {% if field.errors %}
-                        <div class="alert alert-error">
-                            {% for erro in field.errors %}{{ erro }}{% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
+    {% if form.non_field_errors %}
+        <div class="alert alert-error" role="alert">
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
             {% endfor %}
         </div>
+    {% endif %}
 
-        <div class="bloco-tipo" data-tipo="empresa" hidden>
-            <div class="form-group">
-                <label for="cnpj">CNPJ</label>
-                <input type="text" id="cnpj" placeholder="00.000.000/0000-00" maxlength="18" inputmode="numeric">
-            </div>
+    <form method="POST" action="{% url 'signup' %}" class="form-contato">
+        {% csrf_token %}
 
-            <div class="form-group">
-                <label for="nome_empresa">Nome da empresa</label>
-                <input type="text" id="nome_empresa" placeholder="Razão social ou nome fantasia">
-            </div>
-
-            <div class="form-group">
-                <label for="email_empresa">E-mail da empresa</label>
-                <input type="email" id="email_empresa" placeholder="contato@empresa.com.br">
-            </div>
-
-            <div class="form-group">
-                <label for="senha_empresa">Senha</label>
-                <input type="password" id="senha_empresa" placeholder="Crie uma senha">
-            </div>
-
-            <div class="form-group">
-                <label for="senha_empresa2">Confirmação de senha</label>
-                <input type="password" id="senha_empresa2" placeholder="Digite a senha novamente">
-            </div>
-        </div>
+        {% for field in form %}
+            {% if field.name == 'cnpj' %}
+                {% include 'accounts/_campo.html' with field=field dica='Opcional. Os dados completos da empresa ficam para a próxima etapa.' %}
+            {% elif field.name != 'funcionario' %}
+                {% include 'accounts/_campo.html' with field=field %}
+            {% endif %}
+        {% endfor %}
 
         <button type="submit" class="btn-submit">Criar Conta</button>
     </form>
 
-    <p>Já tem uma conta? <a href="{% url 'login' %}">Entrar</a></p>
+    <p class="auth-switch">Já tem uma conta? <a href="{% url 'login' %}">Entrar</a></p>
 </section>
-
-<script>
-    const formCadastro = document.getElementById('form-cadastro');
-    const seletorTipo = document.getElementById('tipo_conta');
-    const blocosTipo = document.querySelectorAll('.bloco-tipo');
-
-    seletorTipo.addEventListener('change', function () {
-        blocosTipo.forEach(function (bloco) {
-            bloco.hidden = bloco.dataset.tipo !== seletorTipo.value;
-        });
-    });
-
-    formCadastro.addEventListener('submit', function (evento) {
-        if (seletorTipo.value === 'empresa') {
-            evento.preventDefault();
-        }
-    });
-</script>
+</div>
+{% load static %}
+<script src="{% static 'js/masks.js' %}"></script>
 {% endblock content %}

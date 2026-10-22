@@ -1,19 +1,96 @@
 {% extends "forum/base.html" %}
+{% load static %}
 
 {% comment %}
-  Dashboard (dashboard.views.home) - frontend a ser implementado.
+  Dashboard (dashboard.views.home).
   Exige usuário logado (anônimos são redirecionados para o login).
 
-  URL: {% url 'dashboard' %}  |  Método: GET
-  Contexto: nenhum específico. O objeto `user` (usuário logado) já está disponível
-  em todos os templates.
+  URL: {% url 'dashboard:dashboard' %}  |  Método: GET
+  Contexto: nenhum contexto extra (a view home não envia variáveis).
+  O objeto `user` já está disponível em todos os templates.
   Destino padrão após login e cadastro (settings.LOGIN_REDIRECT_URL).
 {% endcomment %}
 
 {% block title %}Dashboard - Verdigis{% endblock %}
+{% block fundo %}fundo-4{% endblock %}
+
+{% block head %}<h1 class="dash-banner">BEM-VINDO(A) À PÁGINA DE ESG DA SUA EMPRESA</h1>{% endblock head %}
 
 {% block content %}
-  <section class="secao-conteudo">
-    <h1>Bem-vindo(a), {{ user.username }}!</h1>
+ <script type="module"
+   src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+
+ <style>
+   .dash-folha {
+     width: 280px;
+     height: 320px;
+     background: transparent;
+     --poster-color: transparent;
+   }
+   @media (max-width: 800px) {
+     .dash-folha { width: 100%; height: 260px; }
+   }
+ </style>
+
+ <div class="moldura-vidro">
+  <section class="dash-corpo">
+    <nav class="dash-menu" aria-label="Menu principal">
+      {% if user.FUNCIONARIO %}
+        <a class="dash-botao" href='{% url 'dashboard:adicionar_avaliacao' %}'>Adicione uma nova avaliação</a>
+      {% else %}
+        <a class="dash-botao" href="{% url 'dashboard:dashboard_social' %}">Central de Avaliações</a>
+        <a class="dash-botao" href="{% url 'dashboard:funcionarios' %}">Funcionários</a>
+      {% endif %}
+      <a class="dash-botao" href="{% url 'dashboard:fabrica_metas' %}">Fábrica de metas</a>
+      <a class="dash-botao" href="#">Diagnóstico de compatibilidade</a>
+      <a class="dash-botao" href="#">Práticas da empresa</a>
+      <a class="dash-botao" href="#">Quadro de tarefas</a>
+    </nav>
+
+    <model-viewer
+      class="dash-folha"
+      src="{% static 'models/logo_folhosa.glb' %}"
+      alt="Logo em 3D"
+      camera-controls
+      auto-rotate
+      rotation-per-second="20deg"
+      disable-zoom
+      shadow-intensity="0"
+      environment-image="neutral"
+      exposure="1.1">
+    </model-viewer>
+
+    <aside class="dash-avisos" aria-label="Avisos">
+      {% if metas_concluidas %}
+        <div class="dash-aviso dash-aviso--ok">
+          <span>Nova meta concluída!</span>
+          <button type="button" class="dash-aviso__fechar" aria-label="Fechar aviso">&times;</button>
+        </div>
+      {% endif %}
+      {% if metas_atrasadas %}
+        <div class="dash-aviso dash-aviso--atraso">
+          <span>Atenção, meta atrasada!</span>
+          <button type="button" class="dash-aviso__fechar" aria-label="Fechar aviso">&times;</button>
+        </div>
+      {% endif %}
+    </aside>
   </section>
+</div>
+
+<script>
+  document.querySelectorAll('.dash-aviso').forEach(function (aviso) {
+    var chave = 'aviso-fechado-' + (aviso.classList.contains('dash-aviso--ok') ? 'ok' : 'atraso');
+
+    if (localStorage.getItem(chave)) {
+      aviso.remove();
+      return;
+    }
+
+    aviso.querySelector('.dash-aviso__fechar').addEventListener('click', function () {
+      localStorage.setItem(chave, '1');
+      aviso.classList.add('some');
+      setTimeout(function () { aviso.remove(); }, 300);
+    });
+  });
+</script>
 {% endblock %}

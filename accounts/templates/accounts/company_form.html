@@ -1,0 +1,54 @@
+{% extends "forum/base.html" %}
+
+{% block title %}Completar informações - Verdigis{% endblock %}
+{% block fundo %}fundo-3{% endblock %}
+
+{% block content %}
+<div class="moldura-vidro">
+<section class="secao-form">
+    <h1>COMPLETAR INFORMAÇÕES</h1>
+    <p>Você será o responsável por esta empresa na plataforma.</p>
+
+    <form method="post" action="{% url 'company_register' %}" class="form-contato">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-error" role="alert">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            {% include 'accounts/_campo.html' with field=field %}
+        {% endfor %}
+
+        <button type="submit" class="btn-submit">Cadastrar empresa</button>
+    </form>
+</section>
+</div>
+<script>
+    const campoCep = document.getElementById('id_cep');
+
+    campoCep.addEventListener('blur', function () {
+        const cep = campoCep.value.replace(/\D/g, '');
+        if (cep.length !== 8) {
+            return;
+        }
+        fetch("{% url 'buscar_cep' '00000000' %}".replace('00000000', cep))
+            .then(function (resposta) { return resposta.json(); })
+            .then(function (dados) {
+                if (dados.erro) {
+                    return;
+                }
+                document.getElementById('id_logradouro').value = dados.logradouro;
+                document.getElementById('id_bairro').value = dados.bairro;
+                document.getElementById('id_cidade').value = dados.cidade;
+                document.getElementById('id_uf').value = dados.uf;
+            });
+    });
+</script>
+{% load static %}
+<script src="{% static 'js/masks.js' %}"></script>
+{% endblock %}

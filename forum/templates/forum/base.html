@@ -7,9 +7,11 @@
     <title>{% block title %}Verdigis - Plataforma ESG{% endblock %}</title>
     <link rel="stylesheet" href="https://use.typekit.net/zug8yrx.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/glass.css' %}">      
     <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
+    {# <script src="{% static 'js/vidro.js' %}" defer></script> #}
 </head>
-<body>
+<body class="{% block fundo %}{% endblock %}">
 
     <header>
         <nav>
@@ -19,30 +21,39 @@
             </a>
             <ul class="nav-links">
                 {% if user.is_authenticated %}
-                <li><a href="{% url 'dashboard:dashboard' %}">Início</a></li>
+                <li><a href="{% url 'dashboard:dashboard' %}">Dashboard</a></li>
                 <li>
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'profile' %}">
-                            <img class="profile-avatar-nav" src="{% if user.profile %}{{ user.profile.avatar_url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" alt="Avatar de {{ user.username }}">
-                        </a>
-                    {% endif %}
+                    <a href="{% url 'profile' %}">
+                        <img class="profile-avatar-nav" src="{% if user.profile %}{{ user.profile.avatar_url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" alt="Avatar de {{ user.username }}">
+                    </a>
                 </li>
                 {% else %}
+                <li><a href="{% url 'login' %}">Entrar</a></li>
+                <li><a href="{% url 'signup' %}">Criar conta</a></li>
+                <li>
                     <a href="{% url 'login' %}">
                         <img class="profile-avatar-nav" src="{% static 'img/default-avatar.png' %}" alt="avatar padrão">
                     </a>
+                </li>
                 {% endif %}
             </ul>
         </nav>
     </header>
 
     <main>
+        {% block head %}
+        {% endblock head %}
+
+        {% block messages %}
+        {% endblock messages %}
         {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
+            <div class="avisos-django">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
 
         {% block content %}
@@ -57,5 +68,17 @@
             </ul>
     </footer>
 
+    <script>
+        document.querySelectorAll('.avisos-django .alert').forEach(function (aviso) {
+            setTimeout(function () {
+                aviso.style.transition = 'opacity 0.5s';
+                aviso.style.opacity = '0';
+                setTimeout(function () { aviso.remove(); }, 500);
+            }, 4000);
+        });
+    </script>
+
 </body>
+
+
 </html>

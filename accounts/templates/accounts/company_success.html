@@ -1,0 +1,24 @@
+{% extends "forum/base.html" %}
+
+{% block title %}Empresa cadastrada - Verdigis{% endblock %}
+
+{% block content %}
+<div class="moldura-vidro">
+<section class="secao-form">
+    <h1>EMPRESA CADASTRADA</h1>
+    <p>Os dados da sua empresa foram salvos. Você é o responsável por ela na plataforma.</p>
+
+    <h2>Como seus funcionários entram</h2>
+    <p>Guarde estes dois dados e passe aos seus funcionários:</p>
+    <ul>
+        <li>CNPJ da empresa</li>
+        <li>Senha de acesso dos funcionários, que você definiu no cadastro</li>
+    </ul>
+    <p>Com esses dados, cada funcionário cria a conta em <a href="{% url 'signup_funcionario' %}">Cadastro de funcionário</a>.</p>
+
+    <form method="get" action="{% url 'dashboard:dashboard' %}">
+        <button type="submit" class="btn-submit">Ir para o início</button>
+    </form>
+</section>
+</div>
+{% endblock %}

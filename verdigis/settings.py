@@ -143,6 +143,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Autenticação (app accounts)
 # https://docs.djangoproject.com/en/6.1/topics/auth/default/
 

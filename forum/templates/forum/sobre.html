@@ -1,8 +1,10 @@
 {% extends 'forum/base.html' %}
 
 {% block title %}Sobre a Empresa - Verdigis{% endblock %}
+{% block fundo %}fundo-2{% endblock %}
 
 {% block content %}
+<div class="moldura-vidro">
 <section class="secao-conteudo">
     <h1>SOBRE O PROJETO</h1>
     <p>
@@ -25,10 +27,10 @@
     <p>
         Para mais informações sobre o projeto, você também pode consultar:
     </p>
-    <button href="https://sites.google.com/cesar.school/verdigis-projetos2/home?authuser=1">Nosso Google Sites</button>
+    <button type="button" onclick="window.open('https://sites.google.com/cesar.school/verdigis-projetos2/home', '_blank')">Nosso Google Sites</button>
     <p></p>
-    <button href="https://github.com/jpedrosmenezes/Projeto-Verdigis">Nosso Repositório no GitHub</button>
-  
+    <button type="button" onclick="window.open('https://github.com/jpedrosmenezes/Projeto-Verdigis', '_blank')">Nosso Repositório no GitHub</button>
+    
 </section>
 
 <section class="secao-conteudo">
@@ -37,8 +39,7 @@
         Somos um grupo de 10 estudantes dos cursos de Ciência da Computação e Design da CESAR School, que tem como objetivo desenvolver soluções para empresas do ramo farmacêutico que desejam implementar práticas de ESG em sua estrutura e que buscam adotar um método mais sustentável tanto na parte ambiental, com os descartes adequados, como também em uma melhor relação entre membros da empresa e medidas de governança. 
     </p>
     
-    <button href="https://sites.google.com/cesar.school/verdigis-projetos2/grupo?authuser=1">Nosso Google Sites</button>
-
+    <button type="button" onclick="window.open('https://sites.google.com/cesar.school/verdigis-projetos2/grupo', '_blank')">Nosso Google Sites</button>
     <p>
         Caso tenha alguma dúvida, pode entrar em contato com qualquer membro da nossa equipe:
         <br><br>
@@ -66,5 +67,5 @@
     </p>
         
 </section>
-
+</div>
 {% endblock content %}

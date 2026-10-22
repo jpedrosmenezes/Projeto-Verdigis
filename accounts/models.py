@@ -6,13 +6,13 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.templatetags.static import static
 
-from .validators import validate_cnpj
+from .validators import validate_cnpj, validate_cpf
 
 
 class UserProfile(models.Model):
     TIPO_CHOICES = [
-        ('funcionario', 'Funcionário'),
-        ('empresa', 'Empresa'),
+        ('FUNCIONARIO', 'Funcionário'),
+        ('EMPRESA', 'Empresa'),
     ]
 
     user = models.OneToOneField(
@@ -20,18 +20,29 @@ class UserProfile(models.Model):
         on_delete=models.CASCADE,
         related_name='profile',
     )
-    tipo = models.CharField(max_length=12, choices=TIPO_CHOICES, default='funcionario')
+    tipo = models.CharField(max_length=12, choices=TIPO_CHOICES, default='FUNCIONARIO')
     nome_empresa = models.CharField(max_length=150, blank=True)
-    name = models.CharField(max_length=150, blank=True)
+    nome = models.CharField(max_length=150, blank=True)
     cnpj = models.CharField(max_length=18, blank=True)
     email = models.EmailField(blank=True)
-    profile_picture = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    foto_perfil = models.ImageField(upload_to='avatars/', blank=True, null=True)
     bio = models.TextField(blank=True)
+    cpf = models.CharField(max_length=11, blank=True, validators=[validate_cpf])
+    telefone = models.CharField(max_length=11, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['cpf'],
+                condition=~models.Q(cpf=''),
+                name='accounts_userprofile_cpf_unico',
+            ),
+        ]
 
     @property
     def avatar_url(self):
-        if self.profile_picture:
-            return self.profile_picture.url
+        if self.foto_perfil:
+            return self.foto_perfil.url
         return static('img/default-avatar.png')
 
     def __str__(self):
@@ -39,11 +50,11 @@ class UserProfile(models.Model):
 
 
 class Niche(models.Model):
-    name = models.CharField("Nicho", max_length=100, unique=True)
+    nome = models.CharField("Nicho", max_length=100, unique=True)
     description = models.TextField("Orientações", blank=True)
 
     def __str__(self):
-        return self.name
+        return self.nome
 
 
 class Company(models.Model):
@@ -101,9 +112,9 @@ class Company(models.Model):
 
 class Funcionario(models.Model):
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="funcionario"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="FUNCIONARIO"
     )
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="funcionarios")
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="FUNCIONARIO")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

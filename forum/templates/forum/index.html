@@ -1,6 +1,7 @@
 {% extends 'forum/base.html' %}
 
 {% block title %}Início - Verdigis{% endblock %}
+{% block fundo %}fundo-1{% endblock %}
 
 {% block content %}
 
@@ -12,40 +13,44 @@
         </section>
     {% endfor %}
 {% else %}
-    <section class="secao-conteudo">
-        <h1>BEM-VINDO À VERDIGIS</h1>
-        <p class="desc-index">A plataforma dedicada à gestão de práticas ESG e sustentabilidade para o setor farmacêutico, trazendo em uma plataforma b2b, alguns processos que auxiliam as empresas a implementar as medidas de ESG, com um esquema de parcerias com outras empresas para facilitar o processo.</p>
-    </section>
+    <div class="moldura-vidro">
+        <section class="secao-conteudo">
+            <h1>BEM-VINDO À VERDIGIS</h1>
+            <p class="desc-index">A plataforma dedicada à gestão de práticas ESG e sustentabilidade para o setor farmacêutico, trazendo em uma plataforma b2b, alguns processos que auxiliam as empresas a implementar as medidas de ESG, com um esquema de parcerias com outras empresas para facilitar o processo.</p>
+        </section>
+    </div>
 {% endif %}
 
-<section class="secao-pilares">
-    <h1>PILARES ESG & PRÁTICAS</h1>
-    <div class="pilares-grid">
-        {% for pilar in pilares %}
-            <div class="pilar-card">
-                <span class="pilar-sigla">{{ pilar.sigla }}</span>
-                <h3>{{ pilar.nome }}</h3>
-                <p>{{ pilar.descricao }}</p>
-                
-                {% if pilar.praticas.all %}
-                    <hr style="border: 0; border-top: 1px solid #eee; margin: 1rem 0;">
-                    <h4>Práticas Associadas:</h4>
-                    <ul class="praticas-lista">
-                        {% for pratica in pilar.praticas.all %}
-                            <li>
-                                <strong>{{ pratica.titulo }}:</strong> 
-                                {{ pratica.descricao }}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p><em>Sem práticas registadas para este pilar.</em></p>
-                {% endif %}
-            </div>
-        {% empty %}
-            <p class="pilares-vazio">Ainda não existem pilares ESG registados na plataforma.</p>
-        {% endfor %}
-    </div>
-</section>
+<div class="moldura-vidro">
+    <section class="secao-pilares">
+        <h1>PILARES ESG & PRÁTICAS</h1>
+        <div class="pilares-grid">
+            {% for pilar in pilares %}
+                <div class="pilar-card">
+                    <span class="pilar-sigla">{{ pilar.sigla }}</span>
+                    <h3>{{ pilar.nome }}</h3>
+                    <p>{{ pilar.descricao }}</p>
+                    
+                    {% if pilar.praticas.all %}
+                        <hr style="border: 0; border-top: 1px solid #eee; margin: 1rem 0;">
+                        <h4>Práticas Associadas:</h4>
+                        <ul class="praticas-lista">
+                            {% for pratica in pilar.praticas.all %}
+                                <li>
+                                    <strong>{{ pratica.titulo }}:</strong> 
+                                    {{ pratica.descricao }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p><em>Sem práticas registadas para este pilar.</em></p>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p class="pilares-vazio">Ainda não existem pilares ESG registados na plataforma.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
 
 {% endblock content %}

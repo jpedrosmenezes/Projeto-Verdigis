@@ -12,4 +12,5 @@ urlpatterns = [
     path('cep/<str:cep>/', views.buscar_cep, name='buscar_cep'),
     path('signup/funcionario/', views.signup_funcionario, name='signup_funcionario'),
     path('login/funcionario/', views.login_funcionario, name='login_funcionario'),
+    path('edit_profile/', views.edit_profile, name='edit_profile'),
 ]

@@ -1,0 +1,9 @@
+<div class="seletor-tipo" role="group" aria-label="Tipo de conta">
+    {% if pagina == 'signup' %}
+        <a class="seletor-opcao{% if ativo == 'empresa' %} ativo{% endif %}" href="{% url 'signup' %}"{% if ativo == 'empresa' %} aria-current="page"{% endif %}>Sou empresa</a>
+        <a class="seletor-opcao{% if ativo == 'funcionario' %} ativo{% endif %}" href="{% url 'signup_funcionario' %}"{% if ativo == 'funcionario' %} aria-current="page"{% endif %}>Sou funcionário</a>
+    {% else %}
+        <a class="seletor-opcao{% if ativo == 'empresa' %} ativo{% endif %}" href="{% url 'login' %}"{% if ativo == 'empresa' %} aria-current="page"{% endif %}>Sou empresa</a>
+        <a class="seletor-opcao{% if ativo == 'funcionario' %} ativo{% endif %}" href="{% url 'login_funcionario' %}"{% if ativo == 'funcionario' %} aria-current="page"{% endif %}>Sou funcionário</a>
+    {% endif %}
+</div>

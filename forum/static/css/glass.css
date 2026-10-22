@@ -1,0 +1,140 @@
+/* =====================================================================
+   VERDIGIS — moldura de vidro em volta dos cards
+   Carregar DEPOIS de style.css no base.html.
+   Header, footer e os cards continuam como estão no style.css; este
+   arquivo só adiciona: (1) a imagem de fundo e (2) a .moldura-vidro.
+   ===================================================================== */
+
+/* 1. AJUSTES ---------------------------------------------------------- */
+:root {
+    --moldura-espessura: clamp(20px, 5vw, 56px); /* distância vidro → card */
+    --moldura-raio: 44px;                         /* canto do vidro */
+    --card-raio: 32px;                            /* canto do card sólido */
+    --moldura-tinta: rgba(255, 255, 255, 0.18);   /* leve véu branco no vidro */
+}
+html {
+    overscroll-behavior: none;
+    background: linear-gradient(to bottom, var(--primary-color) 50%, #525fa2 50%);
+}
+body {
+    overscroll-behavior: none;
+    background: transparent;
+}
+
+/* 2. IMAGENS DE FUNDO ---------------------------------------------------
+   Imagens em forum/static/img/. Cada página escolhe a sua com
+   {% block fundo %}fundo-N{% endblock %} no template.
+   A imagem fica numa camada fixa própria (body::before) em vez de
+   background-attachment: fixed — o visual é o mesmo, mas a rolagem
+   fica muito mais leve com o efeito de vidro.                          */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: url("../img/fundo_1.png");
+    background-size: cover;
+    background-position: center;
+    pointer-events: none;
+}
+
+.fundo-1::before { background-image: url("../img/fundo_1.png"); }
+.fundo-2::before { background-image: url("../img/fundo_2.png"); }
+.fundo-3::before { background-image: url("../img/fundo_3.png"); }
+.fundo-4::before { background-image: url("../img/fundo_4.png"); }
+.fundo-5::before { background-image: url("../img/fundo_5.png"); }
+.fundo-6::before { background-image: url("../img/fundo_6.png"); }
+.fundo-7::before { background-image: url("../img/fundo_7.png"); }
+/* 3. A MOLDURA DE VIDRO ------------------------------------------------- */
+.moldura-vidro {
+    width: fit-content;            /* abraça o card, seja ele estreito ou largo */
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0 auto 2.5rem;
+    padding: var(--moldura-espessura);
+    border-radius: var(--moldura-raio);
+
+    background: var(--moldura-tinta);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),    /* reflexo na borda de cima */
+        inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+        0 20px 50px rgba(20, 30, 60, 0.25);         /* sombra que "descola" do fundo */
+
+    /* Padrão para todos os navegadores: só desfoca. */
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    backdrop-filter: blur(10px) saturate(160%);
+}
+
+/* Chrome/Edge: desfoque + DISTORÇÃO (efeito lente nas bordas).
+   O static/js/vidro.js cria o filtro e coloca a classe .com-lente e a
+   variável --lente em cada moldura. Safari e Firefox ficam no padrão
+   acima (sem distorção, só desfoque). */
+.moldura-vidro.com-lente {
+    backdrop-filter: var(--lente) blur(4px) saturate(160%);
+}
+
+/* O card sólido dentro da moldura: mesmo visual de antes, só com
+   cantos mais redondos para acompanhar o vidro e sem margens próprias. */
+.moldura-vidro > .secao-form,
+.moldura-vidro > .secao-conteudo,
+.moldura-vidro > .profile-card,
+.moldura-vidro > .secao-form,
+.moldura-vidro > .profile-card {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+.moldura-vidro > .secao-form   { width: 664px; }  /* 600px + 2rem de padding de cada lado */
+.moldura-vidro > .profile-card { width: 690px; }
+.moldura-vidro > .av-detalhe {
+    margin: 0;
+    border-radius: var(--card-raio);
+}
+
+/* profile-card não tinha fundo próprio; ganha branco para ficar "sólido" */
+.moldura-vidro > .profile-card { background: #fff; }
+
+/* Páginas do dashboard (dashboard, Fábrica de Metas, Central de Avaliações).
+   O .dash-corpo foi feito para ocupar a tela inteira (width: 100vw e
+   margem negativa no style.css). Dentro da moldura isso o faz "escapar"
+   do vidro, então aqui ele volta a obedecer a caixa e vira um card sólido.
+   A moldura dessas páginas fica mais larga que o <main> (até 1200px),
+   porque os painéis precisam de espaço. */
+.moldura-vidro:has(> .dash-corpo) {
+    width: min(1200px, calc(100vw - 48px));
+    max-width: none;
+    margin-top: 2rem;
+    margin-left: calc(50% - min(600px, 50vw - 24px));   /* centraliza na tela */
+}
+.moldura-vidro > .dash-corpo {
+    width: auto;
+    margin: 0;
+    padding: 24px;
+    background: #fff;
+    border-radius: var(--card-raio);
+}
+
+/* No celular, os painéis do dashboard se encaixam na largura do card. */
+@media (max-width: 640px) {
+    .moldura-vidro > .dash-corpo { padding: 16px; }
+    .moldura-vidro > .dash-corpo .dash-menu { grid-template-columns: repeat(2, 1fr); }
+    .moldura-vidro > .dash-corpo .av-temas { width: 100%; }
+}
+/* 4. ACESSIBILIDADE ----------------------------------------------------- */
+@media (prefers-reduced-transparency: reduce) {
+    .moldura-vidro,
+    .moldura-vidro.com-lente {
+        background: rgba(255, 255, 255, 0.85);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
+.moldura-vidro > .secao-conteudo{
+    margin-bottom: 0;
+}
+
+.moldura-vidro > .profile-card{
+    margin-bottom: 0;
+    margin-top: 0;
+}

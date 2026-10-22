@@ -5,7 +5,7 @@ from .models import Company, Funcionario, Niche, UserProfile
 
 @admin.register(Niche)
 class NicheAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('nome',)
 
 
 @admin.register(Company)

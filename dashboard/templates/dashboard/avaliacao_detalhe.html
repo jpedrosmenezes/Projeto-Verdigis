@@ -1,0 +1,35 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% comment %}
+  Avaliação completa (view detalhe_relato_view). Exige login. Método: GET.
+  Contexto: relato (RelatoSocialVerdigis). A seta volta para a central, no tema e sentimento do relato.
+{% endcomment %}
+
+{% block title %}Avaliação - Verdigis{% endblock %}
+
+{% block head %}<h1 class="dash-banner">CENTRAL DE AVALIAÇÕES</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <article class="av-detalhe av-detalhe--{{ relato.sentimento|lower }}">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+
+    <p class="av-detalhe__meta">
+      <span class="av-selo">{{ relato.get_sentimento_display }}</span>
+      <span>{{ relato.get_tema_esg_display }}</span>
+    </p>
+
+    <p class="av-detalhe__mensagem">{{ relato.mensagem|linebreaksbr }}</p>
+
+    <p class="av-detalhe__rodape">
+      {% if relato.eh_anonimo %}Anônimo{% else %}{{ relato.usuario }}{% endif %}
+      · {{ relato.data_registro|date:"d/m/Y H:i" }}
+    </p>
+  </article>
+</div>
+{% endblock %}

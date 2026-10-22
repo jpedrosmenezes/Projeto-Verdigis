@@ -1,0 +1,47 @@
+{% extends "forum/base.html" %}
+
+{% comment %}
+  Nova avaliação (view adicionar_avaliacao). Exige login.
+  Métodos: GET (formulário vazio) e POST (salva e volta para esta página).
+  Contexto: form (RelatoSocialForm: tema_esg, sentimento, mensagem, eh_anonimo).
+{% endcomment %}
+
+{% block title %}Nova avaliação - Verdigis{% endblock %}
+{% block fundo %}fundo-5{% endblock %}
+
+{% block head %}<h1 class="dash-banner">NOVA AVALIAÇÃO</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro" style="margin-top: 2.5rem;">
+  <section class="secao-form">
+    <h2>Conte como foi a sua experiência</h2>
+
+    <form method="post" action="{% url 'dashboard:adicionar_avaliacao' %}" class="form-contato">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error" role="alert">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {% for campo in form %}
+        <div class="form-group">
+          {% if campo.field.widget.input_type == 'checkbox' %}
+            <label for="{{ campo.id_for_label }}">{{ campo }} Enviar como anônimo</label>
+          {% else %}
+            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+            {{ campo }}
+          {% endif %}
+          {% for erro in campo.errors %}
+            <div class="alert alert-error" role="alert">{{ erro }}</div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+
+      <div class="fm-modal__acoes">
+        <button type="submit">Enviar avaliação</button>
+        <button type="button" class="fm-cancelar" onclick="location.href='{% url 'dashboard:dashboard' %}'">Cancelar</button>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
