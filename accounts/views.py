@@ -11,14 +11,16 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
+from django.contrib.auth import get_user_model
 
 from .forms import (
     CODIGO_CREDENCIAL_EMPRESA, CompanyForm, DeleteAccountForm, EditCompanyForm,
     EditProfileForm, EmployeeLoginForm, EmployeeSignupForm, LoginForm,
     ProfileForm, SignupForm, _normalizar_cnpj,
 )
-from .models import Funcionario, Niche, UserProfile
+from .models import Company, Funcionario, Niche, UserProfile
 
+User = get_user_model()
 
 def _dados_post(request):
     return request.POST if request.method == 'POST' else None
@@ -54,21 +56,6 @@ def login(request):
 
     next_url = request.POST.get('next') or request.GET.get('next', '')
     form = LoginForm(request, data=_dados_post(request))
-<<<<<<< Updated upstream
-    if form.is_valid():
-        user = form.get_user()
-        if Funcionario.objects.filter(user=user).exists():
-            messages.error(request, 'Funcionários devem entrar pela página de login de funcionário.')
-            return redirect('login_funcionario')
-        auth.login(request, user)
-        destino_seguro = url_has_allowed_host_and_scheme(
-            next_url,
-            allowed_hosts={request.get_host()},
-            require_https=request.is_secure(),
-        )
-        return redirect(next_url if destino_seguro else settings.LOGIN_REDIRECT_URL)
-=======
->>>>>>> Stashed changes
 
     if form.is_valid():
         user = form.get_user()
@@ -80,6 +67,30 @@ def login(request):
         'accounts/login.html',
         {'form': form, 'next': next_url}
     )
+
+        user = request.user
+        try:
+            with transaction.atomic():
+                empresas = Company.objects.filter(responsavel=user)
+                funcionarios_ids = list(
+                    Funcionario.objects.filter(company__in=empresas)
+                    .exclude(user=user)
+                    .values_list('user_id', flat=True)
+                )
+                # 1) apaga as contas dos funcionários (perfil e vínculo saem junto, em cascata);
+                #    quem for responsável por outra empresa é preservado
+                User.objects.filter(pk__in=funcionarios_ids, companies__isnull=True).delete()
+                # 2) apaga a(s) empresa(s) do usuário
+                empresas.delete()
+                # 3) por fim, apaga o próprio usuário
+                user.delete()
+        except IntegrityError:
+            messages.error(request, 'Não foi possível excluir a conta agora. Tente novamente.')
+            return render(request, 'accounts/delete.html', {'form': form})
+        auth.logout(request)
+        messages.success(request, 'Sua conta foi excluída.')
+        return redirect(settings.LOGOUT_REDIRECT_URL)
+
 
 
 
