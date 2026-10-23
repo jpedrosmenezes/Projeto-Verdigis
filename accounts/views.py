@@ -56,7 +56,18 @@ def login(request):
 
     next_url = request.POST.get('next') or request.GET.get('next', '')
     form = LoginForm(request, data=_dados_post(request))
+
     if form.is_valid():
+        user = form.get_user()
+        auth.login(request, user)
+        return redirect(next_url or settings.LOGIN_REDIRECT_URL)
+
+    return render(
+        request,
+        'accounts/login.html',
+        {'form': form, 'next': next_url}
+    )
+
         user = request.user
         try:
             with transaction.atomic():
@@ -80,7 +91,7 @@ def login(request):
         messages.success(request, 'Sua conta foi excluída.')
         return redirect(settings.LOGOUT_REDIRECT_URL)
 
-    return render(request, 'accounts/login.html', {'form': form, 'next': next_url})
+
 
 
 @require_POST
@@ -91,24 +102,57 @@ def logout(request):
 
 
 @login_required
+
+@login_required
 def delete(request):
     form = DeleteAccountForm(request.user, _dados_post(request))
-    if form.is_valid():
+
+    if request.method == 'POST' and form.is_valid():
         user = request.user
-        if user.companies.exists():
+
+        try:
+            with transaction.atomic():
+                # 1. Busca as empresas do responsável.
+                empresas = Company.objects.filter(responsavel=user)
+
+                # 2. Encontra os funcionários dessas empresas.
+                funcionarios_ids = list(
+                    Funcionario.objects.filter(
+                        company__in=empresas
+                    ).values_list('user_id', flat=True)
+                )
+
+                # 3. Exclui as contas dos funcionários.
+                User.objects.filter(pk__in=funcionarios_ids).delete()
+
+                # 4. Exclui as empresas.
+                empresas.delete()
+
+                # 5. Exclui a conta do responsável.
+                user.delete()
+
+        except (IntegrityError, DatabaseError):
             messages.error(
                 request,
-                'Você é responsável por uma ou mais empresas. '
-                'Remova-as ou transfira a responsabilidade antes de excluir a conta.',
+                'Não foi possível excluir a conta agora. Tente novamente.'
             )
-            return render(request, 'accounts/delete.html', {'form': form})
+            return render(
+                request,
+                'accounts/delete.html',
+                {'form': form}
+            )
+
+        # 6. Encerra a sessão do responsável.
         auth.logout(request)
-        user.delete()
-        messages.success(request, 'Sua conta foi excluída.')
+
+        messages.success(
+            request,
+            'Sua conta e as contas dos funcionários vinculados '
+            'à empresa foram excluídas.'
+        )
         return redirect(settings.LOGOUT_REDIRECT_URL)
 
     return render(request, 'accounts/delete.html', {'form': form})
-
 
 @login_required
 def profile(request):
