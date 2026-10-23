@@ -47,6 +47,7 @@ class SignupForm(UserCreationForm):
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('Já existe uma conta cadastrada com este e-mail.')
         return email
+    
 
     def clean_cnpj(self):
         cnpj = _normalizar_cnpj(self.cleaned_data.get('cnpj'))

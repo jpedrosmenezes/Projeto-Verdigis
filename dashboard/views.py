@@ -238,3 +238,24 @@ def adicionar_avaliacao(request):
     else:
         form = RelatoSocialForm(user=request.user, company=company)
     return render(request, 'dashboard/adicionar.html', {'form': form})
+
+
+@login_required
+def funcionarios_view(request):
+    company = _obter_empresa_usuario(request.user)
+
+    # Só o responsável pela empresa vê a lista (funcionário e usuário sem empresa voltam ao dashboard)
+    if company is None or hasattr(request.user, 'FUNCIONARIO'):
+        messages.error(request, 'Apenas o responsável pela empresa pode ver os funcionários.')
+        return redirect('dashboard:dashboard')
+
+    funcionarios = (
+        Funcionario.objects
+        .filter(company=company)
+        .select_related('user', 'user__profile')
+        .order_by('user__username')
+    )
+    return render(request, 'dashboard/funcionarios.html', {
+        'company': company,
+        'funcionarios': funcionarios,
+    })

@@ -25,4 +25,7 @@ urlpatterns = [
     path('avaliacao/<int:relato_id>/', views.detalhe_relato_view, name='detalhe_relato'),
     
     path('avaliacao/nova/', views.adicionar_avaliacao, name='adicionar_avaliacao'),
+
+        # Lista de funcionários da empresa (só o responsável)
+    path('funcionarios/', views.funcionarios_view, name='funcionarios'),
 ]

@@ -39,6 +39,7 @@
         <a class="dash-botao" href='{% url 'dashboard:adicionar_avaliacao' %}'>Adicione uma nova avaliação</a>
       {% else %}
         <a class="dash-botao" href="{% url 'dashboard:dashboard_social' %}">Central de Avaliações</a>
+        <a class="dash-botao" href="{% url 'dashboard:funcionarios' %}">Funcionários</a>
       {% endif %}
       <a class="dash-botao" href="{% url 'dashboard:fabrica_metas' %}">Fábrica de metas</a>
       <a class="dash-botao" href="#">Diagnóstico de compatibilidade</a>

@@ -54,6 +54,12 @@
 
 </dl>
   <button class="btn-submit" onclick="window.location.href='{% url 'edit_profile' %}'">Editar Perfil</button>
+  {% if not user.companies.exists %}
+    {% if not user.FUNCIONARIO %}
+      <button class="btn-submit-2" onclick="window.location.href='{% url 'company_register' %}'">Completar Informações</button>
+      {% endif %}
+  {% endif %}
+  <p></p>
   <button type="submit" form="form-sair" class="btn-submit btn-logout">Sair</button>
   <form method="get" action="{% url 'delete' %}" class="form-excluir">
     <button type="submit" class="btn-submit btn-excluir">Excluir conta</button>
