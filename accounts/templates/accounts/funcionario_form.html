@@ -34,7 +34,9 @@
 
         <button class="btn-submit" type="submit">{{ botao }}</button>
     </form>
-
+        {% if request.resolver_match.url_name == 'login_funcionario' %}
+        <p class="auth-switch"><a href="{% url 'password_reset' %}">Esqueceu a senha?</a></p>
+    {% endif %}
     <p class="auth-switch"><a href="{% url alt_url %}">{{ alt_texto }}</a></p>
 </section>
 </div>
