@@ -68,40 +68,12 @@ def login(request):
         {'form': form, 'next': next_url}
     )
 
-        user = request.user
-        try:
-            with transaction.atomic():
-                empresas = Company.objects.filter(responsavel=user)
-                funcionarios_ids = list(
-                    Funcionario.objects.filter(company__in=empresas)
-                    .exclude(user=user)
-                    .values_list('user_id', flat=True)
-                )
-                # 1) apaga as contas dos funcionários (perfil e vínculo saem junto, em cascata);
-                #    quem for responsável por outra empresa é preservado
-                User.objects.filter(pk__in=funcionarios_ids, companies__isnull=True).delete()
-                # 2) apaga a(s) empresa(s) do usuário
-                empresas.delete()
-                # 3) por fim, apaga o próprio usuário
-                user.delete()
-        except IntegrityError:
-            messages.error(request, 'Não foi possível excluir a conta agora. Tente novamente.')
-            return render(request, 'accounts/delete.html', {'form': form})
-        auth.logout(request)
-        messages.success(request, 'Sua conta foi excluída.')
-        return redirect(settings.LOGOUT_REDIRECT_URL)
-
-
-
-
 @require_POST
 def logout(request):
     auth.logout(request)
     messages.success(request, 'Você saiu da sua conta.')
     return redirect(settings.LOGOUT_REDIRECT_URL)
 
-
-@login_required
 
 @login_required
 def delete(request):
@@ -112,23 +84,26 @@ def delete(request):
 
         try:
             with transaction.atomic():
-                # 1. Busca as empresas do responsável.
+                # 1. Localiza as empresas vinculadas a este gestor
                 empresas = Company.objects.filter(responsavel=user)
 
-                # 2. Encontra os funcionários dessas empresas.
+                # 2. Pega os IDs de todos os funcionários vinculados a essas empresas
                 funcionarios_ids = list(
-                    Funcionario.objects.filter(
-                        company__in=empresas
-                    ).values_list('user_id', flat=True)
+                    Funcionario.objects.filter(company__in=empresas)
+                    .exclude(user=user)
+                    .values_list('user_id', flat=True)
                 )
 
-                # 3. Exclui as contas dos funcionários.
-                User.objects.filter(pk__in=funcionarios_ids).delete()
+                # 3. Apaga em cascata as contas de todos esses funcionários
+                User.objects.filter(
+                    pk__in=funcionarios_ids, 
+                    companies__isnull=True
+                ).delete()
 
-                # 4. Exclui as empresas.
+                # 4. Apaga a empresa
                 empresas.delete()
 
-                # 5. Exclui a conta do responsável.
+                # 5. Apaga a conta do gestor
                 user.delete()
 
         except (IntegrityError, DatabaseError):
@@ -136,23 +111,19 @@ def delete(request):
                 request,
                 'Não foi possível excluir a conta agora. Tente novamente.'
             )
-            return render(
-                request,
-                'accounts/delete.html',
-                {'form': form}
-            )
+            return render(request, 'accounts/delete.html', {'form': form})
 
-        # 6. Encerra a sessão do responsável.
+        # 6. Desloga o usuário e finaliza
         auth.logout(request)
 
         messages.success(
             request,
-            'Sua conta e as contas dos funcionários vinculados '
-            'à empresa foram excluídas.'
+            'Sua conta, sua empresa e todos os funcionários vinculados foram excluídos com sucesso.'
         )
         return redirect(settings.LOGOUT_REDIRECT_URL)
 
     return render(request, 'accounts/delete.html', {'form': form})
+
 
 @login_required
 def profile(request):
