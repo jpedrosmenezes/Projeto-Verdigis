@@ -50,6 +50,9 @@ Repositório: [`Projeto-Verdigis`](https://github.com/jpedrosmenezes/Projeto-Ver
 <a id="entrega-03"></a>
 ## Entrega 03
 
+### Backlog
+![Print do Backlog](./backlogs/backlog-3.jpg)
+
 ### Quadro do 3º Sprint
 ![Print do Quadro do 2º Sprint](./sprints/sprint3.jpeg)
 
@@ -57,7 +60,10 @@ Repositório: [`Projeto-Verdigis`](https://github.com/jpedrosmenezes/Projeto-Ver
 - [Acessar o site](https://projeto-verdigis.onrender.com)
 
 ### Screencast de explicação do código Django
-- [Assistir no YouTube]()
+- [Assistir no YouTube](https://youtu.be/lO8UCX8t5BI)
+
+### Screencast do Deployment
+- [Assistir no YouTube](https://youtu.be/b2IN5Jz2a6U)
 
 ### Histórias Implementadas:
 
