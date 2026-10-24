@@ -51,7 +51,7 @@ Repositório: [`Projeto-Verdigis`](https://github.com/jpedrosmenezes/Projeto-Ver
 ## Entrega 03
 
 ### Backlog
-![Print do Backlog](./backlogs/backlog-3.jpg)
+![Print do Backlog](./backlogs/backlog-3.jpeg)
 
 ### Quadro do 3º Sprint
 ![Print do Quadro do 2º Sprint](./sprints/sprint3.jpeg)
