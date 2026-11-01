@@ -1,9 +1,13 @@
 {% extends "forum/base.html" %}
 {% load static %}
+{% load relatos %}
 
 {% comment %}
-  Avaliação completa (view detalhe_relato_view). Exige login. Método: GET.
-  Contexto: relato (RelatoSocialVerdigis). A seta volta para a central, no tema e sentimento do relato.
+  Relato completo (view detalhe_relato_view). Método: GET. Relato de outra empresa dá 404.
+  URL: {% url 'dashboard:detalhe_relato' relato.id %}
+  Contexto: relato, moderador (bool, relato.moderar), form_ocultar (motivo opcional) e voltar (nome da URL).
+  O nome do autor vem de {% nome_exibido relato %}: "Anônimo" num relato anônimo, para qualquer papel.
+  Ocultar e restaurar: POST em {% url 'dashboard:ocultar_relato' relato.id %} e {% url 'dashboard:restaurar_relato' relato.id %}.
 {% endcomment %}
 
 {% block title %}Avaliação - Verdigis{% endblock %}
@@ -14,7 +18,7 @@
 <div class="moldura-vidro">
   <article class="av-detalhe av-detalhe--{{ relato.sentimento|lower }}">
     <div class="av-topo">
-      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+      <a class="av-voltar" href="{% url voltar %}" aria-label="Voltar para a lista de relatos">
         <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
       </a>
     </div>
@@ -22,14 +26,33 @@
     <p class="av-detalhe__meta">
       <span class="av-selo">{{ relato.get_sentimento_display }}</span>
       <span>{{ relato.get_tema_esg_display }}</span>
+      {% if relato.oculto_em %}<span class="fm-tag fm-tag--atraso">Oculto</span>{% endif %}
     </p>
 
     <p class="av-detalhe__mensagem">{{ relato.mensagem|linebreaksbr }}</p>
 
     <p class="av-detalhe__rodape">
-      {% if relato.eh_anonimo %}Anônimo{% else %}{{ relato.usuario }}{% endif %}
-      · {{ relato.data_registro|date:"d/m/Y H:i" }}
+      {% nome_exibido relato %} · {{ relato.data_registro|date:"d/m/Y H:i" }}
     </p>
+
+    {% if moderador %}
+      <div class="eq-moderacao">
+        {% if relato.oculto_em %}
+          <p>Ocultado em {{ relato.oculto_em|date:"d/m/Y H:i" }}{% if relato.motivo_ocultacao %}. Motivo: {{ relato.motivo_ocultacao }}{% endif %}</p>
+          <form method="post" action="{% url 'dashboard:restaurar_relato' relato.id %}">
+            {% csrf_token %}
+            <button type="submit" class="eq-botao-pequeno">Restaurar</button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'dashboard:ocultar_relato' relato.id %}" class="eq-form-linha">
+            {% csrf_token %}
+            <label for="{{ form_ocultar.motivo.id_for_label }}">{{ form_ocultar.motivo.label }}</label>
+            {{ form_ocultar.motivo }}
+            <button type="submit" class="eq-botao-pequeno btn-excluir">Ocultar</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endif %}
   </article>
 </div>
 {% endblock %}

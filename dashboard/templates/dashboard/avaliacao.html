@@ -1,5 +1,6 @@
 {% extends "forum/base.html" %}
 {% load static %}
+{% load relatos %}
 
 {% comment %}
   Central de avaliações (view dashboard_social_verdigis). Exige login. Método: GET.
@@ -8,6 +9,8 @@
   Contexto: relatos (já filtrados, mais recentes primeiro), temas (lista de dicts com codigo, nome e total),
   tema_atual (código ou vazio), tema_atual_nome e sentimento_atual.
   Cada relato leva para {% url 'dashboard:detalhe_relato' 0 %} (com o id do relato).
+  Só a empresa da requisição; relatos ocultos ficam fora (aba ?aba=ocultos, só para quem modera).
+  moderador (bool) e total_ocultos. O nome do autor vem sempre de {% nome_exibido relato %}.
 {% endcomment %}
 
 {% block title %}Central de Avaliações - Verdigis{% endblock %}
@@ -25,6 +28,9 @@
     </div>
     <!-- Coluna dos temas (com um tema escolhido, só ele aparece) -->
     <div class="av-temas">
+      {% if moderador %}
+        <a class="av-tema__titulo eq-aba-ocultos" href="{% url 'dashboard:dashboard_social' %}?aba=ocultos">Ocultos ({{ total_ocultos }})</a>
+      {% endif %}
       {% for t in temas %}
         {% if not tema_atual or t.codigo == tema_atual %}
           <article class="av-tema{% if t.codigo == tema_atual %} av-tema--ativo{% endif %}">
@@ -68,7 +74,7 @@
         <div class="av-itens">
           {% for relato in relatos %}
             <a class="av-item" href="{% url 'dashboard:detalhe_relato' relato.id %}">
-              <span class="av-item__autor">{% if relato.eh_anonimo %}Anônimo{% else %}Identificado{% endif %}</span>
+              <span class="av-item__autor">{% nome_exibido relato %}</span>
               <span class="av-item__texto">{{ relato.mensagem|truncatechars:70 }}</span>
               <span class="av-item__seta" aria-hidden="true">→</span>
             </a>
