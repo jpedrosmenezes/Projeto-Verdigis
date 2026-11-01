@@ -1,0 +1,78 @@
+{% extends "forum/base.html" %}
+{% load static %}
+{% comment %}
+  Meus vínculos (accounts.views.meus_vinculos). Método: GET. Só funcionário e consultor.
+  URL: {% url 'accounts:meus_vinculos' %}
+  Contexto: vinculos (Vinculo do usuário), pendentes (SolicitacaoVinculo pendentes),
+  acoes (o que o usuário pode fazer na empresa atual, lido do pode()) e pode_pedir (bool).
+  Sair: POST em {% url 'accounts:sair_empresa' 0 %}. Cancelar pedido: POST em {% url 'accounts:cancelar_solicitacao' 0 %}.
+{% endcomment %}
+
+{% block title %}Meus vínculos - Verdigis{% endblock %}
+{% block fundo %}fundo-6{% endblock %}
+
+{% block head %}<h1 class="dash-banner">MEUS VÍNCULOS</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="dash-corpo av-corpo">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+
+    <div class="fm-lista eq-lista">
+      {% for vinculo in vinculos %}
+        <article class="fm-card fm-card--baixa">
+          <h2 class="fm-card__titulo">{{ vinculo.company.nome_fantasia }}</h2>
+          <div class="fm-card__corpo">
+            <div class="fm-card__tags">
+              <span class="fm-tag"><b>Cargo:</b> {{ vinculo.cargo }}</span>
+              <span class="fm-tag"><b>Setor:</b> {{ vinculo.setor }}</span>
+              <span class="fm-tag"><b>Desde:</b> {{ vinculo.criado_em|date:"d/m/Y" }}</span>
+              {% if request.empresa and request.empresa.pk == vinculo.company_id %}<span class="fm-tag fm-tag--ok">Empresa atual</span>{% endif %}
+            </div>
+            {% if request.empresa and request.empresa.pk == vinculo.company_id %}
+              <h3 class="eq-subtitulo">O que posso fazer nesta empresa</h3>
+              <ul class="eq-acoes">
+                {% for acao in acoes %}<li>{{ acao }}</li>{% empty %}<li>Apenas observar.</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </div>
+          <form method="post" action="{% url 'accounts:sair_empresa' vinculo.id %}" class="eq-form-acao" data-confirmar="Sair de {{ vinculo.company.nome_fantasia }}?">
+            {% csrf_token %}
+            <button type="submit" class="btn-excluir">Sair da empresa</button>
+          </form>
+        </article>
+      {% empty %}
+        <p class="fm-vazio">Você ainda não faz parte de nenhuma empresa.</p>
+      {% endfor %}
+    </div>
+
+    <div class="av-painel av-painel--neutro">
+      <h2 class="av-painel__titulo">Pedidos em análise</h2>
+      <div class="av-painel__corpo">
+        <div class="av-itens">
+          {% for pedido in pendentes %}
+            <div class="av-item">
+              <span class="av-item__autor">{{ pedido.company.nome_fantasia }}</span>
+              <span class="av-item__texto">{{ pedido.cargo }} · {{ pedido.setor }} · enviado em {{ pedido.criada_em|date:"d/m/Y" }}</span>
+              <form method="post" action="{% url 'accounts:cancelar_solicitacao' pedido.id %}" class="av-item__seta">
+                {% csrf_token %}
+                <button type="submit" class="fm-cancelar eq-botao-pequeno">Cancelar</button>
+              </form>
+            </div>
+          {% empty %}
+            <p class="av-vazio">Nenhum pedido em análise.</p>
+          {% endfor %}
+        </div>
+        {% if pode_pedir %}
+          <p class="eq-centro"><a class="dash-botao eq-botao-claro" href="{% url 'accounts:entrar_empresa' %}">Pedir para entrar em uma empresa</a></p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</div>
+<script src="{% static 'js/confirmar.js' %}"></script>
+{% endblock %}

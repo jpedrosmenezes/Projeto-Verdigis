@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{% static 'css/glass.css' %}">      
     <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
     {# <script src="{% static 'js/vidro.js' %}" defer></script> #}
+    <script src="{% static 'js/senha.js' %}" defer></script>
 </head>
 <body class="{% block fundo %}{% endblock %}">
 
@@ -23,15 +24,21 @@
                 {% if user.is_authenticated %}
                 <li><a href="{% url 'dashboard:dashboard' %}">Dashboard</a></li>
                 <li>
-                    <a href="{% url 'profile' %}">
-                        <img class="profile-avatar-nav" src="{% if user.profile %}{{ user.profile.avatar_url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" alt="Avatar de {{ user.username }}">
+                    <a href="{% url 'accounts:notificacoes' %}" class="nt-sino" aria-label="Notificações, {{ notificacoes_nao_lidas|default:0 }} não lida{{ notificacoes_nao_lidas|default:0|pluralize }}">
+                        <svg class="nt-sino__icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3a1.5 1.5 0 0 0-3 0v1.16A7 7 0 0 0 5 11v5l-2 2v1h18v-1Z" fill="currentColor"/></svg>
+                        {% if notificacoes_nao_lidas %}<span class="nt-sino__contador" aria-hidden="true">{{ notificacoes_nao_lidas }}</span>{% endif %}
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'accounts:profile' %}">
+                        <img class="profile-avatar-nav" src="{{ user.avatar_url }}" alt="Avatar de {{ user.nome|default:user.email }}">
                     </a>
                 </li>
                 {% else %}
-                <li><a href="{% url 'login' %}">Entrar</a></li>
-                <li><a href="{% url 'signup' %}">Criar conta</a></li>
+                <li><a href="{% url 'accounts:login' %}">Entrar</a></li>
+                <li><a href="{% url 'accounts:signup' %}">Criar conta</a></li>
                 <li>
-                    <a href="{% url 'login' %}">
+                    <a href="{% url 'accounts:login' %}">
                         <img class="profile-avatar-nav" src="{% static 'img/default-avatar.png' %}" alt="avatar padrão">
                     </a>
                 </li>
