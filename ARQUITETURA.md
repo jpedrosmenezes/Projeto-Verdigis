@@ -54,7 +54,7 @@ Ação desconhecida levanta `KeyError`. `ACOES_NAO_DELEGAVEIS` (`equipe.gerir`, 
 
 ## Fluxos principais
 
-**Cadastro e triagem.** A pessoa cria a conta com nome, e-mail e senha e cai na triagem. Escolhe Empresa (formulário da empresa, com busca de CEP), Funcionário (nome, CPF, telefone) ou Consultor (nome, documento, telefone, especialidade). `concluir_onboarding` grava o perfil e o papel numa transação e recusa quem já tem papel. Esqueceu a senha: fala com o suporte; o superusuário redefine pelo admin.
+**Cadastro e triagem.** A pessoa cria a conta com nome, e-mail e senha e cai na triagem. Escolhe Empresa (formulário da empresa, com busca de CEP), Funcionário (nome, CPF, telefone) ou Consultor (nome, documento, telefone, especialidade). `concluir_onboarding` grava o perfil e o papel numa transação e recusa quem já tem papel. Quem esquece a senha fala com o suporte, e o superusuário redefine pelo admin.
 
 **Entrada na empresa.** A empresa tem um código de 10 caracteres (`XXXXX-XXXXX`, sem 0, 1, I, L, O). Funcionário ou consultor pede para entrar com o código, cargo e setor (`criar_solicitacao`). A Empresa aceita ou recusa na tela Equipe. Aceitar cria o `Vinculo` (tipo tirado do papel, nunca do formulário) e cancela os outros pedidos pendentes do funcionário.
 
@@ -75,30 +75,17 @@ Só `accounts.services.notificar()` cria notificações. Tipos: `SOLICITACAO_REC
 | Comando | Para quê |
 | --- | --- |
 | `python manage.py popular_demo` | Dados de demonstração. Idempotente. Só com `ENVIRONMENT=development`, a menos que receba `--permitir-fora-de-desenvolvimento` |
-| `python manage.py preparar_banco` | Remove o esquema antigo de contas (anterior ao login por e-mail) antes do `migrate`, preservando o conteúdo do `forum`. Só apaga com `RESETAR_CONTAS_LEGADO=sim` |
+| `python manage.py preparar_banco` | Roda no build antes do `migrate`. Em banco criado antes do login por e-mail, remove as tabelas antigas de contas (preservando o `forum`), mas só com `RESETAR_CONTAS_LEGADO=sim`. Em banco atual, não faz nada |
 | `python manage.py garantir_superusuario` | Cria o superusuário de `DJANGO_SUPERUSER_EMAIL` e `DJANGO_SUPERUSER_PASSWORD`, se ainda não existir |
 
-## Usuários de demonstração
-
-Senha de todos: `verdigis123`.
-
-| E-mail | Papel |
-| --- | --- |
-| `admin@demo.com` | Superusuário |
-| `empresa@demo.com` | Empresa "Farmácia Vida Verde [DEMO]" |
-| `funcionario@demo.com` | Funcionário vinculado |
-| `funcionario2@demo.com` | Funcionário vinculado |
-| `consultor@demo.com` | Consultor vinculado, com `METAS_CRIAR` |
-| `pendente@demo.com` | Funcionário com pedido pendente |
+Usuários de demonstração e senha: veja o [README](./README.md#usuários-de-demonstração).
 
 ## Deploy no Render (plano gratuito)
 
 - **Sem shell e sem pre-deploy command:** o `build.sh` roda `collectstatic`, `preparar_banco`, `migrate`, `garantir_superusuario` e, se `CARREGAR_DEMO=sim`, o `popular_demo`.
-- **Primeiro deploy sobre o banco antigo:** defina `RESETAR_CONTAS_LEGADO=sim`, faça o deploy e depois remova a variável. Sem ela, o build para com uma mensagem explicativa e a versão anterior continua no ar. Usuários, metas e relatos antigos são apagados; o conteúdo do site fica.
 - **Disco temporário:** fotos de perfil ficam em `media/`, que é apagado a cada deploy ou reinício. A aplicação mostra o avatar padrão quando o arquivo some. A mídia é servida pelo próprio Django em produção.
 - **Logs:** erros vão para o console (aba Logs do Render).
 - **Hibernação:** o serviço gratuito dorme após 15 minutos sem acesso; a primeira requisição depois disso demora.
-- O Postgres gratuito do Render expira após um período; confira o painel antes de apresentações.
 
 ## Decisões de simplificação
 

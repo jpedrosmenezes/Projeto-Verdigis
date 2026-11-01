@@ -33,7 +33,7 @@ Perda de contratos, crédito mais caro, exposição reputacional e dificuldade d
 
 ## Funcionalidades
 
-- Páginas institucionais: início, quem somos, sobre o projeto e fale conosco
+- Páginas institucionais: início, sobre o projeto e fale conosco
 - Apresentação dos pilares ESG (Ambiental, Social e Governança) com práticas associadas a cada um
 - Formulário de contato com registro das mensagens no banco de dados
 - Conteúdo, equipe, pilares e tecnologias editáveis pelo painel administrativo do Django, sem alteração de código
@@ -47,9 +47,14 @@ Detalhes técnicos (permissões, fluxos e comandos) em [ARQUITETURA.md](./ARQUIT
 | Rota | Descrição |
 | --- | --- |
 | `/` | Página inicial |
-| `/quem-somos/` | Equipe e apresentação do grupo |
-| `/sobre-projeto/` | Objetivos, pilares, práticas e tecnologias |
+| `/sobre/` | Objetivos, pilares, práticas e tecnologias |
 | `/fale-conosco/` | Formulário de contato |
+| `/account/signup/` e `/account/login/` | Cadastro e login por e-mail |
+| `/account/onboarding/` | Escolha do papel (empresa, funcionário ou consultor) |
+| `/dashboard/` | Painel da empresa, com o menu de cada papel |
+| `/dashboard/equipe/` | Pedidos de entrada, funcionários e consultores |
+| `/dashboard/metas/` | Fábrica de metas |
+| `/dashboard/avaliacao/` | Central de avaliações (relatos da equipe) |
 | `/admin/` | Painel administrativo |
 
 ---
@@ -111,15 +116,13 @@ Senha de todos: `verdigis123`.
 | `consultor@demo.com` | Consultor da empresa, com permissão para criar metas |
 | `pendente@demo.com` | Funcionário com pedido de entrada pendente |
 
-Para rodar os testes: `python manage.py test`.
-
 ### Variáveis de ambiente
 
 | Variável | Obrigatória | Descrição |
 | --- | --- | --- |
 | `SECRET_KEY` | Sim | Chave secreta do Django |
-| `ENVIRONMENT` | Sim | `development` usa SQLite local; qualquer outro valor usa PostgreSQL |
-| `DATABASE_URL` | Em produção | URL de conexão do PostgreSQL |
+| `ENVIRONMENT` | Sim | `development` liga o modo de depuração e, sem `DATABASE_URL`, usa SQLite local |
+| `DATABASE_URL` | Em produção | URL de conexão do PostgreSQL. Quando definida, é usada em qualquer ambiente |
 | `DJANGO_SUPERUSER_EMAIL` e `DJANGO_SUPERUSER_PASSWORD` | Não | Criam o superusuário durante o build (o Render gratuito não tem shell) |
 | `CARREGAR_DEMO` | Não | `sim` carrega os dados de demonstração no build |
 
@@ -133,18 +136,22 @@ O deploy é feito no Render (plano gratuito). O script `build.sh` instala as dep
 
 Configure `SECRET_KEY`, `ENVIRONMENT` e `DATABASE_URL` como variáveis de ambiente do serviço e use `gunicorn verdigis.wsgi` como comando de inicialização.
 
+No plano gratuito o disco é apagado a cada deploy ou reinício (fotos de perfil enviadas se perdem e o avatar padrão volta a aparecer) e o serviço hiberna após 15 minutos sem acesso.
+
 ---
 
 ## Estrutura do repositório
 
 ```
 .
-├── verdigis/       
-├── forum/          
+├── verdigis/
+├── forum/
 ├── accounts/
 ├── dashboard/
-├── docs/           
-├── build.sh        
+├── templates/
+├── docs/
+├── ARQUITETURA.md
+├── build.sh
 ├── manage.py
 ├── .gitignore
 └── requirements.txt
