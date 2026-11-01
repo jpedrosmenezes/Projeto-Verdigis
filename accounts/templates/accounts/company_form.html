@@ -1,54 +1,46 @@
 {% extends "forum/base.html" %}
+{% load static %}
+{% comment %}
+  Triagem da empresa (accounts.views.onboarding_papel com papel='empresa'). Métodos: GET e POST.
+  URL: {% url 'accounts:onboarding_papel' 'empresa' %}
+  Contexto: form (CompanyForm) e niche_info (dict id do nicho -> orientações).
+  O CEP preenche o endereço via {% url 'accounts:buscar_cep' '00000000' %} (js/empresa_form.js).
+{% endcomment %}
 
-{% block title %}Completar informações - Verdigis{% endblock %}
+{% block title %}Cadastrar empresa - Verdigis{% endblock %}
 {% block fundo %}fundo-3{% endblock %}
 
 {% block content %}
 <div class="moldura-vidro">
 <section class="secao-form">
-    <h1>COMPLETAR INFORMAÇÕES</h1>
+    <div class="av-topo">
+        <a class="av-voltar" href="{% url 'accounts:onboarding' %}" aria-label="Voltar para a escolha do papel">
+            <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+        </a>
+    </div>
+    <h1>CADASTRAR EMPRESA</h1>
     <p>Você será o responsável por esta empresa na plataforma.</p>
 
-    <form method="post" action="{% url 'company_register' %}" class="form-contato">
+    <form method="post" action="{% url 'accounts:onboarding_papel' 'empresa' %}" class="form-contato"
+          data-url-cep="{% url 'accounts:buscar_cep' '00000000' %}">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
             <div class="alert alert-error" role="alert">
-                {% for error in form.non_field_errors %}
-                    <p>{{ error }}</p>
-                {% endfor %}
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
             </div>
         {% endif %}
 
         {% for field in form %}
             {% include 'accounts/_campo.html' with field=field %}
+            {% if field.name == 'niche' %}<p class="fm-dica" id="niche-dica" aria-live="polite"></p>{% endif %}
         {% endfor %}
 
         <button type="submit" class="btn-submit">Cadastrar empresa</button>
     </form>
 </section>
 </div>
-<script>
-    const campoCep = document.getElementById('id_cep');
-
-    campoCep.addEventListener('blur', function () {
-        const cep = campoCep.value.replace(/\D/g, '');
-        if (cep.length !== 8) {
-            return;
-        }
-        fetch("{% url 'buscar_cep' '00000000' %}".replace('00000000', cep))
-            .then(function (resposta) { return resposta.json(); })
-            .then(function (dados) {
-                if (dados.erro) {
-                    return;
-                }
-                document.getElementById('id_logradouro').value = dados.logradouro;
-                document.getElementById('id_bairro').value = dados.bairro;
-                document.getElementById('id_cidade').value = dados.cidade;
-                document.getElementById('id_uf').value = dados.uf;
-            });
-    });
-</script>
-{% load static %}
+{{ niche_info|json_script:"niche-info" }}
 <script src="{% static 'js/masks.js' %}"></script>
+<script src="{% static 'js/empresa_form.js' %}"></script>
 {% endblock %}

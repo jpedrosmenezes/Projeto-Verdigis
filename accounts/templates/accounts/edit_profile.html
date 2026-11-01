@@ -1,14 +1,30 @@
 {% extends "forum/base.html" %}
+{% load static %}
+{% comment %}
+  Edição de perfil (accounts.views.edit_profile). Métodos: GET e POST (multipart, por causa da foto).
+  URL: {% url 'accounts:edit_profile' %}
+  Contexto: form (EditProfileForm: nome, email, telefone, foto_perfil, bio, senha_atual),
+  company_form (só para o responsável, prefixo "empresa"), consultor_form (só consultor, prefixo "consultor")
+  e niche_info (orientações dos nichos, quando há company_form).
+  Trocar o e-mail exige a senha atual.
+{% endcomment %}
 
 {% block title %}Editar Perfil - Verdigis{% endblock %}
+{% block fundo %}fundo-2{% endblock %}
 
 {% block content %}
 <div class="moldura-vidro">
     <section class="secao-form">
+        <div class="av-topo">
+            <a class="av-voltar" href="{% url 'accounts:profile' %}" aria-label="Voltar para o perfil">
+                <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+            </a>
+        </div>
         <h1>EDITAR PERFIL</h1>
         <p>Atualize suas informações abaixo.</p>
 
-        <form method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data" class="form-contato">
+        <form method="post" action="{% url 'accounts:edit_profile' %}" enctype="multipart/form-data" class="form-contato"
+              data-url-cep="{% url 'accounts:buscar_cep' '00000000' %}">
             {% csrf_token %}
 
             {% if form.non_field_errors or company_form.non_field_errors %}
@@ -18,20 +34,31 @@
                 </div>
             {% endif %}
 
+            <h3>Seu perfil</h3>
+            {% for field in form %}
+                {% include 'accounts/_campo.html' with field=field %}
+            {% endfor %}
+
+            {% if consultor_form %}
+                <h3>Dados profissionais</h3>
+                {% for field in consultor_form %}
+                    {% include 'accounts/_campo.html' with field=field %}
+                {% endfor %}
+            {% endif %}
+
             {% if company_form %}
                 <h3>Dados da empresa</h3>
                 {% for field in company_form %}
                     {% include 'accounts/_campo.html' with field=field %}
+                    {% if field.name == 'niche' %}<p class="fm-dica" id="niche-dica" aria-live="polite"></p>{% endif %}
                 {% endfor %}
-                <h3>Seu perfil</h3>
             {% endif %}
-
-            {% for field in form %}
-                {% include 'accounts/_campo.html' with field=field %}
-            {% endfor %}
 
             <button class="btn-submit" type="submit">Salvar</button>
         </form>
     </section>
 </div>
+{% if niche_info %}{{ niche_info|json_script:"niche-info" }}{% endif %}
+<script src="{% static 'js/masks.js' %}"></script>
+<script src="{% static 'js/empresa_form.js' %}"></script>
 {% endblock %}

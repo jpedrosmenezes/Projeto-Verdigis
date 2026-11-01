@@ -1,0 +1,40 @@
+{% extends "forum/base.html" %}
+{% comment %}
+  Triagem (accounts.views.onboarding). Método: GET.
+  URL: {% url 'accounts:onboarding' %}
+  Obrigatória para quem ainda não tem papel (TriagemObrigatoriaMiddleware).
+  Cada cartão leva a {% url 'accounts:onboarding_papel' 'empresa' %} (ou funcionario, consultor).
+{% endcomment %}
+
+{% block title %}Como você vai usar a Verdigis - Verdigis{% endblock %}
+{% block fundo %}fundo-3{% endblock %}
+
+{% block content %}
+<div class="moldura-vidro">
+<section class="secao-form">
+    <h1>COMO VOCÊ VAI USAR A VERDIGIS?</h1>
+    <p>Escolha a opção que descreve você. Essa escolha não pode ser trocada depois.</p>
+
+    <div class="seletor-tipo bloco-tipo eq-papeis" role="list">
+        <a class="seletor-opcao eq-papel" role="listitem" href="{% url 'accounts:onboarding_papel' 'empresa' %}">
+            <span class="eq-papel__nome">Empresa</span>
+            <span class="eq-papel__texto">Sou responsável por uma farmácia, distribuidora ou indústria e quero cadastrá-la.</span>
+        </a>
+        <a class="seletor-opcao eq-papel" role="listitem" href="{% url 'accounts:onboarding_papel' 'funcionario' %}">
+            <span class="eq-papel__nome">Funcionário</span>
+            <span class="eq-papel__texto">Trabalho em uma empresa já cadastrada e vou entrar com o código que ela me passou.</span>
+        </a>
+        <a class="seletor-opcao eq-papel" role="listitem" href="{% url 'accounts:onboarding_papel' 'consultor' %}">
+            <span class="eq-papel__nome">Consultor</span>
+            <span class="eq-papel__texto">Acompanho uma ou mais empresas como especialista externo.</span>
+        </a>
+    </div>
+
+    <p class="auth-switch">Mudou de ideia? <a href="{% url 'accounts:delete' %}">Excluir minha conta</a></p>
+    <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-submit btn-logout">Sair</button>
+    </form>
+</section>
+</div>
+{% endblock %}

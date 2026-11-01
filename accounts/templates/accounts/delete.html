@@ -1,17 +1,10 @@
-
 {% extends "forum/base.html" %}
 {% comment %}
-  Exclusão de conta (accounts.views.delete) - frontend a ser implementado.
-  Exige usuário logado (anônimos são redirecionados para o login).
-
-  URL: {% url 'delete' %}  |  Métodos: GET (confirmação) e POST (exclui)
-  Contexto: form (DeleteAccountForm) com o campo password (senha atual)
-
-  O formulário precisa de {% csrf_token %} e deve enviar POST para a mesma URL. ✓ 
-  Senha incorreta: form.password.errors. Sucesso: conta apagada + logout + redirect. ✓ 
-
-  Logout (accounts.views.logout) não tem página: aceita somente POST em
-  {% url 'logout' %} (um <form method="post"> com {% csrf_token %}, ex.: botão "Sair"). ✓ 
+  Exclusão de conta (accounts.views.delete). Métodos: GET (confirmação) e POST (exclui).
+  URL: {% url 'accounts:delete' %}
+  Contexto: form (ConfirmarSenhaForm: password e, para o responsável, codigo da empresa),
+  company (empresa do responsável ou None) e vinculos (empresas de que a pessoa faz parte).
+  Responsável: a empresa é apagada antes da conta. Funcionário e consultor: as empresas são avisadas.
 {% endcomment %}
 
 {% block title %}Excluir conta - Verdigis{% endblock %}
@@ -22,28 +15,26 @@
     <h1>EXCLUIR CONTA</h1>
     <p>Tem certeza que deseja excluir sua conta? Esta ação é definitiva e não pode ser desfeita.</p>
 
-    <form method="post" action="{% url 'delete' %}" class="form-contato">
-        {% csrf_token %}
+    {% if company %}
+      <div class="alert alert-warning" role="alert">
+        Você é o responsável por <b>{{ company.nome_fantasia }}</b>. A empresa será apagada junto com a conta,
+        com toda a equipe, as metas e os relatos. As contas dos membros da equipe continuam existindo.
+      </div>
+    {% elif vinculos %}
+      <div class="alert alert-warning" role="alert">
+        Você sairá de: {% for v in vinculos %}{{ v.company.nome_fantasia }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+        As empresas serão avisadas.
+      </div>
+    {% endif %}
 
-      <div class="form-group">
-  <label for="id_password" style="display: block; margin-bottom: 0.4rem; color: #5a6e2a; font-weight: bold;">Confirme sua senha</label>
-  <input 
-    type="password" 
-    name="password" 
-    id="id_password" 
-    placeholder="Digite sua senha"
-    style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;" 
-    required
-  >
-  {% for error in form.password.errors %}
-    <p class="field-error">{{ error }}</p>
-  {% endfor %}
-</div>
-
-      <button class="btn btn-danger" type="submit" style="width: 100%; padding: 0.75rem; border-radius: 8px; margin-top: 1.5rem; font-weight: bold;">
-  Excluir conta
-</button>
+    <form method="post" action="{% url 'accounts:delete' %}" class="form-contato">
+      {% csrf_token %}
+      {% for field in form %}
+        {% include 'accounts/_campo.html' with field=field %}
+      {% endfor %}
+      <button class="btn-submit btn-excluir" type="submit">Excluir conta</button>
     </form>
+    <p class="auth-switch"><a href="{% url 'dashboard:dashboard' %}">Voltar</a></p>
   </section>
 </div>
 {% endblock %}
