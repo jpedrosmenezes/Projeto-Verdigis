@@ -1,9 +1,12 @@
 {% extends "forum/base.html" %}
+{% load static %}
 
 {% comment %}
-  Edição de meta (view editar_meta_view). Exige login; meta de outro usuário dá 404.
+  Edição de meta (view editar_meta_view). Meta de outra empresa dá 404; sem permissão (meta.editar) dá 403.
   Métodos: GET (formulário preenchido) e POST (salva e volta para a lista).
-  Contexto: form (FormsMetas) e meta. Use {% csrf_token %} e envie para {% url 'dashboard:editar_meta' meta.id %}.
+  URL: {% url 'dashboard:editar_meta' meta.id %}
+  Contexto: form (FormsMetas para Empresa/consultor, FormMetaFuncionario para o funcionário) e meta.
+  Meta "sem responsável" é reatribuída escolhendo outro funcionário aqui.
 {% endcomment %}
 
 {% block title %}Editar meta - Verdigis{% endblock %}
@@ -12,10 +15,17 @@
 {% block head %}<h1 class="dash-banner">EDITAR META</h1>{% endblock head %}
 
 {% block content %}
-
-<div class="moldura-vidro" style="margin-top: 2.5rem;">
+<div class="moldura-vidro eq-moldura-topo">
   <section class="secao-form">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:fabrica_metas' %}" aria-label="Voltar para a Fábrica de Metas">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
     <h2>{{ meta.nome }}</h2>
+    {% if meta.sem_responsavel %}
+      <p class="alert alert-warning">Esta meta está sem responsável. Escolha um funcionário para reatribuí-la.</p>
+    {% endif %}
 
     <form method="post" action="{% url 'dashboard:editar_meta' meta.id %}" class="form-contato" id="form-editar-meta">
       {% csrf_token %}
@@ -24,15 +34,14 @@
         <div class="alert alert-error" role="alert">{{ form.non_field_errors }}</div>
       {% endif %}
 
-      <!-- Corrigido para 'pilar_esg' (alinhado com o FormsMetas e fabrica_metas.html) -->
       <div class="fm-esg" role="radiogroup" aria-label="Pilar ESG">
-        <input type="radio" name="pilar_esg" id="esg-E" value="E" required {% if form.pilar_esg.value == 'E' or form.instance.pilar_esg == 'E' %}checked{% endif %}>
+        <input type="radio" name="pilar_esg" id="esg-E" value="E" required {% if form.pilar_esg.value == 'E' %}checked{% endif %}>
         <label for="esg-E" title="Ambiental">E</label>
 
-        <input type="radio" name="pilar_esg" id="esg-S" value="S" {% if form.pilar_esg.value == 'S' or form.instance.pilar_esg == 'S' %}checked{% endif %}>
+        <input type="radio" name="pilar_esg" id="esg-S" value="S" {% if form.pilar_esg.value == 'S' %}checked{% endif %}>
         <label for="esg-S" title="Social">S</label>
 
-        <input type="radio" name="pilar_esg" id="esg-G" value="G" {% if form.pilar_esg.value == 'G' or form.instance.pilar_esg == 'G' %}checked{% endif %}>
+        <input type="radio" name="pilar_esg" id="esg-G" value="G" {% if form.pilar_esg.value == 'G' %}checked{% endif %}>
         <label for="esg-G" title="Governança">G</label>
       </div>
       {% for erro in form.pilar_esg.errors %}
@@ -41,11 +50,9 @@
 
       {% for campo in form %}
         {% if campo.name != 'pilar_esg' %}
-          <div class="form-group" {% if campo.name == 'funcionario' %}id="campo-funcionario-container"{% endif %}>
-            <label for="{{ campo.id_for_label }}" class="form-label">{{ campo.label }}</label>
-            <div class="input-wrapper">
-              {{ campo }}
-            </div>
+          <div class="form-group"{% if campo.name == 'funcionario' %} id="campo-funcionario-container"{% endif %}>
+            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+            {{ campo }}
             {% for erro in campo.errors %}
               <div class="alert alert-error" role="alert">{{ erro }}</div>
             {% endfor %}
@@ -53,42 +60,12 @@
         {% endif %}
       {% endfor %}
 
-
       <div class="fm-modal__acoes">
         <button type="submit">Salvar alterações</button>
-        <button type="button" class="fm-cancelar" onclick="location.href='{% url 'dashboard:fabrica_metas' %}'">Cancelar</button>
+        <a class="fm-cancelar eq-link-botao" href="{% url 'dashboard:fabrica_metas' %}">Cancelar</a>
       </div>
     </form>
   </section>
 </div>
-
-<!-- JavaScript idêntico para garantir a alternância de visibilidade e limpeza no formulário de edição -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const selectTipo = document.getElementById('id_tipo') || document.querySelector('select[name="tipo"]');
-    const containerFuncionario = document.getElementById('campo-funcionario-container');
-    const selectFuncionario = containerFuncionario ? containerFuncionario.querySelector('select') : null;
-
-    function alternarExibicaoFuncionario() {
-      if (!selectTipo || !containerFuncionario) return;
-
-      if (selectTipo.value === 'INDIVIDUAL') {
-        containerFuncionario.style.display = 'block'; // Garante exibição em bloco abaixo do label
-        if (selectFuncionario) selectFuncionario.required = true;
-      } else {
-        containerFuncionario.style.display = 'none';
-        if (selectFuncionario) {
-          selectFuncionario.required = false;
-          selectFuncionario.value = '';
-        }
-      }
-    }
-
-    if (selectTipo) {
-      selectTipo.addEventListener('change', alternarExibicaoFuncionario);
-      // Executa na carga inicial da página com os dados já preenchidos
-      alternarExibicaoFuncionario();
-    }
-  });
-</script>
+<script src="{% static 'js/metas.js' %}"></script>
 {% endblock %}

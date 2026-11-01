@@ -2,14 +2,14 @@
 {% load static %}
 
 {% comment %}
-  Fábrica de metas (view fabrica_metas_view). Exige login. Métodos: GET e POST (cria meta).
-  Contexto: form (FormsMetas), metas (metas do usuário logado, pendentes primeiro)
-  e hoje (date, usado para marcar metas atrasadas).
-  Todo formulário POST precisa de {% csrf_token %}.
-  Por meta: editar (GET) em {% url 'dashboard:editar_meta' meta.id %};
-  concluir/reabrir e excluir são somente POST em
-  {% url 'dashboard:alternar_conclusao' meta.id %} e {% url 'dashboard:deletar_meta' meta.id %}.
-  A criação de meta acontece num <dialog> aberto pelo botão "+".
+  Fábrica de metas (view fabrica_metas_view). Exige empresa no contexto. Métodos: GET e POST (cria meta).
+  URL: {% url 'dashboard:fabrica_metas' %}?colaborador=<id do vínculo>|sem
+  Contexto: metas (visíveis ao papel, pendentes primeiro; cada uma com pode_editar, pode_concluir
+  e pode_apagar), form (FormsMetas, FormMetaFuncionario ou None se não pode criar), hoje,
+  colaboradores (funcionários para o filtro; None para o funcionário), colaborador_atual e eh_funcionario.
+  Por meta: editar (GET) em {% url 'dashboard:editar_meta' 0 %};
+  concluir/reabrir e excluir são POST em {% url 'dashboard:alternar_conclusao' 0 %} e {% url 'dashboard:deletar_meta' 0 %}.
+  A criação de meta acontece num <dialog> aberto pelo botão "+" (js/metas.js).
 {% endcomment %}
 
 {% block title %}Fábrica de Metas - Verdigis{% endblock %}
@@ -25,7 +25,21 @@
           <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
         </a>
       </div>
-    <!-- Lista de metas -->
+
+    {% if colaboradores is not None %}
+      <form method="get" class="eq-filtro" action="{% url 'dashboard:fabrica_metas' %}">
+        <label for="id_colaborador">Filtrar por colaborador</label>
+        <select name="colaborador" id="id_colaborador" data-enviar-ao-mudar>
+          <option value="">Todas as metas</option>
+          {% for v in colaboradores %}
+            <option value="{{ v.id }}"{% if colaborador_atual == v.id|stringformat:"s" %} selected{% endif %}>{{ v.user.nome }}</option>
+          {% endfor %}
+          <option value="sem"{% if colaborador_atual == 'sem' %} selected{% endif %}>Sem responsável</option>
+        </select>
+        <button type="submit" class="eq-botao-pequeno">Filtrar</button>
+      </form>
+    {% endif %}
+
     <div class="fm-lista">
       {% for meta in metas %}
         <article class="fm-card fm-card--{{ meta.prioridade|lower }}{% if meta.completo %} fm-card--concluida{% endif %}">
@@ -36,12 +50,14 @@
               <span class="fm-badge" title="{{ meta.get_pilar_esg_display }}">{{ meta.pilar_esg }}</span>
               <span class="fm-tag"><b>Prazo:</b> {{ meta.deadline|date:"d/m/Y" }}</span>
               <span class="fm-tag"><b>Prioridade:</b> {{ meta.get_prioridade_display|lower }}</span>
-              
-              <!-- Badges para Tipo e Funcionário -->
               <span class="fm-tag"><strong>{{ meta.get_tipo_display }}</strong></span>
 
-              {% if meta.tipo == 'INDIVIDUAL' and meta.funcionario %}
-                <span class="fm-tag fm-tag--user"> {{ meta.funcionario.user.get_full_name|default:meta.funcionario.user.username }}</span>
+              {% if meta.tipo == 'INDIVIDUAL' %}
+                {% if meta.funcionario %}
+                  <span class="fm-tag fm-tag--user">{{ meta.funcionario.user.nome }}</span>
+                {% elif not eh_funcionario %}
+                  <span class="fm-tag fm-tag--atraso">Sem responsável</span>
+                {% endif %}
               {% endif %}
 
               {% if meta.completo %}
@@ -58,51 +74,58 @@
             {% endfor %}
           </div>
 
+          {% if meta.pode_editar or meta.pode_concluir or meta.pode_apagar %}
           <details class="fm-menu">
             <summary>Editar</summary>
             <div class="fm-menu__opcoes">
-              <a href="{% url 'dashboard:editar_meta' meta.id %}">Editar meta</a>
+              {% if meta.pode_editar %}
+                <a href="{% url 'dashboard:editar_meta' meta.id %}">{% if meta.sem_responsavel %}Editar e reatribuir{% else %}Editar meta{% endif %}</a>
+              {% endif %}
 
-              <form method="post" action="{% url 'dashboard:alternar_conclusao' meta.id %}">
-                {% csrf_token %}
-                <button type="submit">{% if meta.completo %}Reabrir meta{% else %}Concluir meta{% endif %}</button>
-              </form>
+              {% if meta.pode_concluir %}
+                <form method="post" action="{% url 'dashboard:alternar_conclusao' meta.id %}">
+                  {% csrf_token %}
+                  <button type="submit">{% if meta.completo %}Reabrir meta{% else %}Concluir meta{% endif %}</button>
+                </form>
+              {% endif %}
 
-              <form method="post" action="{% url 'dashboard:deletar_meta' meta.id %}"
-                    onsubmit="return confirm('Excluir a meta &quot;{{ meta.nome|escapejs }}&quot;?');">
-                {% csrf_token %}
-                <button type="submit" class="btn-excluir">Excluir meta</button>
-              </form>
+              {% if meta.pode_apagar %}
+                <form method="post" action="{% url 'dashboard:deletar_meta' meta.id %}" data-confirmar="Excluir a meta &quot;{{ meta.nome }}&quot;?">
+                  {% csrf_token %}
+                  <button type="submit" class="btn-excluir">Excluir meta</button>
+                </form>
+              {% endif %}
             </div>
           </details>
+          {% endif %}
         </article>
       {% empty %}
-        <p class="fm-vazio">Nenhuma meta cadastrada até o momento. Clique no + para começar.</p>
+        <p class="fm-vazio">Nenhuma meta cadastrada até o momento.{% if form %} Clique no + para começar.{% endif %}</p>
       {% endfor %}
     </div>
 
-    <!-- Botão de nova meta -->
+    {% if form %}
     <div class="fm-nova">
-      <button type="button" class="fm-mais" onclick="document.getElementById('modal-meta').showModal()">
+      <button type="button" class="fm-mais" data-abrir-modal="modal-meta">
         <span class="fm-mais__sinal">+</span>
         <span class="fm-mais__texto">Adicione uma nova meta</span>
       </button>
     </div>
+    {% endif %}
   </section>
 </div>
 
-<!-- Janela: criar nova meta -->
-<dialog id="modal-meta" class="fm-modal" onclick="if (event.target === this) this.close()">
+{% if form %}
+<dialog id="modal-meta" class="fm-modal"{% if form.errors %} data-abrir{% endif %}>
   <h2 class="fm-modal__topo">Adicione:</h2>
 
-  <form method="post" class="fm-modal__corpo" id="form-meta">
+  <form method="post" class="fm-modal__corpo" id="form-meta" action="{% url 'dashboard:fabrica_metas' %}">
     {% csrf_token %}
 
     {% if form.non_field_errors %}
       <div class="alert alert-error" role="alert">{{ form.non_field_errors }}</div>
     {% endif %}
 
-    <!-- Seleção exclusiva pelos Botões ESG (campo 'pilar_esg') -->
     <div class="fm-esg" role="radiogroup" aria-label="Pilar ESG">
       <input type="radio" name="pilar_esg" id="esg-E" value="E" required {% if form.pilar_esg.value == 'E' %}checked{% endif %}>
       <label for="esg-E" title="Ambiental">E</label>
@@ -117,11 +140,13 @@
     {% for erro in form.pilar_esg.errors %}
       <div class="alert alert-error" role="alert">{{ erro }}</div>
     {% endfor %}
+    {% if eh_funcionario %}
+      <p class="fm-dica">A meta será individual e atribuída a você.</p>
+    {% endif %}
 
-    <!-- Renderização dos demais campos (oculta 'pilar_esg' para evitar duplicação) -->
     {% for campo in form %}
       {% if campo.name != 'pilar_esg' %}
-        <div class="form-group" {% if campo.name == 'funcionario' %}id="campo-funcionario-container"{% endif %}>
+        <div class="form-group"{% if campo.name == 'funcionario' %} id="campo-funcionario-container"{% endif %}>
           <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
           {{ campo }}
           {% for erro in campo.errors %}
@@ -133,57 +158,13 @@
 
     <div class="fm-modal__acoes">
       <button type="submit">Criar meta</button>
-      <button type="button" class="fm-cancelar" onclick="this.closest('dialog').close()">Cancelar</button>
+      <button type="button" class="fm-cancelar" data-fechar-modal>Cancelar</button>
     </div>
   </form>
 </dialog>
+{% endif %}
 
-<!-- JavaScript para exibição condicional do Funcionário -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const selectTipo = document.getElementById('id_tipo') || document.querySelector('select[name="tipo"]');
-    const containerFuncionario = document.getElementById('campo-funcionario-container');
-    const selectFuncionario = containerFuncionario ? containerFuncionario.querySelector('select') : null;
-    const formMeta = document.getElementById('form-meta');
-
-    function alternarExibicaoFuncionario() {
-      if (!selectTipo || !containerFuncionario) return;
-
-      if (selectTipo.value === 'INDIVIDUAL') {
-        containerFuncionario.style.display = 'block';
-        if (selectFuncionario) {
-          selectFuncionario.required = true;
-        }
-      } else {
-        containerFuncionario.style.display = 'none';
-        if (selectFuncionario) {
-          selectFuncionario.required = false;
-          selectFuncionario.value = ''; // Limpa o ID selecionado para não enviar valor residual no POST
-        }
-      }
-    }
-
-    if (selectTipo) {
-      selectTipo.addEventListener('change', alternarExibicaoFuncionario);
-      // Executa na carga inicial da página
-      alternarExibicaoFuncionario();
-    }
-
-    // Se o formulário for resetado, reavalia a visibilidade
-    if (formMeta) {
-      formMeta.addEventListener('reset', function() {
-        setTimeout(alternarExibicaoFuncionario, 10);
-      });
-    }
-
-    // Caso existam erros de validação retornados pelo Django, abre o modal e ajusta os campos
-    {% if form.errors %}
-      const modalMeta = document.getElementById('modal-meta');
-      if (modalMeta) {
-        modalMeta.showModal();
-        alternarExibicaoFuncionario();
-      }
-    {% endif %}
-  });
-</script>
+<script src="{% static 'js/metas.js' %}"></script>
+<script src="{% static 'js/confirmar.js' %}"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
