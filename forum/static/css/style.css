@@ -1232,3 +1232,292 @@ textarea::placeholder {
     opacity: 0.8;
     font-size: 0.8rem;
 }
+
+/* =====================================================================
+   Modelo 3D do dashboard (antes estava inline no dashboard.html)
+   ===================================================================== */
+.dash-folha {
+    width: 280px;
+    height: 320px;
+    background: transparent;
+    --poster-color: transparent;
+}
+@media (max-width: 800px) {
+    .dash-folha { width: 100%; height: 260px; }
+}
+
+
+/* =====================================================================
+   nt- Notificações: sino do menu e lista
+   ===================================================================== */
+.nt-sino {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.nt-sino__icone {
+    width: 26px;
+    height: 26px;
+}
+.nt-sino__contador {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    background: #c0281c;
+    color: #fff;
+    border-radius: 9px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+}
+.nt-painel { max-width: 640px; }
+.av-item.nt-item--nova { border-left: 6px solid var(--primary-color); }
+.nt-selo {
+    padding: 1px 8px;
+    background: var(--primary-color);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 0.7rem;
+}
+
+
+/* =====================================================================
+   eq- Equipe, vínculos, triagem e telas de conta
+   ===================================================================== */
+
+/* Triagem: três cartões de papel */
+.eq-papeis {
+    flex-direction: column;
+    gap: 0.6rem;
+}
+.secao-form .eq-papel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1rem 1.2rem;
+    background: #fff;
+    border: 2px solid transparent;
+    text-align: left;
+}
+.secao-form .eq-papel:hover,
+.secao-form .eq-papel:focus-visible {
+    border-color: var(--primary-color);
+    background: #fff;
+}
+.eq-papel__nome {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+.eq-papel__texto {
+    color: #444;
+    font-weight: 400;
+    font-size: 0.9rem;
+}
+
+/* Coluna principal do dashboard (menu + código da empresa) */
+.eq-coluna {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 320px;
+}
+.eq-sem-empresa { max-width: 380px; }
+.eq-sem-empresa .form-contato { margin-top: 0.5rem; }
+.eq-empresa-atual {
+    margin: 0;
+    color: var(--text-color);
+    font-weight: 700;
+}
+.eq-contexto {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.eq-contexto label { font-weight: 600; color: var(--primary-color); }
+.eq-contexto select,
+.eq-filtro select {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: inherit;
+    color: var(--text-color);
+}
+
+/* Cartão do código da empresa */
+.eq-codigo {
+    padding: 14px 16px;
+    background: var(--secondary-color);
+    border-radius: 18px;
+    text-align: center;
+}
+.eq-codigo__rotulo {
+    margin: 0;
+    color: #444;
+    font-size: 0.8rem;
+}
+.eq-codigo__valor {
+    margin: 4px 0 8px;
+    color: var(--text-color);
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-family: "helvetica-neue-lt-pro-cond", monospace;
+}
+.eq-codigo__dica {
+    margin: 8px 0 0;
+    color: #444;
+    font-size: 0.72rem;
+}
+
+/* Botões pequenos e links com cara de botão */
+.eq-botao-pequeno {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+}
+.eq-link-botao {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+.secao-form .eq-link-botao,
+.profile-card .eq-link-botao { color: #fff; }
+.eq-botoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+.eq-botoes .btn-submit-2 { margin-left: 0; }
+.eq-botoes form { margin: 0; }
+.eq-botao-claro {
+    display: inline-flex;
+    height: auto;
+    padding: 10px 16px;
+}
+.eq-centro { text-align: center; margin: 16px 0 0; }
+
+/* Abas da tela Equipe (reaproveitam o visual dos temas da Central) */
+.eq-abas {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.av-tema__titulo.eq-aba--ativa {
+    background: var(--text-color);
+    outline: 3px solid #fff;
+    box-shadow: 0 0 0 5px var(--text-color);
+}
+.eq-aba-ocultos { background: var(--text-color); }
+
+/* Itens da equipe com botões */
+.eq-item { grid-template-columns: 1fr; }
+.eq-item__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+.eq-form-acao { margin: 14px 16px 0; }
+.eq-form-acao button { width: 100%; }
+.av-item__seta.eq-botao-pequeno,
+form.av-item__seta { font-size: 0.8rem; }
+
+/* Lista de vínculos e consultores */
+.eq-lista, .eq-consultores { flex: 1; }
+.eq-consultores .fm-dica { margin: 0 0 16px; }
+.eq-subtitulo {
+    margin: 4px 0 0;
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+.eq-acoes {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: #333;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* Painel de permissões do consultor */
+.eq-permissoes fieldset {
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    border: 1px solid #d9d9d6;
+    border-radius: 12px;
+}
+.eq-permissoes legend {
+    padding: 0 6px;
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+.eq-switch {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.eq-switch input { width: 18px; height: 18px; accent-color: var(--primary-color); }
+.eq-switch label { color: #222; font-size: 0.85rem; font-weight: 600; }
+.eq-switch small { grid-column: 2; color: #555; font-size: 0.72rem; }
+
+/* Filtro por colaborador na Fábrica de Metas */
+.eq-filtro {
+    flex: 0 0 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.eq-filtro label { font-weight: 600; color: var(--primary-color); }
+
+/* Telas de formulário logo abaixo do banner */
+.eq-moldura-topo { margin-top: 2.5rem; }
+
+/* Checkbox com texto longo (anonimato) */
+.form-group .eq-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: #333;
+    font-weight: 400;
+}
+.form-group .eq-checkbox input { margin-top: 3px; }
+
+/* Moderação de relatos */
+.eq-moderacao {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #d0d0cc;
+    color: #444;
+    font-size: 0.85rem;
+    text-align: center;
+}
+.eq-form-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.eq-form-linha input {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+@media (max-width: 640px) {
+    .eq-coluna, .eq-sem-empresa { max-width: none; width: 100%; }
+    .fm-corpo > .eq-filtro { order: 1; }
+    .av-detalhe { padding: 2rem 1.2rem; }
+}
