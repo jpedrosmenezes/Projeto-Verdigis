@@ -1,0 +1,135 @@
+{% extends "forum/base.html" %}
+{% load static %}
+{% load formats %}
+
+{% comment %}
+  Equipe da empresa (dashboard.views.equipe). Método: GET. Só a Empresa (equipe.gerir).
+  URL: {% url 'dashboard:equipe' %}?aba=pendentes|funcionarios|consultores
+  Contexto: company, aba, pendentes (SolicitacaoVinculo), funcionarios e consultores (Vinculo).
+  Cada consultor traz capacidades_ui (valor, rotulo, descricao, ligada) e resumo_capacidades.
+  Aceitar/recusar: POST em {% url 'dashboard:responder_solicitacao' 0 %} com acao=aceitar|recusar.
+  Remover membro: POST em {% url 'dashboard:remover_membro' 0 %}.
+  Permissões do consultor: POST em {% url 'dashboard:salvar_capacidades' 0 %} com a lista "capacidades".
+{% endcomment %}
+
+{% block title %}Equipe - Verdigis{% endblock %}
+{% block fundo %}fundo-6{% endblock %}
+
+{% block head %}<h1 class="dash-banner">EQUIPE</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="dash-corpo av-corpo">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+
+    <div class="av-temas">
+      <div class="eq-codigo">
+        <p class="eq-codigo__rotulo">Código da empresa</p>
+        <p class="eq-codigo__valor">{{ company.codigo_formatado }}</p>
+        <button type="button" class="eq-botao-pequeno" data-copiar="{{ company.codigo_formatado }}">Copiar</button>
+      </div>
+      <nav class="eq-abas" aria-label="Seções da equipe">
+        <a class="av-tema__titulo{% if aba == 'pendentes' %} eq-aba--ativa{% endif %}" href="?aba=pendentes"{% if aba == 'pendentes' %} aria-current="page"{% endif %}>Pendentes ({{ pendentes|length }})</a>
+        <a class="av-tema__titulo{% if aba == 'funcionarios' %} eq-aba--ativa{% endif %}" href="?aba=funcionarios"{% if aba == 'funcionarios' %} aria-current="page"{% endif %}>Funcionários ({{ funcionarios|length }})</a>
+        <a class="av-tema__titulo{% if aba == 'consultores' %} eq-aba--ativa{% endif %}" href="?aba=consultores"{% if aba == 'consultores' %} aria-current="page"{% endif %}>Consultores ({{ consultores|length }})</a>
+      </nav>
+    </div>
+
+    {% if aba == 'pendentes' %}
+      <div class="av-painel av-painel--neutro">
+        <h2 class="av-painel__titulo">Pedidos para entrar na equipe</h2>
+        <div class="av-painel__corpo">
+          <div class="av-itens">
+            {% for pedido in pendentes %}
+              <div class="av-item eq-item">
+                <span class="av-item__autor">{{ pedido.solicitante.nome }} · {{ pedido.solicitante.get_papel_display }}</span>
+                <span class="av-item__texto">{{ pedido.cargo }} · {{ pedido.setor }} · {{ pedido.solicitante.email }}</span>
+                {% if pedido.mensagem %}<span class="av-item__texto">“{{ pedido.mensagem }}”</span>{% endif %}
+                <span class="av-item__texto">Enviado em {{ pedido.criada_em|date:"d/m/Y H:i" }}</span>
+                <form method="post" action="{% url 'dashboard:responder_solicitacao' pedido.id %}" class="eq-item__acoes">
+                  {% csrf_token %}
+                  <button type="submit" name="acao" value="aceitar" class="eq-botao-pequeno">Aceitar</button>
+                  <button type="submit" name="acao" value="recusar" class="eq-botao-pequeno btn-excluir">Recusar</button>
+                </form>
+              </div>
+            {% empty %}
+              <p class="av-vazio">Nenhum pedido pendente.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+    {% elif aba == 'funcionarios' %}
+      <div class="av-painel av-painel--positivo">
+        <h2 class="av-painel__titulo">Funcionários de {{ company.nome_fantasia }}</h2>
+        <div class="av-painel__corpo">
+          <div class="av-itens">
+            {% for v in funcionarios %}
+              <div class="av-item eq-item">
+                <span class="av-item__autor">{{ v.user.nome }}</span>
+                <span class="av-item__texto">{{ v.cargo }} · {{ v.setor }} · {{ v.user.email }}</span>
+                <span class="av-item__texto">{% if v.user.telefone %}{{ v.user.telefone|telefone_br }} · {% endif %}Desde {{ v.criado_em|date:"d/m/Y" }}</span>
+                <form method="post" action="{% url 'dashboard:remover_membro' v.id %}" class="eq-item__acoes" data-confirmar="Remover {{ v.user.nome }} da equipe? As metas individuais dele ficarão sem responsável.">
+                  {% csrf_token %}
+                  <button type="submit" class="eq-botao-pequeno btn-excluir">Remover</button>
+                </form>
+              </div>
+            {% empty %}
+              <p class="av-vazio">Nenhum funcionário na equipe ainda. Passe o código da empresa para eles.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+    {% else %}
+      <div class="eq-consultores">
+        <p class="fm-dica">Sem nenhuma opção ligada, o consultor só observa.</p>
+        <div class="fm-lista">
+          {% for v in consultores %}
+            <article class="fm-card fm-card--baixa">
+              <h2 class="fm-card__titulo">{{ v.user.nome }}</h2>
+              <div class="fm-card__corpo">
+                <div class="fm-card__tags">
+                  <span class="fm-tag"><b>{{ v.cargo }}</b> · {{ v.setor }}</span>
+                  <span class="fm-tag">{{ v.user.email }}</span>
+                  {% if v.resumo_capacidades %}
+                    <span class="fm-tag fm-tag--ok">Pode: {{ v.resumo_capacidades }}</span>
+                  {% else %}
+                    <span class="fm-tag">Observador</span>
+                  {% endif %}
+                </div>
+                <form method="post" action="{% url 'dashboard:salvar_capacidades' v.id %}" class="eq-permissoes">
+                  {% csrf_token %}
+                  <fieldset>
+                    <legend>Permissões</legend>
+                    {% for c in v.capacidades_ui %}
+                      <div class="eq-switch">
+                        <input type="checkbox" role="switch" name="capacidades" value="{{ c.valor }}" id="cap-{{ v.id }}-{{ c.valor }}"{% if c.ligada %} checked{% endif %} aria-describedby="cap-{{ v.id }}-{{ c.valor }}-desc">
+                        <label for="cap-{{ v.id }}-{{ c.valor }}">{{ c.rotulo }}</label>
+                        <small id="cap-{{ v.id }}-{{ c.valor }}-desc">{{ c.descricao }}</small>
+                      </div>
+                    {% endfor %}
+                  </fieldset>
+                  <button type="submit" class="eq-botao-pequeno">Salvar permissões</button>
+                </form>
+              </div>
+              <form method="post" action="{% url 'dashboard:remover_membro' v.id %}" class="eq-form-acao" data-confirmar="Remover {{ v.user.nome }} dos consultores da empresa?">
+                {% csrf_token %}
+                <button type="submit" class="btn-excluir">Remover consultor</button>
+              </form>
+            </article>
+          {% empty %}
+            <p class="fm-vazio">Nenhum consultor vinculado.</p>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </section>
+</div>
+<script src="{% static 'js/copiar.js' %}"></script>
+<script src="{% static 'js/confirmar.js' %}"></script>
+{% endblock %}

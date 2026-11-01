@@ -1,14 +1,15 @@
 {% extends "forum/base.html" %}
 {% load static %}
+{% load permissoes %}
 
 {% comment %}
-  Dashboard (dashboard.views.home).
-  Exige usuário logado (anônimos são redirecionados para o login).
-
-  URL: {% url 'dashboard:dashboard' %}  |  Método: GET
-  Contexto: nenhum contexto extra (a view home não envia variáveis).
-  O objeto `user` já está disponível em todos os templates.
-  Destino padrão após login e cadastro (settings.LOGIN_REDIRECT_URL).
+  Dashboard (dashboard.views.home). Método: GET. Exige login e papel definido (triagem).
+  URL: {% url 'dashboard:dashboard' %}
+  Contexto: metas_atrasadas e metas_concluidas (metas visíveis ao usuário),
+  pedidos_pendentes (Empresa), vinculos_consultor (consultor, para o seletor de empresa),
+  form_entrar e pedidos_enviados (funcionário/consultor sem empresa).
+  Os botões do menu aparecem conforme pode(); request.empresa é a empresa em que o usuário atua.
+  Seletor do consultor: POST em {% url 'dashboard:contexto' %} com o campo company.
 {% endcomment %}
 
 {% block title %}Dashboard - Verdigis{% endblock %}
@@ -20,32 +21,82 @@
  <script type="module"
    src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 
- <style>
-   .dash-folha {
-     width: 280px;
-     height: 320px;
-     background: transparent;
-     --poster-color: transparent;
-   }
-   @media (max-width: 800px) {
-     .dash-folha { width: 100%; height: 260px; }
-   }
- </style>
-
  <div class="moldura-vidro">
   <section class="dash-corpo">
-    <nav class="dash-menu" aria-label="Menu principal">
-      {% if user.FUNCIONARIO %}
-        <a class="dash-botao" href='{% url 'dashboard:adicionar_avaliacao' %}'>Adicione uma nova avaliação</a>
-      {% else %}
-        <a class="dash-botao" href="{% url 'dashboard:dashboard_social' %}">Central de Avaliações</a>
-        <a class="dash-botao" href="{% url 'dashboard:funcionarios' %}">Funcionários</a>
-      {% endif %}
-      <a class="dash-botao" href="{% url 'dashboard:fabrica_metas' %}">Fábrica de metas</a>
-      <a class="dash-botao" href="#">Diagnóstico de compatibilidade</a>
-      <a class="dash-botao" href="#">Práticas da empresa</a>
-      <a class="dash-botao" href="#">Quadro de tarefas</a>
-    </nav>
+    {% if request.empresa %}
+      {% pode 'relato.ver_todos' as pode_ver_relatos %}
+      {% pode 'relato.enviar' as pode_enviar_relato %}
+      {% pode 'equipe.gerir' as pode_gerir_equipe %}
+      {% pode 'meta.ver' as pode_ver_metas %}
+      <div class="eq-coluna">
+        {% if vinculos_consultor|length > 1 %}
+          <form method="post" action="{% url 'dashboard:contexto' %}" class="eq-contexto">
+            {% csrf_token %}
+            <label for="id_company_ativa">Atuando em</label>
+            <select name="company" id="id_company_ativa" data-enviar-ao-mudar>
+              {% for v in vinculos_consultor %}
+                <option value="{{ v.company_id }}"{% if v.company_id == request.empresa.pk %} selected{% endif %}>{{ v.company.nome_fantasia }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="eq-botao-pequeno">Trocar</button>
+          </form>
+        {% else %}
+          <p class="eq-empresa-atual">{{ request.empresa.nome_fantasia }}</p>
+        {% endif %}
+
+        <nav class="dash-menu" aria-label="Menu principal">
+          {% if pode_ver_relatos %}
+            <a class="dash-botao" href="{% url 'dashboard:dashboard_social' %}">Central de Avaliações</a>
+          {% endif %}
+          {% if pode_enviar_relato %}
+            <a class="dash-botao" href="{% url 'dashboard:adicionar_avaliacao' %}">Adicione uma nova avaliação</a>
+            {% if not pode_ver_relatos %}
+              <a class="dash-botao" href="{% url 'dashboard:meus_relatos' %}">Meus relatos</a>
+            {% endif %}
+          {% endif %}
+          {% if pode_gerir_equipe %}
+            <a class="dash-botao" href="{% url 'dashboard:equipe' %}">Equipe{% if pedidos_pendentes %} ({{ pedidos_pendentes }}){% endif %}</a>
+          {% endif %}
+          {% if pode_ver_metas %}
+            <a class="dash-botao" href="{% url 'dashboard:fabrica_metas' %}">Fábrica de metas</a>
+          {% endif %}
+          {% if user.papel != 'EMPRESA' %}
+            <a class="dash-botao" href="{% url 'accounts:meus_vinculos' %}">Meus vínculos</a>
+          {% endif %}
+          {% if user.papel == 'EMPRESA' %}
+            <a class="dash-botao" href="#">Diagnóstico de compatibilidade</a>
+            <a class="dash-botao" href="#">Práticas da empresa</a>
+            <a class="dash-botao" href="#">Quadro de tarefas</a>
+          {% endif %}
+        </nav>
+
+        {% if user.papel == 'EMPRESA' %}
+          <div class="eq-codigo">
+            <p class="eq-codigo__rotulo">Código da empresa</p>
+            <p class="eq-codigo__valor">{{ request.empresa.codigo_formatado }}</p>
+            <button type="button" class="eq-botao-pequeno" data-copiar="{{ request.empresa.codigo_formatado }}">Copiar</button>
+            <p class="eq-codigo__dica">Passe este código para funcionários e consultores pedirem para entrar.</p>
+          </div>
+        {% endif %}
+      </div>
+    {% elif form_entrar %}
+      <div class="eq-coluna eq-sem-empresa">
+        <h2 class="eq-subtitulo">Entre em uma empresa</h2>
+        <p>Peça o código ao responsável pela empresa e envie seu pedido. Você recebe uma notificação quando ele responder.</p>
+        {% for pedido in pedidos_enviados %}
+          {% if forloop.first %}<p><b>Pedidos em análise:</b></p><ul class="eq-acoes">{% endif %}
+          <li>{{ pedido.company.nome_fantasia }} (enviado em {{ pedido.criada_em|date:"d/m/Y" }})</li>
+          {% if forloop.last %}</ul>{% endif %}
+        {% endfor %}
+        {% include 'accounts/_form_entrar.html' with form=form_entrar %}
+        <p><a href="{% url 'accounts:meus_vinculos' %}">Ver meus vínculos e pedidos</a></p>
+      </div>
+    {% else %}
+      <div class="eq-coluna">
+        <h2 class="eq-subtitulo">Conta administrativa</h2>
+        <p>Esta conta não atua dentro de uma empresa. Para depuração, use o <a href="{% url 'admin:index' %}">painel administrativo</a>.</p>
+      </div>
+    {% endif %}
 
     <model-viewer
       class="dash-folha"
@@ -77,20 +128,6 @@
   </section>
 </div>
 
-<script>
-  document.querySelectorAll('.dash-aviso').forEach(function (aviso) {
-    var chave = 'aviso-fechado-' + (aviso.classList.contains('dash-aviso--ok') ? 'ok' : 'atraso');
-
-    if (localStorage.getItem(chave)) {
-      aviso.remove();
-      return;
-    }
-
-    aviso.querySelector('.dash-aviso__fechar').addEventListener('click', function () {
-      localStorage.setItem(chave, '1');
-      aviso.classList.add('some');
-      setTimeout(function () { aviso.remove(); }, 300);
-    });
-  });
-</script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+<script src="{% static 'js/copiar.js' %}"></script>
 {% endblock %}
