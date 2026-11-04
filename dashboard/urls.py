@@ -1,4 +1,5 @@
 from django.urls import path
+from . import views, views_parcerias
 
 from . import views
 
@@ -27,6 +28,14 @@ urlpatterns = [
     path('avaliacao/<int:relato_id>/', views.detalhe_relato_view, name='detalhe_relato'),
     path('avaliacao/<int:relato_id>/ocultar/', views.ocultar_relato_view, name='ocultar_relato'),
     path('avaliacao/<int:relato_id>/restaurar/', views.restaurar_relato_view, name='restaurar_relato'),
+    
+    # Painel de Parcerias
+    path('parcerias/', views_parcerias.painel, name='parcerias'),
+    path('parcerias/eixo/<str:pilar>/', views_parcerias.eixo, name='parcerias_eixo'),
+    path('parcerias/empresa/<int:company_id>/', views_parcerias.detalhe, name='parcerias_detalhe'),
+    path('parcerias/empresa/<int:company_id>/match/', views_parcerias.alternar_match, name='parcerias_match'),
+    path('parcerias/matches/', views_parcerias.meus_matches, name='parcerias_matches'),
+    path('parcerias/perfil/', views_parcerias.meu_perfil, name='parcerias_perfil'),
 
     # Encerrar a conta da empresa
     path('empresa/apagar/', views.apagar_empresa, name='apagar_empresa'),

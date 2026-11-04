@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import Meta, RelatoSocialVerdigis
+from .models import (
+    InteresseParceria, Meta, PerfilParceria, QualidadeESG, RecursoAcessibilidade, RelatoSocialVerdigis,
+)
 
 
 @admin.register(Meta)
@@ -18,3 +20,28 @@ class RelatoSocialVerdigisAdmin(admin.ModelAdmin):
     date_hierarchy = 'data_registro'
     # O autor nunca aparece, nem aqui: o anonimato vale em todas as telas.
     exclude = ('usuario',)
+
+@admin.register(QualidadeESG)
+class QualidadeESGAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'pilar')
+    list_filter = ('pilar',)
+    search_fields = ('nome',)
+
+
+@admin.register(RecursoAcessibilidade)
+class RecursoAcessibilidadeAdmin(admin.ModelAdmin):
+    search_fields = ('nome',)
+
+
+@admin.register(PerfilParceria)
+class PerfilParceriaAdmin(admin.ModelAdmin):
+    list_display = ('company', 'visivel', 'atualizado_em')
+    list_filter = ('visivel',)
+    filter_horizontal = ('qualidades', 'acessibilidades', 'necessidades')
+
+
+@admin.register(InteresseParceria)
+class InteresseParceriaAdmin(admin.ModelAdmin):
+    list_display = ('origem', 'destino', 'pilar', 'criado_em')
+    list_filter = ('pilar',)
+    date_hierarchy = 'criado_em'

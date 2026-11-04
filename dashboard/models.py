@@ -118,3 +118,101 @@ class RelatoSocialVerdigis(models.Model):
 
     def __str__(self):
         return f'Relato {self.get_tema_esg_display()} - {self.get_sentimento_display()}'
+
+
+# ---------- Painel de Parcerias ----------
+
+# Reaproveita os três pilares da Meta (E, S, G) sem depender do nome "Meta",
+# que dentro das classes abaixo é a classe interna de configuração do Django.
+PILARES_ESG = Meta.ESG_ESCOLHA
+
+
+class QualidadeESG(models.Model):
+    """Prática/qualidade ESG que uma empresa pode declarar (ex.: "Energia renovável")."""
+
+    nome = models.CharField(max_length=80)
+    pilar = models.CharField(max_length=1, choices=PILARES_ESG)
+
+    class Meta:
+        verbose_name = 'Qualidade ESG'
+        verbose_name_plural = 'Qualidades ESG'
+        ordering = ['pilar', 'nome']
+        constraints = [
+            models.UniqueConstraint(fields=['pilar', 'nome'], name='qualidade_unica_por_pilar'),
+        ]
+
+    def __str__(self):
+        return f'{self.get_pilar_display()} · {self.nome}'
+
+
+class RecursoAcessibilidade(models.Model):
+    """Condição de acessibilidade/atendimento da empresa (ex.: "Intérprete de Libras")."""
+
+    nome = models.CharField(max_length=80, unique=True)
+
+    class Meta:
+        verbose_name = 'Recurso de acessibilidade'
+        verbose_name_plural = 'Recursos de acessibilidade'
+        ordering = ['nome']
+
+    def __str__(self):
+        return self.nome
+
+
+class PerfilParceria(models.Model):
+    """Perfil público da empresa no Painel de Parcerias. Só aparece para as outras se `visivel`."""
+
+    company = models.OneToOneField(
+        'accounts.Company',
+        on_delete=models.CASCADE,
+        related_name='perfil_parceria',
+        verbose_name='Empresa',
+    )
+    visivel = models.BooleanField(
+        default=False,
+        verbose_name='Aparecer no Painel de Parcerias',
+        help_text='Desligado, nenhuma outra empresa encontra o seu perfil.',
+    )
+    descricao = models.TextField(max_length=600, blank=True, verbose_name='Apresentação')
+    qualidades = models.ManyToManyField(
+        QualidadeESG, blank=True, related_name='perfis', verbose_name='O que a empresa já faz',
+    )
+    acessibilidades = models.ManyToManyField(
+        RecursoAcessibilidade, blank=True, related_name='perfis', verbose_name='Acessibilidade',
+    )
+    necessidades = models.ManyToManyField(
+        QualidadeESG, blank=True, related_name='perfis_interessados', verbose_name='O que a empresa procura em parceiros',
+    )
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Perfil de parceria'
+        verbose_name_plural = 'Perfis de parceria'
+
+    def __str__(self):
+        return f'Perfil de parceria de {self.company}'
+
+
+class InteresseParceria(models.Model):
+    """Match dado por `origem` em `destino`. É mútuo quando existe o registro inverso."""
+
+    origem = models.ForeignKey(
+        'accounts.Company', on_delete=models.CASCADE, related_name='interesses_enviados',
+    )
+    destino = models.ForeignKey(
+        'accounts.Company', on_delete=models.CASCADE, related_name='interesses_recebidos',
+    )
+    # Eixo em que a empresa estava navegando quando deu o match.
+    pilar = models.CharField(max_length=1, choices=PILARES_ESG)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Interesse de parceria'
+        verbose_name_plural = 'Interesses de parceria'
+        ordering = ['-criado_em']
+        constraints = [
+            models.UniqueConstraint(fields=['origem', 'destino'], name='interesse_unico_por_par'),
+        ]
+
+    def __str__(self):
+        return f'{self.origem} → {self.destino} [{self.pilar}]'
