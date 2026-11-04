@@ -32,6 +32,7 @@ def _primeira_mensagem(erro):
 def home(request):
     contexto = {'metas_atrasadas': 0, 'metas_concluidas': 0}
     user = request.user
+    contexto['pode_parcerias'] = user.papel == Papel.EMPRESA and request.empresa is not None
 
     if request.empresa is not None and pode(request, 'meta.ver'):
         metas = services.metas_visiveis(request)

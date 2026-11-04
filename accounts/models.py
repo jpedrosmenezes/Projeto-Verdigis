@@ -301,3 +301,4 @@ class Notificacao(models.Model):
     class Meta:
         ordering = ['-criada_em']
         indexes = [models.Index(fields=['destinatario', 'lida_em'], name='accounts_notif_dest_lida')]
+        

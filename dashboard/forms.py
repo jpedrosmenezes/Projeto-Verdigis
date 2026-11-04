@@ -2,7 +2,7 @@ from django import forms
 
 from accounts.models import TipoVinculo, Vinculo
 
-from .models import Meta, RelatoSocialVerdigis
+from .models import Meta, PerfilParceria, QualidadeESG, RecursoAcessibilidade, RelatoSocialVerdigis
 
 WIDGETS_META = {
     'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Reduzir uso de papel'}),
@@ -91,3 +91,66 @@ class OcultarRelatoForm(forms.Form):
         label='Motivo (opcional)', max_length=300, required=False,
         widget=forms.TextInput(attrs={'placeholder': 'Ex.: conteúdo ofensivo'}),
     )
+
+# ---------- Painel de Parcerias ----------
+
+class QualidadeChoiceField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, qualidade):
+        return f'{qualidade.get_pilar_display()} · {qualidade.nome}'
+
+
+class PerfilParceriaForm(forms.ModelForm):
+    """Perfil que a empresa mostra (e o que procura) no Painel de Parcerias."""
+
+    qualidades = QualidadeChoiceField(
+        queryset=QualidadeESG.objects.all(), required=False, label='O que a empresa já faz',
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
+    )
+    necessidades = QualidadeChoiceField(
+        queryset=QualidadeESG.objects.all(), required=False, label='O que a empresa procura em parceiros',
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
+    )
+    acessibilidades = forms.ModelMultipleChoiceField(
+        queryset=RecursoAcessibilidade.objects.all(), required=False, label='Acessibilidade',
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
+    )
+
+    class Meta:
+        model = PerfilParceria
+        fields = ['visivel', 'descricao', 'qualidades', 'acessibilidades', 'necessidades']
+        widgets = {
+            'visivel': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'descricao': forms.Textarea(attrs={
+                'rows': 4, 'class': 'form-control',
+                'placeholder': 'Conte em poucas linhas o que a empresa já faz em ESG.',
+            }),
+        }
+
+
+class FiltroParceirosForm(forms.Form):
+    """Filtros do passo "Definir acessibilidade e qualidades desejadas". Chega por GET."""
+
+    busca = forms.CharField(
+        label='Nome da empresa', max_length=80, required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Buscar por nome'}),
+    )
+    qualidades = forms.ModelMultipleChoiceField(
+        queryset=QualidadeESG.objects.none(), required=False, label='Qualidades desejadas',
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
+    )
+    acessibilidades = forms.ModelMultipleChoiceField(
+        queryset=RecursoAcessibilidade.objects.all(), required=False, label='Acessibilidade',
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
+    )
+
+    def __init__(self, *args, pilar, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Só qualidades do eixo escolhido: id de outro pilar vira erro de validação.
+        self.fields['qualidades'].queryset = QualidadeESG.objects.filter(pilar=pilar)
+
+    @property
+    def aplicado(self):
+        """True quando o gestor escolheu "com filtros" (há algum valor preenchido e válido)."""
+        if not self.is_bound or not self.is_valid():
+            return False
+        return any(self.cleaned_data.get(campo) for campo in ('busca', 'qualidades', 'acessibilidades'))
