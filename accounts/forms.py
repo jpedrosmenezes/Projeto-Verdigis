@@ -1,104 +1,107 @@
 import re
+
 from django import forms
-from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, BaseUserCreationForm
 from django.core.files.uploadedfile import UploadedFile
 
-from accounts.models import Company, Funcionario, UserProfile
-from accounts.validators import validate_cnpj, validate_cpf
-
-User = get_user_model()
+from .models import Company, PerfilConsultor, PerfilFuncionario, User
+from .validators import validate_cnpj, validate_cpf
 
 TAMANHO_MAX_AVATAR = 2 * 1024 * 1024
 
-CODIGO_CREDENCIAL_EMPRESA = 'credencial_empresa'
+UFS = [
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA',
+    'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
+]
 
 
 def _normalizar_cnpj(valor):
     return re.sub(r'[^0-9A-Za-z]', '', valor or '').upper()
 
 
-class SignupForm(UserCreationForm):
-    email = forms.EmailField(label='E-mail')
-    # Novos campos adicionados ao cadastro do usuário:
-    # CNPJ, número de telefone e identificação de funcionário.
-    cnpj = forms.CharField(label='CNPJ', max_length=18, required=False)
-    telefone = forms.CharField(label='Número de Telefone', max_length=20, required=True)
-    funcionario = forms.BooleanField(label='Sou funcionário da empresa', required=False)
-    
-    class Meta(UserCreationForm.Meta):
+def _so_digitos(valor):
+    return re.sub(r'\D', '', valor or '')
+
+
+def _limpar_telefone(valor, obrigatorio=False):
+    telefone = _so_digitos(valor)
+    if not telefone and not obrigatorio:
+        return ''
+    if len(telefone) not in (10, 11):
+        raise forms.ValidationError('Telefone inválido. Informe DDD e número.')
+    return telefone
+
+
+def _validar_avatar(foto):
+    if isinstance(foto, UploadedFile) and foto.size > TAMANHO_MAX_AVATAR:
+        raise forms.ValidationError('A imagem deve ter no máximo 2 MB.')
+    return foto
+
+
+def _email_em_uso(email, exceto=None):
+    qs = User.objects.filter(email__iexact=email)
+    if exceto is not None:
+        qs = qs.exclude(pk=exceto.pk)
+    return qs.exists()
+
+
+# ---------- Cadastro e login ----------
+
+class SignupForm(BaseUserCreationForm):
+    class Meta:
         model = User
-        # Inclusão dos novos campos no formulário de cadastro.
-        fields = ('username', 'email', 'cnpj', 'telefone', 'funcionario')
+        fields = ('nome', 'email')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs['placeholder'] = 'Digite seu nome de usuário'
+        self.fields['nome'].widget.attrs['placeholder'] = 'Seu nome completo'
         self.fields['email'].widget.attrs['placeholder'] = 'seuemail@exemplo.com'
-        self.fields['cnpj'].widget.attrs['data-mask'] = 'cnpj'
-        self.fields['cnpj'].widget.attrs['placeholder'] = '00.000.000/0000-00'
-        self.fields['telefone'].widget.attrs['data-mask'] = 'telefone'
-        self.fields['telefone'].widget.attrs['placeholder'] = '(81) 99999-8888'
         self.fields['password1'].widget.attrs['placeholder'] = 'Crie uma senha'
         self.fields['password2'].widget.attrs['placeholder'] = 'Repita a senha'
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip().lower()
-        if User.objects.filter(email__iexact=email).exists():
+        if _email_em_uso(email):
             raise forms.ValidationError('Já existe uma conta cadastrada com este e-mail.')
         return email
-    
-
-    def clean_cnpj(self):
-        cnpj = _normalizar_cnpj(self.cleaned_data.get('cnpj'))
-        if cnpj:
-            validate_cnpj(cnpj)
-        return cnpj
-
-    def clean_telefone(self):
-        telefone = re.sub(r'\D', '', self.cleaned_data['telefone'])
-        if len(telefone) not in (10, 11):
-            raise forms.ValidationError('Telefone inválido. Informe DDD e número.')
-        return telefone
-
-    def save(self, commit=True):
-        user = super().save(commit=commit)
-        if commit:
-            UserProfile.objects.update_or_create(
-                user=user,
-                defaults={
-                    'cpf': self.cleaned_data.get('cpf', ''),
-                    'telefone': self.cleaned_data['telefone'],
-                    'cnpj': self.cleaned_data.get('cnpj', ''),
-                    'email': user.email,
-                },
-            )
-        return user
 
 
-class LoginForm(AuthenticationForm):
+class EmailAuthenticationForm(AuthenticationForm):
     error_messages = {
-        'invalid_login': 'Usuário ou senha incorretos.',
+        'invalid_login': 'E-mail ou senha incorretos.',
         'inactive': 'Esta conta está desativada.',
     }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs['placeholder'] = 'Digite seu nome de usuário'
+        self.fields['username'].label = 'E-mail'
+        self.fields['username'].widget = forms.EmailInput(attrs={
+            'placeholder': 'seuemail@exemplo.com', 'autocomplete': 'email', 'autofocus': True,
+        })
         self.fields['password'].widget.attrs['placeholder'] = 'Digite sua senha'
 
+    def clean_username(self):
+        return (self.cleaned_data.get('username') or '').strip().lower()
 
-class DeleteAccountForm(forms.Form):
+
+class ConfirmarSenhaForm(forms.Form):
+    """Confirmação por senha (excluir conta). Para o responsável, pede também o código da empresa."""
     password = forms.CharField(
-        label='Senha',
-        strip=False,
-        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password'}),
+        label='Confirme sua senha', strip=False,
+        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password', 'placeholder': 'Digite sua senha'}),
     )
+    codigo = forms.CharField(label='Digite o código da empresa', required=False)
 
-    def __init__(self, user, *args, **kwargs):
+    def __init__(self, user, *args, company=None, **kwargs):
         self.user = user
+        self.company = company
         super().__init__(*args, **kwargs)
-        self.fields['password'].widget.attrs['placeholder'] = 'Digite sua senha'
+        if company is None:
+            del self.fields['codigo']
+        else:
+            self.fields['codigo'].required = True
+            self.fields['codigo'].widget.attrs['placeholder'] = company.codigo_formatado
+            self.fields['codigo'].help_text = 'Confirma que você sabe qual empresa está apagando.'
 
     def clean_password(self):
         password = self.cleaned_data['password']
@@ -106,56 +109,31 @@ class DeleteAccountForm(forms.Form):
             raise forms.ValidationError('Senha incorreta.')
         return password
 
+    def clean_codigo(self):
+        from .models import normalizar_codigo
+        codigo = normalizar_codigo(self.cleaned_data.get('codigo'))
+        if self.company is not None and codigo != self.company.codigo:
+            raise forms.ValidationError('O código não confere com o da sua empresa.')
+        return codigo
 
-class ProfileForm(forms.ModelForm):
-    class Meta:
-        model = UserProfile
-        fields = ['nome', 'cnpj', 'email', 'foto_perfil']
-        labels = {
-            'nome': 'Nome',
-            'cnpj': 'CNPJ',
-            'email': 'E-mail',
-            'foto_perfil': 'Foto de Perfil',
-        }
-        widgets = {
-            'nome': forms.TextInput(attrs={'placeholder': 'Digite seu nome'}),
-            'cnpj': forms.TextInput(attrs={'placeholder': 'Digite seu CNPJ'}),
-            'email': forms.EmailInput(attrs={'placeholder': 'Digite seu e-mail'}),
-            'foto_perfil': forms.FileInput(attrs={'accept': 'image/*'}),
-        }
 
-    def clean_cnpj(self):
-        cnpj = _normalizar_cnpj(self.cleaned_data.get('cnpj'))
-        if cnpj:
-            validate_cnpj(cnpj)
-        return cnpj
-
-    def clean_foto_perfil(self):
-        foto = self.cleaned_data.get('foto_perfil')
-        if isinstance(foto, UploadedFile) and foto.size > TAMANHO_MAX_AVATAR:
-            raise forms.ValidationError('A imagem deve ter no máximo 2 MB.')
-        return foto
-
+# ---------- Empresa ----------
 
 class CompanyForm(forms.ModelForm):
-    senha_funcionarios = forms.CharField(
-        label='Senha de acesso dos funcionários',
-        min_length=8,
-        strip=False,
-        widget=forms.PasswordInput(render_value=False),
-        help_text='Mínimo de 8 caracteres. Seus funcionários usam essa senha para cadastrar e entrar.',
-    )
-
     class Meta:
         model = Company
-        exclude = ('responsavel', 'created_at', 'cnpj') 
+        fields = [
+            'razao_social', 'nome_fantasia', 'cnpj', 'inscricao_estadual', 'inscricao_municipal', 'niche',
+            'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf',
+            'email_corporativo', 'telefone_fixo', 'celular_whatsapp',
+        ]
 
-    def __init__(self, *args, user=None, **kwargs):
-        self.user = user
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         placeholders = {
             'razao_social': 'Razão Social da empresa',
             'nome_fantasia': 'Nome Fantasia',
+            'cnpj': '00.000.000/0000-00',
             'inscricao_estadual': 'Inscrição Estadual (opcional)',
             'inscricao_municipal': 'Inscrição Municipal (opcional)',
             'cep': '00000-000',
@@ -168,71 +146,37 @@ class CompanyForm(forms.ModelForm):
             'email_corporativo': 'contato@empresa.com.br',
             'telefone_fixo': '(00) 3333-4444',
             'celular_whatsapp': '(00) 99999-8888',
-            'senha_funcionarios': 'Senha para seus funcionários acessarem',
         }
-
-        #Adicionada checagem de chave nome para evitar KeyError
-        for nome, text in placeholders.items():
+        for nome, texto in placeholders.items():
             if nome in self.fields:
-                self.fields[nome].widget.attrs['placeholder'] = text
-
-        #Removido o loop duplicado de placeholders e mantida apenas a definição do empty_label do nicho
+                self.fields[nome].widget.attrs['placeholder'] = texto
         if 'niche' in self.fields:
             self.fields['niche'].empty_label = 'Selecione o nicho'
-
-        mascaras = {
-            'cep': 'cep',
-            'telefone_fixo': 'telefone',
-            'celular_whatsapp': 'telefone',
-        }
-        for name, mask in mascaras.items():
-            if name in self.fields:
-                self.fields[name].widget.attrs['data-mask'] = mask
-
+        mascaras = {'cnpj': 'cnpj', 'cep': 'cep', 'telefone_fixo': 'telefone', 'celular_whatsapp': 'telefone'}
+        for nome, mascara in mascaras.items():
+            if nome in self.fields:
+                self.fields[nome].widget.attrs['data-mask'] = mascara
         for field in self.fields.values():
             field.widget.attrs.setdefault('class', 'form-control')
 
-    def _cnpj_do_responsavel(self):
-        if self.user is None:
-            return None
-        profile = UserProfile.objects.filter(user=self.user).first()
-        return profile.cnpj if profile else None
-
-    def clean(self):
-            cleaned = super().clean()
-            if self.user is not None and not self.instance.pk:
-                cnpj = self._cnpj_do_responsavel()
-                if not cnpj:
-                    raise forms.ValidationError(
-                        'Seu perfil não tem CNPJ. Informe o CNPJ no perfil antes de cadastrar a empresa.'
-                    )
-                if Company.objects.filter(cnpj=cnpj).exists():
-                    raise forms.ValidationError('Já existe uma empresa cadastrada com este CNPJ.')
-            return cleaned
-
+    def clean_cnpj(self):
+        cnpj = _normalizar_cnpj(self.cleaned_data.get('cnpj'))
+        validate_cnpj(cnpj)
+        if Company.objects.filter(cnpj=cnpj).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('Já existe uma empresa cadastrada com este CNPJ.')
+        return cnpj
 
     def clean_cep(self):
-        cep = re.sub(r'\D', '', self.cleaned_data['cep'])
+        cep = _so_digitos(self.cleaned_data['cep'])
         if len(cep) != 8:
             raise forms.ValidationError('CEP deve ter 8 dígitos.')
         return cep
 
     def clean_uf(self):
-        return self.cleaned_data['uf'].strip().upper()
-
-    #Método save() adicionado. O formulário lia a senha digitada no campo 'senha_funcionarios',
-    # mas não a gravava no objeto Company. Agora chama o set_senha_acesso(senha) para criptografar e salvar no banco.
-    def save(self, commit=True):
-        company = super().save(commit=False)
-        cnpj = self._cnpj_do_responsavel()
-        if cnpj:
-            company.cnpj = cnpj
-        senha_raw = self.cleaned_data.get('senha_funcionarios')
-        if senha_raw:
-            company.set_senha_acesso(senha_raw)
-        if commit:
-            company.save()
-        return company
+        uf = self.cleaned_data['uf'].strip().upper()
+        if uf not in UFS:
+            raise forms.ValidationError('UF inválida.')
+        return uf
 
     def is_valid(self):
         valid = super().is_valid()
@@ -244,174 +188,158 @@ class CompanyForm(forms.ModelForm):
         return valid
 
 
-class EmployeeSignupForm(SignupForm):
-    #Adicionado required=True explícito para garantir preenchimento
-    # O CPF não é pedido no cadastro de empresa, só no de funcionário.
-    cpf = forms.CharField(label='CPF', max_length=14, required=True)
-    cnpj = forms.CharField(label='CNPJ da empresa', required=True)
-    senha_empresa = forms.CharField(
-        label='Senha da empresa', strip=False, widget=forms.PasswordInput(), required=True
-    )
-    class Meta(SignupForm.Meta):
-        fields = ('username', 'email', 'cpf', 'cnpj', 'telefone', 'funcionario')
+class EditCompanyForm(CompanyForm):
+    """Dados da empresa na edição de perfil. O CNPJ não muda depois do cadastro."""
 
-    def __init__(self, *args, **kwargs):
+    class Meta(CompanyForm.Meta):
+        fields = [f for f in CompanyForm.Meta.fields if f != 'cnpj']
+
+
+# ---------- Triagem: funcionário e consultor ----------
+
+class _DadosPessoaisMixin(forms.Form):
+    nome = forms.CharField(label='Nome completo', max_length=150)
+    telefone = forms.CharField(label='Telefone', max_length=20)
+
+    def _preparar_pessoais(self, user):
+        self.fields['nome'].initial = user.nome
+        self.fields['nome'].widget.attrs['placeholder'] = 'Seu nome completo'
+        self.fields['telefone'].initial = user.telefone
+        self.fields['telefone'].widget.attrs.update({'data-mask': 'telefone', 'placeholder': '(81) 99999-8888'})
+
+    def clean_telefone(self):
+        return _limpar_telefone(self.cleaned_data.get('telefone'), obrigatorio=True)
+
+
+class FuncionarioOnboardingForm(_DadosPessoaisMixin, forms.ModelForm):
+    # Declarado aqui porque o valor chega com máscara (14 caracteres) e é limpo depois.
+    cpf = forms.CharField(label='CPF', max_length=14)
+
+    class Meta:
+        model = PerfilFuncionario
+        fields = ['cpf']
+
+    field_order = ['nome', 'cpf', 'telefone']
+
+    def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
-        self.company = None
-        self.fields['cpf'].widget.attrs['data-mask'] = 'cpf'
-        self.fields['cpf'].widget.attrs['placeholder'] = '000.000.000-00'
-        self.fields['cnpj'].widget.attrs['data-mask'] = 'cnpj'
-        self.fields['cnpj'].widget.attrs['placeholder'] = '00.000.000/0000-00'
-        self.fields['senha_empresa'].widget.attrs['placeholder'] = 'Senha fornecida pela empresa'
+        self._preparar_pessoais(user)
+        self.fields['cpf'].widget.attrs.update({'data-mask': 'cpf', 'placeholder': '000.000.000-00'})
 
     def clean_cpf(self):
-        cpf = re.sub(r'\D', '', self.cleaned_data['cpf'])
+        cpf = _so_digitos(self.cleaned_data.get('cpf'))
         validate_cpf(cpf)
-        if UserProfile.objects.filter(cpf=cpf).exists():
+        if PerfilFuncionario.objects.filter(cpf=cpf).exists():
             raise forms.ValidationError('Já existe uma conta cadastrada com este CPF.')
         return cpf
-   
-    def clean_cnpj(self):
-        return _normalizar_cnpj(self.cleaned_data.get('cnpj'))
+
+
+class ConsultorOnboardingForm(_DadosPessoaisMixin, forms.ModelForm):
+    documento = forms.CharField(label='Número do documento', max_length=18)
+
+    class Meta:
+        model = PerfilConsultor
+        fields = ['documento_tipo', 'documento', 'especialidade', 'link_profissional']
+
+    field_order = ['nome', 'documento_tipo', 'documento', 'telefone', 'especialidade', 'link_profissional']
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._preparar_pessoais(user)
+        self.fields['documento'].widget.attrs.update({'data-mask': 'cpf-cnpj', 'placeholder': 'CPF ou CNPJ'})
+        self.fields['especialidade'].widget.attrs['placeholder'] = 'Ex.: gestão ambiental, segurança do trabalho'
+        self.fields['link_profissional'].widget.attrs['placeholder'] = 'https://www.linkedin.com/in/... (opcional)'
 
     def clean(self):
         cleaned = super().clean()
-        cnpj = cleaned.get('cnpj')
-        senha = cleaned.get('senha_empresa')
-        if cnpj and senha:
-            company = Company.objects.filter(cnpj=cnpj).first()
-            if not company or not company.check_senha_acesso(senha):
-                raise forms.ValidationError(
-                    'CNPJ ou senha da empresa inválidos.', code=CODIGO_CREDENCIAL_EMPRESA
-                )
-            self.company = company
+        tipo = cleaned.get('documento_tipo')
+        bruto = self.data.get(self.add_prefix('documento'), '')
+        if not tipo or 'documento' in self.errors:
+            return cleaned
+        if tipo == PerfilConsultor.TipoDocumento.CPF:
+            documento = _so_digitos(bruto)
+            validador = validate_cpf
+        else:
+            documento = _normalizar_cnpj(bruto)
+            validador = validate_cnpj
+        try:
+            validador(documento)
+        except forms.ValidationError as erro:
+            self.add_error('documento', erro)
+            return cleaned
+        if PerfilConsultor.objects.filter(documento=documento).exists():
+            self.add_error('documento', 'Já existe uma conta de consultor com este documento.')
+            return cleaned
+        cleaned['documento'] = documento
+        self.instance.documento = documento
         return cleaned
 
-    def save(self, commit=True):
-        user = super().save(commit=commit)
-        # 1. Trocado 'tipo': 'funcionario' por 'tipo': 'FUNCIONARIO' para bater com o TIPO_CHOICES do UserProfile.
-        # 2. Adicionada a trava `and self.company` e uso do `get_or_create` para evitar duplicidades na tabela Funcionario.
-        if commit and self.company:
-            Funcionario.objects.get_or_create(user=user, company=self.company)
-            UserProfile.objects.update_or_create(
-                user=user,
-                defaults={
-                    'tipo': 'FUNCIONARIO',
-                    'nome_empresa': self.company.nome_fantasia,
-                    'email': user.email,
-                    'cnpj': '',
-                },
-            )
-        return user
 
+# ---------- Vínculos ----------
 
-class EmployeeLoginForm(LoginForm):
-    cnpj = forms.CharField(label='CNPJ da empresa')
-    senha_empresa = forms.CharField(
-        label='Senha da empresa', strip=False, widget=forms.PasswordInput()
+class EntrarEmpresaForm(forms.Form):
+    codigo = forms.CharField(
+        label='Código da empresa', max_length=20,
+        widget=forms.TextInput(attrs={'placeholder': 'XXXXX-XXXXX', 'autocomplete': 'off'}),
+    )
+    cargo = forms.CharField(label='Cargo', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Ex.: Farmacêutico'}))
+    setor = forms.CharField(label='Setor', max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Ex.: Atendimento'}))
+    mensagem = forms.CharField(
+        label='Mensagem (opcional)', max_length=500, required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'Conte quem você é para a empresa'}),
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['cnpj'].widget.attrs['data-mask'] = 'cnpj'
-        self.fields['cnpj'].widget.attrs['placeholder'] = '00.000.000/0000-00'
-        self.fields['senha_empresa'].widget.attrs['placeholder'] = 'Senha fornecida pela empresa'
 
-    def clean(self):
-        cleaned = super().clean()  # autentica usuário e senha pessoal
-        cnpj = _normalizar_cnpj(cleaned.get('cnpj'))
-        senha = cleaned.get('senha_empresa')
-        if self.user_cache is not None and cnpj and senha:
-            vinculo = (
-                Funcionario.objects.select_related('company')
-                .filter(user=self.user_cache)
-                .first()
-            )
-            if (
-                vinculo is None
-                or vinculo.company.cnpj != cnpj
-                or not vinculo.company.check_senha_acesso(senha)
-            ):
-                raise forms.ValidationError(
-                    'Dados de acesso da empresa inválidos.', code=CODIGO_CREDENCIAL_EMPRESA
-                )
-        return cleaned
+# ---------- Perfil ----------
 
 class EditProfileForm(forms.ModelForm):
-    """Perfil pessoal: vale para funcionário e para o responsável da empresa."""
-    username = forms.CharField(
-        label='Nome de usuário',
-        max_length=150,
-        validators=User._meta.get_field('username').validators,
+    senha_atual = forms.CharField(
+        label='Senha atual', required=False, strip=False,
+        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password', 'placeholder': 'Só se for trocar o e-mail'}),
+        help_text='Obrigatória apenas para trocar o e-mail.',
+    )
+    telefone = forms.CharField(
+        label='Telefone', max_length=20, required=False,
+        widget=forms.TextInput(attrs={'placeholder': '(81) 99999-8888', 'data-mask': 'telefone'}),
     )
 
     class Meta:
-        model = UserProfile
+        model = User
         fields = ['nome', 'email', 'telefone', 'foto_perfil', 'bio']
-        labels = {
-            'nome': 'Nome',
-            'email': 'E-mail',
-            'telefone': 'Telefone',
-            'foto_perfil': 'Foto de Perfil',
-            'bio': 'Bio',
-        }
         widgets = {
             'nome': forms.TextInput(attrs={'placeholder': 'Digite seu nome'}),
             'email': forms.EmailInput(attrs={'placeholder': 'seuemail@exemplo.com'}),
-            'telefone': forms.TextInput(attrs={'placeholder': '(81) 99999-8888', 'data-mask': 'telefone'}),
             'foto_perfil': forms.FileInput(attrs={'accept': 'image/*'}),
             'bio': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Fale um pouco sobre você'}),
         }
 
-    def __init__(self, *args, user, **kwargs):
-        self.user = user
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].initial = user.username
-        self.fields['username'].widget.attrs['placeholder'] = 'Digite seu nome de usuário'
-        self.order_fields(['username', 'nome', 'email', 'telefone', 'foto_perfil', 'bio'])
-
-    def clean_username(self):
-        username = self.cleaned_data['username'].strip()
-        if User.objects.filter(username__iexact=username).exclude(pk=self.user.pk).exists():
-            raise forms.ValidationError('Este nome de usuário já está em uso.')
-        return username
+        self.email_original = self.instance.email
 
     def clean_email(self):
-        email = self.cleaned_data.get('email', '').strip().lower()
-        if email and User.objects.filter(email__iexact=email).exclude(pk=self.user.pk).exists():
+        email = self.cleaned_data['email'].strip().lower()
+        if _email_em_uso(email, exceto=self.instance):
             raise forms.ValidationError('Já existe uma conta com este e-mail.')
         return email
 
     def clean_telefone(self):
-        telefone = re.sub(r'\D', '', self.cleaned_data.get('telefone', ''))
-        if telefone and len(telefone) not in (10, 11):
-            raise forms.ValidationError('Telefone inválido. Informe DDD e número.')
-        return telefone
+        return _limpar_telefone(self.cleaned_data.get('telefone'))
 
     def clean_foto_perfil(self):
-        foto = self.cleaned_data.get('foto_perfil')
-        if isinstance(foto, UploadedFile) and foto.size > TAMANHO_MAX_AVATAR:
-            raise forms.ValidationError('A imagem deve ter no máximo 2 MB.')
-        return foto
+        return _validar_avatar(self.cleaned_data.get('foto_perfil'))
 
-    def save(self, commit=True):
-        profile = super().save(commit=commit)
-        if commit:
-            self.user.username = self.cleaned_data['username']
-            self.user.email = self.cleaned_data.get('email', '')
-            self.user.save(update_fields=['username', 'email'])
-        return profile
+    def clean(self):
+        cleaned = super().clean()
+        email = cleaned.get('email')
+        if email and email != self.email_original:
+            senha = cleaned.get('senha_atual') or ''
+            if not self.instance.check_password(senha):
+                self.add_error('senha_atual', 'Informe sua senha atual para trocar o e-mail.')
+        return cleaned
 
 
-class EditCompanyForm(CompanyForm):
-    """Dados da empresa. CNPJ e senha de acesso ficam de fora de propósito."""
-    senha_funcionarios = None  # remove o campo herdado de CompanyForm
-
-    class Meta(CompanyForm.Meta):
-        exclude = None
-        fields = [
-            'razao_social', 'nome_fantasia',
-            'inscricao_municipal', 'inscricao_estadual', 'niche',
-            'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf',
-            'telefone_fixo', 'celular_whatsapp',
-        ]
+class EditConsultorForm(forms.ModelForm):
+    class Meta:
+        model = PerfilConsultor
+        fields = ['especialidade', 'link_profissional']

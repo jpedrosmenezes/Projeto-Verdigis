@@ -1,0 +1,49 @@
+{% extends "forum/base.html" %}
+{% load static %}
+{% comment %}
+  Notificações (accounts.views.notificacoes). Método: GET.
+  URL: {% url 'accounts:notificacoes' %}
+  Contexto: notificacoes (as 100 mais recentes do usuário).
+  Abrir uma notificação ({% url 'accounts:abrir_notificacao' 0 %}) marca como lida e leva ao link dela.
+  "Marcar todas como lidas": POST em {% url 'accounts:marcar_todas_lidas' %}.
+{% endcomment %}
+
+{% block title %}Notificações - Verdigis{% endblock %}
+{% block fundo %}fundo-6{% endblock %}
+
+{% block head %}<h1 class="dash-banner">NOTIFICAÇÕES</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="dash-corpo av-corpo">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+    <div class="av-painel av-painel--neutro nt-painel">
+      <h2 class="av-painel__titulo">Suas notificações</h2>
+      <div class="av-painel__corpo">
+        {% if notificacoes_nao_lidas %}
+          <form method="post" action="{% url 'accounts:marcar_todas_lidas' %}" class="eq-centro">
+            {% csrf_token %}
+            <button type="submit" class="fm-cancelar eq-botao-pequeno">Marcar todas como lidas</button>
+          </form>
+        {% endif %}
+        <div class="av-itens">
+          {% for n in notificacoes %}
+            <a class="av-item{% if not n.lida_em %} nt-item--nova{% endif %}" href="{% url 'accounts:abrir_notificacao' n.id %}">
+              <span class="av-item__autor">{% if not n.lida_em %}<span class="nt-selo">Nova</span> {% endif %}{{ n.get_tipo_display }}</span>
+              <span class="av-item__texto">{{ n.texto }}</span>
+              <span class="av-item__texto">{{ n.criada_em|date:"d/m/Y H:i" }}</span>
+              <span class="av-item__seta" aria-hidden="true">→</span>
+            </a>
+          {% empty %}
+            <p class="av-vazio">Você não tem notificações.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% comment %}
+  Meus relatos (view meus_relatos). Funcionário. Método: GET.
+  URL: {% url 'dashboard:meus_relatos' %}
+  Contexto: relatos (só os não anônimos do próprio usuário, não ocultos). Os anônimos nunca aparecem aqui.
+{% endcomment %}
+
+{% block title %}Meus relatos - Verdigis{% endblock %}
+{% block fundo %}fundo-6{% endblock %}
+
+{% block head %}<h1 class="dash-banner">MEUS RELATOS</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="dash-corpo av-corpo">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+    <div class="av-painel av-painel--positivo">
+      <h2 class="av-painel__titulo">Relatos enviados com o seu nome</h2>
+      <div class="av-painel__corpo">
+        <p class="av-painel__total">{{ relatos|length }} relato{{ relatos|length|pluralize }}</p>
+        <div class="av-itens">
+          {% for relato in relatos %}
+            <a class="av-item" href="{% url 'dashboard:detalhe_relato' relato.id %}">
+              <span class="av-item__autor">{{ relato.get_tema_esg_display }} · {{ relato.data_registro|date:"d/m/Y" }}</span>
+              <span class="av-item__texto">{{ relato.mensagem|truncatechars:70 }}</span>
+              <span class="av-item__seta" aria-hidden="true">→</span>
+            </a>
+          {% empty %}
+            <p class="av-vazio">Você ainda não enviou relatos com o seu nome. Relatos anônimos não aparecem nesta lista.</p>
+          {% endfor %}
+        </div>
+        <p class="eq-centro"><a class="dash-botao eq-botao-claro" href="{% url 'dashboard:adicionar_avaliacao' %}">Enviar novo relato</a></p>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

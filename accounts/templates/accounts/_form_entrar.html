@@ -1,0 +1,17 @@
+{% comment %}
+  Formulário "Entrar em uma empresa" (POST para {% url 'accounts:entrar_empresa' %}).
+  Usado no dashboard (estado "sem empresa"), em "Meus vínculos" e na própria página de pedido.
+  Contexto: form (EntrarEmpresaForm).
+{% endcomment %}
+<form method="post" action="{% url 'accounts:entrar_empresa' %}" class="form-contato">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="alert alert-error" role="alert">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+    {% endif %}
+    {% for field in form %}
+        {% include 'accounts/_campo.html' with field=field %}
+    {% endfor %}
+    <button type="submit" class="btn-submit">Enviar pedido</button>
+</form>

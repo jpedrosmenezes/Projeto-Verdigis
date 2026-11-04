@@ -1,4 +1,9 @@
 {% extends "forum/base.html" %}
+{% comment %}
+  Login por e-mail (accounts.views.login). Métodos: GET e POST.
+  URL: {% url 'accounts:login' %}
+  Contexto: form (EmailAuthenticationForm: username = e-mail, password) e next.
+{% endcomment %}
 
 {% block title %}Entrar - Verdigis{% endblock %}
 {% block fundo %}fundo-1{% endblock %}
@@ -7,32 +12,26 @@
 <div class="moldura-vidro">
 <section class="secao-form">
     <h1>ENTRAR</h1>
-    <p>Escolha como você entra na plataforma.</p>
-
-    {% include 'accounts/_seletor_tipo.html' with pagina='login' ativo='empresa' %}
+    <p>Use o e-mail e a senha da sua conta.</p>
 
     {% if form.non_field_errors %}
         <div class="alert alert-error" role="alert">
-            {% for error in form.non_field_errors %}
-                <p>{{ error }}</p>
-            {% endfor %}
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
         </div>
     {% elif next %}
         <p class="help">Entre para acessar esta página.</p>
     {% endif %}
 
-    <form method="post" action="{% url 'login' %}" class="form-contato">
+    <form method="post" action="{% url 'accounts:login' %}" class="form-contato">
         {% csrf_token %}
-
         {% for field in form %}
             {% include 'accounts/_campo.html' with field=field %}
         {% endfor %}
-
         <input type="hidden" name="next" value="{{ next }}">
         <button class="btn-submit" type="submit">Entrar</button>
     </form>
-    <p class="auth-switch"><a href="{% url 'password_reset' %}">Esqueceu a senha?</a></p>
-    <p class="auth-switch">Ainda não tem conta? <a href="{% url 'signup' %}">Criar conta</a></p>
+    <p class="auth-switch">Esqueceu a senha? Fale com o suporte: <a href="mailto:contato.verdigis@gmail.com">contato.verdigis@gmail.com</a></p>
+    <p class="auth-switch">Ainda não tem conta? <a href="{% url 'accounts:signup' %}">Criar conta</a></p>
 </section>
 </div>
 {% endblock %}

@@ -1,0 +1,43 @@
+{% extends "forum/base.html" %}
+{% load static %}
+{% load relatos %}
+
+{% comment %}
+  Relatos ocultos (view dashboard_social_verdigis com ?aba=ocultos). Só quem modera (relato.moderar).
+  URL: {% url 'dashboard:dashboard_social' %}?aba=ocultos
+  Contexto: relatos (ocultos da empresa, mais recentes primeiro) e moderador.
+{% endcomment %}
+
+{% block title %}Relatos ocultos - Verdigis{% endblock %}
+{% block fundo %}fundo-6{% endblock %}
+
+{% block head %}<h1 class="dash-banner">CENTRAL DE AVALIAÇÕES</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="dash-corpo av-corpo">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:dashboard_social' %}" aria-label="Voltar para a Central de Avaliações">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+    <div class="av-painel av-painel--neutro">
+      <h2 class="av-painel__titulo">Relatos ocultos</h2>
+      <div class="av-painel__corpo">
+        <p class="av-painel__total">{{ relatos|length }} relato{{ relatos|length|pluralize }} oculto{{ relatos|length|pluralize }}</p>
+        <div class="av-itens">
+          {% for relato in relatos %}
+            <a class="av-item" href="{% url 'dashboard:detalhe_relato' relato.id %}">
+              <span class="av-item__autor">{% nome_exibido relato %} · {{ relato.get_tema_esg_display }}</span>
+              <span class="av-item__texto">{{ relato.mensagem|truncatechars:70 }}</span>
+              <span class="av-item__seta" aria-hidden="true">→</span>
+            </a>
+          {% empty %}
+            <p class="av-vazio">Nenhum relato oculto.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

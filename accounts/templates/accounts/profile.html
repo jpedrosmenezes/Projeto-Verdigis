@@ -1,6 +1,12 @@
 {% extends "forum/base.html" %}
 {% load static %}
 {% load formats %}
+{% comment %}
+  Perfil (accounts.views.profile). Método: GET.
+  URL: {% url 'accounts:profile' %}
+  Contexto: company (empresa do responsável ou None) e vinculos (vínculos do funcionário/consultor).
+  Sair é POST em {% url 'accounts:logout' %}.
+{% endcomment %}
 
 {% block title %}Perfil - Verdigis{% endblock %}
 {% block fundo %}fundo-2{% endblock %}
@@ -9,64 +15,85 @@
 <div class="moldura-vidro">
 <section class="profile-card">
   <div class="profile-header">
-    <img class="profile-avatar" src="{{ user.profile.avatar_url }}" alt="Avatar de {{ user.username }}">
+    <img class="profile-avatar" src="{{ user.avatar_url }}" alt="Avatar de {{ user.nome|default:user.email }}">
     <div>
-      <h1>{{ user.profile.nome|default:user.username }}</h1>
-      <p>@{{ user.username }}</p>
+      <h1>{{ user.nome|default:user.email }}</h1>
+      <p>{{ user.get_papel_display|default:"Papel ainda não escolhido" }}</p>
     </div>
   </div>
   <dl class="profile-info">
-  <dt>E-mail:</dt>
-  <dd>{{ user.email|default:"Não informado" }}</dd>
+    <dt>E-mail:</dt>
+    <dd>{{ user.email }}</dd>
 
-  {% if user.profile.tipo == "EMPRESA" %}
-    {% if user.profile.nome_empresa %}
-      <dt>Nome da empresa:</dt>
-      <dd>{{ user.profile.nome_empresa }}</dd>
+    {% if user.telefone %}
+      <dt>Telefone:</dt>
+      <dd>{{ user.telefone|telefone_br }}</dd>
     {% endif %}
 
-    {% if user.profile.cnpj %}
-      <dt>CNPJ:</dt>
-      <dd>{{ user.profile.cnpj }}</dd>
+    {% if user.perfil_funcionario %}
+      <dt>CPF:</dt>
+      <dd>{{ user.perfil_funcionario.cpf|cpf_br }}</dd>
     {% endif %}
-  {% endif %}
 
-  {% if user.profile.telefone %}
-    <dt>Telefone:</dt>
-    <dd>{{ user.profile.telefone|telefone_br }}</dd>
-  {% endif %}
-
-  {% if user.profile.bio %}
-    <dt>Bio:</dt>
-    <dd>{{ user.profile.bio|linebreaksbr }}</dd>
-  {% endif %}
-
-  <div class="profile-info-dates">
-    <div class="profile-info-date">
-    <dt>Membro desde:</dt>
-    <dd>{{ user.date_joined|date:"d/m/Y" }}</dd>
-    </div>
-    <div class="profile-info-date">  
-    <dt>Último acesso:</dt>
-    <dd>{{ user.last_login|date:"d/m/Y H:i"|default:"—" }}</dd>
-    </div>
-  </div>
-
-</dl>
-  <button class="btn-submit" onclick="window.location.href='{% url 'edit_profile' %}'">Editar Perfil</button>
-  {% if not user.companies.exists %}
-    {% if not user.FUNCIONARIO %}
-      <button class="btn-submit-2" onclick="window.location.href='{% url 'company_register' %}'">Completar Informações</button>
+    {% if user.perfil_consultor %}
+      <dt>{{ user.perfil_consultor.documento_tipo }}:</dt>
+      <dd>{{ user.perfil_consultor.documento }}</dd>
+      <dt>Especialidade:</dt>
+      <dd>{{ user.perfil_consultor.especialidade }}</dd>
+      {% if user.perfil_consultor.link_profissional %}
+        <dt>Link profissional:</dt>
+        <dd><a href="{{ user.perfil_consultor.link_profissional }}" rel="noopener" target="_blank">{{ user.perfil_consultor.link_profissional }}</a></dd>
       {% endif %}
-  {% endif %}
-  <p></p>
-  <button type="submit" form="form-sair" class="btn-submit btn-logout">Sair</button>
-  <form method="get" action="{% url 'delete' %}" class="form-excluir">
-    <button type="submit" class="btn-submit btn-excluir">Excluir conta</button>
-  </form>
-  <form id="form-sair" method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-  </form>  
+    {% endif %}
+
+    {% if company %}
+      <dt>Empresa:</dt>
+      <dd>{{ company.nome_fantasia }} ({{ company.razao_social }})</dd>
+      <dt>CNPJ:</dt>
+      <dd>{{ company.cnpj|cnpj_br }}</dd>
+      <dt>Código da empresa:</dt>
+      <dd>{{ company.codigo_formatado }}</dd>
+    {% endif %}
+
+    {% for vinculo in vinculos %}
+      {% if forloop.first %}<dt>Empresas:</dt>{% endif %}
+      <dd>{{ vinculo.company.nome_fantasia }} · {{ vinculo.cargo }} · {{ vinculo.setor }}</dd>
+    {% endfor %}
+
+    {% if user.bio %}
+      <dt>Bio:</dt>
+      <dd>{{ user.bio|linebreaksbr }}</dd>
+    {% endif %}
+
+    <div class="profile-info-dates">
+      <div class="profile-info-date">
+        <dt>Membro desde:</dt>
+        <dd>{{ user.date_joined|date:"d/m/Y" }}</dd>
+      </div>
+      <div class="profile-info-date">
+        <dt>Último acesso:</dt>
+        <dd>{{ user.last_login|date:"d/m/Y H:i"|default:"—" }}</dd>
+      </div>
+    </div>
+  </dl>
+
+  <div class="eq-botoes">
+    <a class="btn-submit eq-link-botao" href="{% url 'accounts:edit_profile' %}">Editar Perfil</a>
+    <a class="btn-submit-2 eq-link-botao" href="{% url 'accounts:password_change' %}">Trocar senha</a>
+    {% if user.papel == 'FUNCIONARIO' or user.papel == 'CONSULTOR' %}
+      <a class="btn-submit-2 eq-link-botao" href="{% url 'accounts:meus_vinculos' %}">Meus vínculos</a>
+    {% endif %}
+  </div>
+  <div class="eq-botoes">
+    <form method="post" action="{% url 'accounts:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn-submit btn-logout">Sair</button>
+    </form>
+    {% if company %}
+      <a class="btn-submit btn-excluir eq-link-botao" href="{% url 'dashboard:apagar_empresa' %}">Apagar empresa</a>
+    {% endif %}
+    <a class="btn-submit btn-excluir eq-link-botao" href="{% url 'accounts:delete' %}">Excluir conta</a>
+  </div>
 </section>
 </div>
 {% endblock content %}

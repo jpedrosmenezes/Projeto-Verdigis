@@ -1,9 +1,12 @@
 {% extends "forum/base.html" %}
+{% load static %}
 
 {% comment %}
-  Nova avaliação (view adicionar_avaliacao). Exige login.
+  Novo relato (view adicionar_avaliacao). Funcionário e consultor (relato.enviar).
   Métodos: GET (formulário vazio) e POST (salva e volta para esta página).
+  URL: {% url 'dashboard:adicionar_avaliacao' %}
   Contexto: form (RelatoSocialForm: tema_esg, sentimento, mensagem, eh_anonimo).
+  O autor é sempre guardado, mas nunca aparece num relato anônimo.
 {% endcomment %}
 
 {% block title %}Nova avaliação - Verdigis{% endblock %}
@@ -12,9 +15,14 @@
 {% block head %}<h1 class="dash-banner">NOVA AVALIAÇÃO</h1>{% endblock head %}
 
 {% block content %}
-<div class="moldura-vidro" style="margin-top: 2.5rem;">
+<div class="moldura-vidro eq-moldura-topo">
   <section class="secao-form">
-    <h2>Conte como foi a sua experiência</h2>
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+    <h2>Conte como foi a sua experiência em {{ request.empresa.nome_fantasia }}</h2>
 
     <form method="post" action="{% url 'dashboard:adicionar_avaliacao' %}" class="form-contato">
       {% csrf_token %}
@@ -26,7 +34,7 @@
       {% for campo in form %}
         <div class="form-group">
           {% if campo.field.widget.input_type == 'checkbox' %}
-            <label for="{{ campo.id_for_label }}">{{ campo }} Enviar como anônimo</label>
+            <label for="{{ campo.id_for_label }}" class="eq-checkbox">{{ campo }} <span>{{ campo.label }}</span></label>
           {% else %}
             <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
             {{ campo }}
@@ -39,7 +47,7 @@
 
       <div class="fm-modal__acoes">
         <button type="submit">Enviar avaliação</button>
-        <button type="button" class="fm-cancelar" onclick="location.href='{% url 'dashboard:dashboard' %}'">Cancelar</button>
+        <a class="fm-cancelar eq-link-botao" href="{% url 'dashboard:dashboard' %}">Cancelar</a>
       </div>
     </form>
   </section>
