@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
+
 
 
 # Fábrica de metas
@@ -216,3 +218,53 @@ class InteresseParceria(models.Model):
 
     def __str__(self):
         return f'{self.origem} → {self.destino} [{self.pilar}]'
+
+
+#--------tabela de atividades-----------
+
+class AtividadeMeta(models.Model):
+    KANBAM_CHOICES = [
+        ('A_FAZER', 'A Fazer'),
+        ('EM_ANDAMENTO', 'Em Andamento'),
+        ('REVISAO', 'Em Revisão'),
+        ('FEITO', 'Feito'),
+    ]
+
+    meta = models.ForeignKey(
+        Meta,
+        on_delete=models.CASCADE,
+        related_name='atividades',
+        verbose_name='Meta',
+    )
+    nome = models.CharField(max_length=255, verbose_name='Nome da atividade')
+    descricao = models.TextField(blank=True, verbose_name='Descrição')
+    pilar_esg = models.CharField(max_length=1, choices=Meta.ESG_ESCOLHA, verbose_name='Pilar ESG')
+    prazo = models.DateField(null=True, blank=True, verbose_name='Prazo')
+    prioridade = models.CharField(
+        max_length=5,
+        choices=Meta.NIVEL_PRIORIDADE,
+        default='MEDIA',
+        verbose_name='Prioridade',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=KANBAM_CHOICES,
+        default='A_FAZER',
+        verbose_name='Status',
+    )
+    data_criacao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Atividade da Meta'
+        verbose_name_plural = 'Atividades da Meta'
+        ordering = ['prazo', 'id']
+
+    @property
+    def em_atraso(self):
+        """Retorna True se tiver prazo definido, não estiver em 'FEITO' e a data já venceu."""
+        if self.prazo and self.status != 'FEITO':
+            return self.prazo < timezone.localdate()
+        return False
+
+    def __str__(self):
+        return f'{self.nome} [{self.get_status_display()}]'
