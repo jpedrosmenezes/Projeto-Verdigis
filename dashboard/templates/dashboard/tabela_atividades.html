@@ -1,0 +1,26 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% block title %} Verdigis - Atividades ESG {% endblock %}
+{% block fundo %}fundo-5{% endblock %}
+
+{% block head %}<h1 class="dash-banner">ATIVIDADES ESG</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="dash-corpo fm-corpo">
+    <div class="av-topo">
+        <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+          <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+        </a>
+    </div>
+    {% for meta in metas%}
+        <div class="carrossel">
+            <div class="carrossel__item">
+                <div class="carrossel__item__titulo">{{ meta.nome }}</div>
+                <a href="{% url 'dashboard:atividades_meta' meta.id %}" class="carrossel__item__link">Ver atividades</a>
+            </div>
+            
+  </section>
+</div>
+{% endblock %}

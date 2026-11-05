@@ -19,6 +19,9 @@ from . import services
 from .forms import FormMetaFuncionario, FormsMetas, OcultarRelatoForm, RelatoSocialForm
 from .models import Meta, RelatoSocialVerdigis
 
+from django.http import JsonResponse
+from .models import AtividadeMeta
+
 SENTIMENTOS = ('POSITIVO', 'NEGATIVO', 'NEUTRO')
 
 
@@ -394,3 +397,78 @@ def apagar_empresa(request):
         'total_metas': company.metas.count(),
         'total_relatos': company.relatos.count(),
     })
+
+
+
+# ---------- tabela de atividades ----------
+
+@login_required
+@empresa_required
+def visulizar_tabela(request):
+    exigir(request, 'meta.ver')
+    metas = list(services.metas_visiveis(request).order_by('completo', 'deadline'))
+    meta_selecionada = metas[0] if metas else None
+    
+    return render(request, 'dashboard/tabela_atividades.html', {
+        'metas': metas,
+        'meta_selecionada': meta_selecionada,
+        'hoje': timezone.localdate(),
+    })
+
+
+@login_required
+@empresa_required
+def preencher_tabela(request, meta_id):
+    """Retorna os cards das 4 colunas para a meta selecionada no carrossel."""
+    meta = _meta_da_empresa(request, meta_id)
+    exigir(request, 'meta.ver')
+    
+    atividades = meta.atividades.all()
+    
+    dados = {
+        'meta_id': meta.id,
+        'meta_nome': meta.nome,
+        'a_fazer': list(atividades.filter(status='A_FAZER').values('id', 'nome', 'descricao', 'pilar_esg', 'prazo', 'prioridade')),
+        'em_andamento': list(atividades.filter(status='EM_ANDAMENTO').values('id', 'nome', 'descricao', 'pilar_esg', 'prazo', 'prioridade')),
+        'revisao': list(atividades.filter(status='REVISAO').values('id', 'nome', 'descricao', 'pilar_esg', 'prazo', 'prioridade')),
+        'feito': list(atividades.filter(status='FEITO').values('id', 'nome', 'descricao', 'pilar_esg', 'prazo', 'prioridade')),
+    }
+    return JsonResponse(dados)
+
+
+@login_required
+@require_POST
+@empresa_required
+def criar_atividade(request):
+    exigir(request, 'meta.criar')
+    meta_id = request.POST.get('meta_id')
+    meta = _meta_da_empresa(request, meta_id)
+
+    AtividadeMeta.objects.create(
+        meta=meta,
+        nome=request.POST.get('nome'),
+        descricao=request.POST.get('descricao', ''),
+        pilar_esg=request.POST.get('pilar_esg'),
+        prazo=request.POST.get('prazo') or None,
+        prioridade=request.POST.get('prioridade', 'MEDIA'),
+        status='A_FAZER'  # Sempre inicia em "A Fazer"
+    )
+    messages.success(request, 'Atividade adicionada com sucesso!')
+    return redirect(f"{reverse('dashboard:visulizar_tabela')}?meta={meta.id}")
+
+
+
+@login_required
+@require_POST
+@empresa_required
+def mover_atividade(request, atividade_id):
+    atividade = get_object_or_404(AtividadeMeta, id=atividade_id, meta__company=request.empresa)
+    exigir(request, 'meta.editar', atividade.meta)
+    
+    novo_status = request.POST.get('status')
+    if novo_status in dict(AtividadeMeta.STATUS_CHOICES):
+        atividade.status = novo_status
+        atividade.save(update_fields=['status'])
+        return JsonResponse({'status': 'sucesso', 'novo_status': novo_status, 'em_atraso': atividade.em_atraso})
+    
+    return JsonResponse({'status': 'erro', 'mensagem': 'Status inválido'}, status=400)

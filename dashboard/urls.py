@@ -39,4 +39,11 @@ urlpatterns = [
 
     # Encerrar a conta da empresa
     path('empresa/apagar/', views.apagar_empresa, name='apagar_empresa'),
+
+    # tabela de atividades
+    path('visualizar_tabela/', views.visulizar_tabela, name='visulizar_tabela'),
+    path('metas/<int:meta_id>/atividades/', views.preencher_tabela, name='preencher_tabela'),
+    path('atividades/nova/', views.criar_atividade, name='criar_atividade'),
+    path('atividades/<int:atividade_id>/mover/', views.mover_atividade, name='mover_atividade'),
+
 ]
