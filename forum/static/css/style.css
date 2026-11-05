@@ -1521,3 +1521,248 @@ form.av-item__seta { font-size: 0.8rem; }
     .fm-corpo > .eq-filtro { order: 1; }
     .av-detalhe { padding: 2rem 1.2rem; }
 }
+
+/* Garante que [hidden] vença qualquer display definido nas classes abaixo */
+.ca-corpo [hidden] { display: none !important; }
+ 
+/* No celular o .dash-corpo usa column-reverse; aqui a ordem natural (voltar, detalhes, carrosséis) */
+@media (max-width: 640px) {
+    .ca-corpo { flex-direction: column; }
+    .ca-corpo > .av-topo { order: 0; }
+}
+ 
+/* ---------- Carrosséis ---------- */
+.ca-faixas {
+    flex: 0 0 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+ 
+.ca-faixa { min-width: 0; }
+ 
+.ca-faixa__topo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+ 
+.ca-faixa__titulo {
+    margin: 0;
+    color: #111;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+ 
+.ca-setas {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+ 
+.ca-setas button {
+    padding: 4px 14px;
+    font-size: 1.1rem;
+    line-height: 1.2;
+}
+ 
+.ca-trilho {
+    display: flex;
+    gap: 16px;
+    padding: 8px 6px 14px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+}
+ 
+.ca-trilho .fm-vazio {
+    color: #555;
+    font-size: 0.85rem;
+}
+ 
+/* Card da meta: é um <button>, então anula o estilo global de button */
+.ca-card {
+    flex: 0 0 220px;
+    display: block;
+    padding: 0;
+    scroll-snap-align: start;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+}
+ 
+.ca-card:hover {
+    background: var(--secondary-color);
+    transform: translateY(-3px);
+}
+ 
+.ca-card:focus-visible {
+    outline: 3px solid var(--text-color);
+    outline-offset: 3px;
+}
+ 
+.ca-card .fm-card__titulo {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    min-height: 3.9em; /* altura igual para títulos de 1 a 3 linhas */
+}
+ 
+.ca-card--ativo {
+    outline: 3px solid #fff;
+    box-shadow: 0 0 0 5px var(--fm-cor);
+}
+ 
+/* ---------- Detalhes da meta ---------- */
+.ca-detalhe {
+    flex: 0 0 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+ 
+.ca-detalhe .av-detalhe__meta {
+    flex-wrap: wrap;
+    justify-content: center;
+}
+ 
+.ca-fechar,
+.ca-fechar:hover {
+    left: auto;
+    right: 20px;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    font-size: 1.8rem;
+    line-height: 1;
+    transform: none;
+}
+ 
+.ca-fechar { color: #111; cursor: pointer; }
+.ca-fechar:hover { color: #000; opacity: 0.6; }
+.ca-fechar:focus-visible { outline: 3px solid var(--text-color); outline-offset: 3px; }
+ 
+.ca-detalhe__titulo {
+    margin: 0 0 1rem;
+    color: #111;
+    font-size: 1.5rem;
+    font-weight: 500;
+    text-align: center;
+}
+ 
+.ca-detalhe__resumo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+ 
+.ca-detalhe__acoes {
+    display: flex;
+    justify-content: center;
+    margin: 1.2rem 0 0;
+}
+ 
+/* ---------- Kanban ---------- */
+.ca-kanban {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 1.5rem;
+    align-items: start;
+}
+ 
+@media (max-width: 1000px) {
+    .ca-kanban { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+ 
+@media (max-width: 640px) {
+    .ca-kanban { grid-template-columns: 1fr; }
+    .ca-card { flex-basis: 180px; }
+}
+ 
+.ca-coluna {
+    background: #f1f1ef;
+    border-radius: 18px;
+    overflow: hidden;
+}
+ 
+.ca-coluna__titulo {
+    margin: 0;
+    padding: 10px 12px;
+    background: var(--text-color);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: center;
+}
+ 
+.ca-coluna__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 80px;
+    padding: 12px;
+}
+ 
+.ca-coluna__vazio {
+    margin: 0;
+    color: #777;
+    font-size: 0.78rem;
+    text-align: center;
+}
+ 
+/* Card de atividade: faixa lateral na cor da prioridade */
+.ca-atividade {
+    --fm-cor: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: #fff;
+    border-left: 6px solid var(--fm-cor);
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+ 
+.ca-atividade--alta { --fm-cor: #c0281c; }
+.ca-atividade--media { --fm-cor: #c98a00; }
+.ca-atividade--baixa { --fm-cor: var(--primary-color); }
+ 
+.ca-atividade__nome {
+    margin: 0;
+    color: #111;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+ 
+.ca-atividade .fm-item {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+}
+ 
+.ca-atividade .fm-item::before { content: none; }
+ 
+.ca-atividade__status {
+    width: 100%;
+    padding: 0.4rem;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 0.8rem;
+}
+ 
+.ca-atividade__status:disabled { opacity: 0.6; }
+ 
+@media (prefers-reduced-motion: reduce) {
+    .ca-card:hover { transform: none; }
+}
