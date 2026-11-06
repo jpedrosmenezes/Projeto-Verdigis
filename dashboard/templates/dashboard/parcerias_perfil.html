@@ -1,0 +1,59 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% comment %}
+  Perfil de parceria (dashboard.views_parcerias.meu_perfil). Métodos: GET (formulário) e POST (salva e volta ao painel).
+  URL: {% url 'dashboard:parcerias_perfil' %}
+  Contexto: form (PerfilParceriaForm: visivel, descricao, qualidades, acessibilidades, necessidades) e perfil.
+  Os campos de várias opções (qualidades, acessibilidades, necessidades) são desenhados opção por opção.
+{% endcomment %}
+
+{% block title %}Perfil de parceria - Verdigis{% endblock %}
+{% block fundo %}fundo-5{% endblock %}
+
+{% block head %}<h1 class="dash-banner">PERFIL DE PARCERIA</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro eq-moldura-topo">
+  <section class="secao-form">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:parcerias' %}" aria-label="Voltar para o painel">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+    <h2>Como a sua empresa aparece para as parceiras</h2>
+
+    <form method="post" action="{% url 'dashboard:parcerias_perfil' %}" class="form-contato pc-perfil">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error" role="alert">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {% for campo in form %}
+        <div class="form-group">
+          {% if campo.field.widget.allow_multiple_selected %}
+            <label>{{ campo.label }}</label>
+            {% for opcao in campo %}
+              <label for="{{ opcao.id_for_label }}" class="eq-checkbox">{{ opcao.tag }} <span>{{ opcao.choice_label }}</span></label>
+            {% endfor %}
+          {% elif campo.field.widget.input_type == 'checkbox' %}
+            <label for="{{ campo.id_for_label }}" class="eq-checkbox">{{ campo }} <span>{{ campo.label }}</span></label>
+          {% else %}
+            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+            {{ campo }}
+          {% endif %}
+          {% for erro in campo.errors %}
+            <div class="alert alert-error" role="alert">{{ erro }}</div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+
+      <div class="eq-botoes pc-rodape">
+        <button type="submit" class="btn-submit">Salvar perfil</button>
+        <a class="btn-submit-2 eq-link-botao" href="{% url 'dashboard:parcerias' %}">Cancelar</a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
