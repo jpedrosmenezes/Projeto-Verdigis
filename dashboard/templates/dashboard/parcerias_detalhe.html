@@ -1,0 +1,61 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% comment %}
+  Saber mais sobre uma empresa (dashboard.views_parcerias.detalhe). Método: GET. Só o gestor da empresa.
+  URL: {% url 'dashboard:parcerias_detalhe' 0 %}?pilar=E|S|G (só empresas com perfil visível).
+  Contexto: perfil, company, grupos (por pilar: nome, descricao, qualidades, metas com total, concluidas e percentual),
+  pilar (eixo de origem: codigo e nome), interesse_enviado, match_mutuo e next.
+  Match: POST em {% url 'dashboard:parcerias_match' 0 %} com pilar e next.
+{% endcomment %}
+
+{% block title %}{{ company.nome_fantasia }} - Verdigis{% endblock %}
+{% block fundo %}fundo-5{% endblock %}
+
+{% block head %}<h1 class="dash-banner">{{ company.nome_fantasia|upper }}</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro eq-moldura-topo">
+  <section class="secao-conteudo">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:parcerias_eixo' pilar.codigo %}" aria-label="Voltar para a lista de {{ pilar.nome }}">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+
+    <h2 class="pc-nome">
+      <span>{{ company.nome_fantasia }}</span>
+      {% if match_mutuo %}<span class="av-selo pc-selo">Match mútuo ✓</span>{% endif %}
+    </h2>
+    <p class="pc-info">{{ company.niche.nome }} · {{ company.cidade }}/{{ company.uf }}</p>
+    {% if perfil.descricao %}<p class="pc-info">{{ perfil.descricao }}</p>{% endif %}
+
+    {% for grupo in grupos %}
+      <h3 class="pc-titulo">{{ grupo.nome }}</h3>
+      <p class="pc-info">
+        {% for q in grupo.qualidades %}{{ q.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}
+      </p>
+      <p class="pc-info">Metas: {{ grupo.metas.concluidas }} de {{ grupo.metas.total }} concluídas ({{ grupo.metas.percentual }}%)</p>
+    {% endfor %}
+
+    {% if perfil.acessibilidades.all %}
+      <h3 class="pc-titulo">Acessibilidade</h3>
+      <p class="pc-info">
+        {% for a in perfil.acessibilidades.all %}{{ a.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}
+      </p>
+    {% endif %}
+
+    <div class="eq-botoes pc-rodape">
+      <form method="post" action="{% url 'dashboard:parcerias_match' company.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="pilar" value="{{ pilar.codigo }}">
+        <input type="hidden" name="next" value="{{ next }}">
+        <button type="submit" class="btn-submit-2{% if match_mutuo or interesse_enviado %} btn-excluir{% endif %}">
+          {% if match_mutuo or interesse_enviado %}Desfazer match{% else %}Dar match{% endif %}
+        </button>
+      </form>
+      <a class="btn-submit-2 eq-link-botao" href="{% url 'dashboard:parcerias_eixo' pilar.codigo %}">Voltar à lista</a>
+    </div>
+  </section>
+</div>
+{% endblock %}
