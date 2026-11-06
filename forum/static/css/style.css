@@ -1522,6 +1522,186 @@ form.av-item__seta { font-size: 0.8rem; }
     .av-detalhe { padding: 2rem 1.2rem; }
 }
 
+/* ==========================
+   pc- Painel de Parcerias
+   ==========================*/
+.pc-eixos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 20px;
+}
+
+.pc-eixos .av-tema { padding-bottom: 14px; }
+
+.pc-info {
+    margin: 0;
+    padding: 6px 14px 0;
+    color: #111;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.pc-filtro__titulo.pc-intro {
+    padding: 0 0 20px;
+}
+
+.alert-warning a { color: inherit; font-weight: bold; }
+
+.pc-rodape { justify-content: center; margin-top: 24px; }
+
+.pc-filtro { padding: 14px; }
+
+.pc-filtro .form-group { margin-bottom: 14px; }
+
+.pc-titulo { margin: 18px 0 4px; text-align: center; color: var(--text-color); }
+
+.pc-paginas { justify-content: center; margin-top: 16px; }
+
+.pc-matches { display: flex; flex-direction: column; gap: 24px; flex: 1; max-width: 520px; }
+
+.pc-matches .av-painel { align-self: stretch; }
+
+.av-item .eq-botoes .btn-submit-2,
+.pc-filtro .eq-botoes .btn-submit-2,
+.pc-paginas .btn-submit-2 { margin-top: 0; }
+
+.pc-nome { text-align: center; }
+
+.secao-conteudo p.pc-info { max-width: none; }
+
+.pc-filtro__titulo {
+    margin: 0;
+    padding: 18px 18px 0;
+    font-family: "helvetica-neue-lt-pro-cond", sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.065em;
+    color: #778d44;
+    text-align: center;
+}
+
+.secao-form a.btn-submit-2:hover {
+    color: #fff;
+    text-decoration: none;
+}
+
+.pc-rodape .btn-submit,
+.pc-rodape .btn-submit-2 {
+    margin-top: 0;
+}
+
+.pc-filtro .eq-checkbox,
+.pc-perfil .eq-checkbox {
+    color: var(--text-color);
+}
+
+.pc-filtro .eq-checkbox input,
+.pc-perfil .eq-checkbox input {
+    appearance: none;
+    flex: none;
+    width: 15px;
+    height: 15px;
+    padding: 0;
+    border: 2px solid var(--text-color);
+    border-radius: 50%;
+    background: #fff;
+}
+
+.pc-filtro .eq-checkbox input:checked,
+.pc-perfil .eq-checkbox input:checked {
+    background: radial-gradient(circle, var(--text-color) 0 45%, #fff 50%);
+}
+
+.pc-eixos .av-tema__titulo,
+.pc-rodape .btn-submit-2 {
+    font-family: "helvetica-neue-lt-pro-cond", sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.pc-eixos .av-tema__titulo {
+    transition: transform .2s ease, background-color .3s;
+}
+
+.pc-eixos .av-tema__titulo:hover {
+    transform: scale(1.05);
+}
+
+.secao-conteudo .pc-eixos p {
+    max-width: none;
+}
+
+.pc-eixos .pc-info {
+    color: var(--text-color);
+}
+
+.pc-eixos .av-tema__total {
+    color: var(--primary-color);
+    font-family: "helvetica-neue-lt-pro-cond", sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.pc-rodape .btn-submit-2 {
+    font-family: "helvetica-neue-lt-pro-cond", sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.pc-rodape .btn-submit-2,
+.pc-rodape .btn-submit {
+    line-height: 1.2;
+}
+
+.pc-selo {
+    --av-cor: var(--primary-color);
+}
+
+.av-item__autor.pc-linha,
+.pc-nome {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.pc-nome {
+    justify-content: center;
+}
+
+button,
+[type="submit"],
+[type="button"],
+a,
+summary,
+select,
+label.eq-checkbox,
+input[type="checkbox"],
+input[type="radio"],
+[onclick],
+[class*="btn-"],
+[class*="botao"] {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
+button,
+[class*="btn-"],
+[class*="botao"] {
+    user-select: none;
+}
+
+.eq-link-botao {
+    transition: transform .2s ease, background-color .3s;
+}
+
+.eq-link-botao:hover {
+    transform: scale(1.05);
+}
+
 /* Garante que [hidden] vença qualquer display definido nas classes abaixo */
 .ca-corpo [hidden] { display: none !important; }
  

@@ -68,6 +68,7 @@
             <a class="dash-botao" href="#">Práticas da empresa</a>
             <a class="dash-botao" href="{% url 'dashboard:visualizar_tabela' %}">Quadro de tarefas</a>
           {% endif %}
+          <a class="dash-botao" href="{% url 'dashboard:parcerias' %}">Painel de Parcerias</a>
         </nav>
 
         {% if user.papel == 'EMPRESA' %}

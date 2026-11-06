@@ -1,0 +1,109 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% comment %}
+  Parceiros de um eixo (dashboard.views_parcerias.eixo). Método: GET. Só o gestor da empresa.
+  URL: {% url 'dashboard:parcerias_eixo' 'E' %} (E, S ou G). Filtros por GET: busca, qualidades, acessibilidades, page.
+  Contexto: pilar (codigo, nome, descricao), form (FiltroParceirosForm), com_filtros, total, por_necessidades,
+  pagina (12 por página) e qs (filtros atuais, para os links de página) e next (endereço atual).
+  Cada item de pagina é um PerfilParceria com: company, descricao, qualidades_pilar, em_comum, compatibilidade (% ou None),
+  metas_total, metas_concluidas, interesse_enviado e match_mutuo.
+  Match: POST em {% url 'dashboard:parcerias_match' 0 %} com pilar e next.
+{% endcomment %}
+
+{% block title %}Parceiros {{ pilar.nome }} - Verdigis{% endblock %}
+{% block fundo %}fundo-6{% endblock %}
+
+{% block head %}<h1 class="dash-banner">PARCEIROS · {{ pilar.nome|upper }}</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="dash-corpo av-corpo">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:parcerias' %}" aria-label="Voltar para o painel">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+
+    <div class="av-temas">
+      <article class="av-tema">
+        <h2 class="pc-filtro__titulo">FILTRAR PARCEIROS</h2>
+        <form method="get" class="pc-filtro">
+          <div class="form-group">
+            <label for="{{ form.busca.id_for_label }}">{{ form.busca.label }}</label>
+            {{ form.busca }}
+          </div>
+          <div class="form-group">
+            <label>{{ form.qualidades.label }}</label>
+            {% for opcao in form.qualidades %}
+              <label for="{{ opcao.id_for_label }}" class="eq-checkbox">{{ opcao.tag }} <span>{{ opcao.choice_label }}</span></label>
+            {% endfor %}
+          </div>
+          <div class="form-group">
+            <label>{{ form.acessibilidades.label }}</label>
+            {% for opcao in form.acessibilidades %}
+              <label for="{{ opcao.id_for_label }}" class="eq-checkbox">{{ opcao.tag }} <span>{{ opcao.choice_label }}</span></label>
+            {% endfor %}
+          </div>
+          <div class="eq-botoes">
+            <button type="submit" class="eq-botao-pequeno{% if perfil.match_mutuo or perfil.interesse_enviado %} btn-excluir{% endif %}">Filtrar</button>
+            {% if com_filtros %}
+              <a class="eq-botao-pequeno eq-link-botao btn-submit-2" href="{% url 'dashboard:parcerias_eixo' pilar.codigo %}">Limpar</a>
+            {% endif %}
+          </div>
+        </form>
+      </article>
+    </div>
+
+    <div class="av-painel av-painel--neutro">
+      <h2 class="av-painel__titulo">{{ pilar.nome }}: {{ total }} empresa{{ total|pluralize }}</h2>
+      <div class="av-painel__corpo">
+        {% if por_necessidades and not com_filtros %}
+          <p class="av-painel__total">Ordenadas pelo que a sua empresa procura.</p>
+        {% endif %}
+
+        <div class="av-itens">
+          {% for perfil in pagina %}
+            <div class="av-item eq-item">
+              <span class="av-item__autor pc-linha">
+                <span>{{ perfil.company.nome_fantasia }}{% if perfil.compatibilidade is not None %} · {{ perfil.compatibilidade }}% compatível{% endif %}</span>
+                {% if perfil.match_mutuo %}<span class="av-selo pc-selo">Match mútuo ✓</span>{% endif %}
+              </span>
+              <span class="av-item__texto">
+                {% for q in perfil.qualidades_pilar %}{{ q.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}
+              </span>
+              <span class="av-item__texto">Metas: {{ perfil.metas_concluidas }} de {{ perfil.metas_total }} concluídas</span>
+
+              <div class="eq-botoes">
+                <a class="eq-botao-pequeno eq-link-botao btn-submit-2" href="{% url 'dashboard:parcerias_detalhe' perfil.company_id %}?pilar={{ pilar.codigo }}">Saber mais</a>
+                <form method="post" action="{% url 'dashboard:parcerias_match' perfil.company_id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="pilar" value="{{ pilar.codigo }}">
+                  <input type="hidden" name="next" value="{{ next }}">
+                  <button type="submit" class="eq-botao-pequeno{% if perfil.match_mutuo or perfil.interesse_enviado %} btn-excluir{% endif %}">
+                    {% if perfil.match_mutuo or perfil.interesse_enviado %}Desfazer match{% else %}Dar match{% endif %}
+                  </button>
+                </form>
+              </div>
+            </div>
+          {% empty %}
+            <p class="av-vazio">Nenhuma empresa encontrada neste eixo.</p>
+          {% endfor %}
+        </div>
+
+        {% if pagina.paginator.num_pages > 1 %}
+          <div class="eq-botoes pc-paginas">
+            {% if pagina.has_previous %}
+              <a class="eq-botao-pequeno eq-link-botao btn-submit-2" href="?page={{ pagina.previous_page_number }}&{{ qs }}">Anterior</a>
+            {% endif %}
+            <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+            {% if pagina.has_next %}
+              <a class="eq-botao-pequeno eq-link-botao btn-submit-2" href="?page={{ pagina.next_page_number }}&{{ qs }}">Próxima</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% comment %}
+  Painel de Parcerias (dashboard.views_parcerias.painel). Método: GET. Só o gestor da empresa acessa.
+  URL: {% url 'dashboard:parcerias' %}
+  Contexto: eixos (lista com os 3 pilares: codigo, nome, descricao, metas_total, metas_concluidas,
+  percentual, parceiros, necessidades), perfil, perfil_completo e total_matches_mutuos.
+{% endcomment %}
+
+{% block title %}Painel de Parcerias - Verdigis{% endblock %}
+{% block fundo %}fundo-4{% endblock %}
+
+{% block head %}<h1 class="dash-banner">PAINEL DE PARCERIAS</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="secao-conteudo">
+  <h2 class="pc-filtro__titulo pc-intro">Escolha um eixo para encontrar empresas parceiras compatíveis com o seu perfil.</h2>
+    {% if not perfil_completo %}
+      <p class="alert alert-warning">
+        Seu perfil de parceria ainda não tem qualidades.
+        <a href="{% url 'dashboard:parcerias_perfil' %}">Completar perfil</a>
+      </p>
+    {% endif %}
+
+    <div class="pc-eixos">
+      {% for eixo in eixos %}
+        <article class="av-tema">
+          <a class="av-tema__titulo" href="{% url 'dashboard:parcerias_eixo' eixo.codigo %}">{{ eixo.nome }}</a>
+          <p class="av-tema__total">{{ eixo.parceiros }} empresa{{ eixo.parceiros|pluralize }}</p>
+          <p class="pc-info">{{ eixo.descricao }}</p>
+          <p class="pc-info">Metas concluídas: {{ eixo.percentual }}%</p>
+          <p class="pc-info">Você procura {{ eixo.necessidades }} qualidade{{ eixo.necessidades|pluralize }}</p>
+        </article>
+      {% endfor %}
+    </div>
+
+    <div class="eq-botoes pc-rodape">
+      <a class="btn-submit-2 eq-link-botao" href="{% url 'dashboard:parcerias_matches' %}">
+        Meus matches{% if total_matches_mutuos %} ({{ total_matches_mutuos }}){% endif %}
+      </a>
+      <a class="btn-submit-2 eq-link-botao" href="{% url 'dashboard:parcerias_perfil' %}">Meu perfil de parceria</a>
+      <a class="btn-submit-2 eq-link-botao" href="{% url 'dashboard:dashboard' %}">Voltar ao dashboard</a>
+    </div>
+  </section>
+</div>
+{% endblock %}
