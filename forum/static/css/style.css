@@ -1946,3 +1946,64 @@ button,
 @media (prefers-reduced-motion: reduce) {
     .ca-card:hover { transform: none; }
 }
+/* ==========================
+   esg- Desempenho ESG
+   ==========================*/
+.pc-eixos.esg-cartoes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.esg-sigla { font-size: 2.2rem; }
+
+.esg-data { font-size: 0.8rem; opacity: 0.75; }
+
+.esg-grafico {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 28px auto 0;
+    max-width: 640px;
+    padding: 20px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.esg-barra {
+    display: grid;
+    grid-template-columns: 190px 1fr 56px;
+    align-items: center;
+    gap: 12px;
+}
+
+.esg-barra__rotulo { font-weight: 700; color: var(--text-color); }
+
+.esg-barra__trilho {
+    height: 22px;
+    border-radius: 11px;
+    background: rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.esg-barra__preenchimento {
+    height: 100%;
+    border-radius: 11px;
+    transition: width .6s ease;
+}
+
+.esg-barra__preenchimento--e { background: var(--primary-color); }
+.esg-barra__preenchimento--s { background: #4f8fb8; }
+.esg-barra__preenchimento--g { background: #c99a2e; }
+
+.esg-barra__valor { font-weight: 700; text-align: right; color: var(--text-color); }
+
+.secao-conteudo p.esg-total { margin: 6px 0 0; max-width: none; text-align: center; }
+
+.esg-atividades { margin: 28px auto 0; max-width: 640px; }
+
+@media (max-width: 600px) {
+    .pc-eixos.esg-cartoes { grid-template-columns: 1fr; }
+    .esg-barra { grid-template-columns: 1fr 48px; }
+    .esg-barra__rotulo { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .esg-barra__preenchimento { transition: none; }
+}

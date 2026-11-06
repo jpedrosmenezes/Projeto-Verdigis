@@ -497,24 +497,24 @@ def mover_atividade(request, atividade_id):
     
     return JsonResponse({'status': 'erro', 'mensagem': 'Status inválido'}, status=400)
 
+@login_required
 def esg_dashboard(request):
-    
+    """Desempenho ESG: pontuação acumulada por pilar (gráfico) e as últimas atividades registradas."""
     for pilar_code, _ in ESGMetricas.PILAR_CHOICES:
         ESGMetricas.objects.get_or_create(pilar=pilar_code)
 
-    metricas = ESGMetricas.objects.all()
+    ordem = [codigo for codigo, _ in ESGMetricas.PILAR_CHOICES]
+    metricas = sorted(ESGMetricas.objects.all(), key=lambda m: ordem.index(m.pilar))
     atividades_recentes = ESGAtividade.objects.order_by('-data_realizacao')[:10]
 
-    
-    dados_graficos = {
-        'E': ESGMetricas.objects.get(pilar='E').pontuacao_total,
-        'S': ESGMetricas.objects.get(pilar='S').pontuacao_total,
-        'G': ESGMetricas.objects.get(pilar='G').pontuacao_total,
-    }
+    dados_graficos = {m.pilar: m.pontuacao_total for m in metricas}
 
     context = {
         'metricas': metricas,
         'atividades': atividades_recentes,
         'dados_graficos': dados_graficos,
+        'pontuacao_geral': sum(dados_graficos.values()),
+        # Referência das barras: o pilar com mais pontos ocupa a barra inteira
+        'maior_pontuacao': max(dados_graficos.values(), default=0),
     }
-    return render(request, 'esg_dashboard.html', context)
+    return render(request, 'dashboard/desempenho_esg.html', context)
