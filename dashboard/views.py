@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Count
+from django.db.models import Case, Count, IntegerField, Value, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -402,19 +402,43 @@ def apagar_empresa(request):
 
 # ---------- tabela de atividades ----------
 
+ORDEM_PILARES = (('E', 'Ambiental'), ('S', 'Social'), ('G', 'Governança'))
+ 
+ 
 @login_required
 @empresa_required
-def visulizar_tabela(request):
+def visualizar_tabela(request):
     exigir(request, 'meta.ver')
-    metas = list(services.metas_visiveis(request).order_by('completo', 'deadline'))
-    meta_selecionada = metas[0] if metas else None
-    
+ 
+    ordem_prioridade = Case(
+        When(prioridade='ALTA', then=Value(0)),
+        When(prioridade='MEDIA', then=Value(1)),
+        default=Value(2),
+        output_field=IntegerField(),
+    )
+    metas = list(
+        services.metas_visiveis(request)
+        .annotate(ordem_prioridade=ordem_prioridade)
+        .order_by('ordem_prioridade', 'deadline')
+    )
+    for meta in metas:
+        meta.pode_editar = pode(request, 'meta.editar', meta)
+ 
+    faixas = [
+        {'pilar': codigo, 'nome': nome, 'metas': [m for m in metas if m.pilar_esg == codigo]}
+        for codigo, nome in ORDEM_PILARES
+    ]
+ 
+    meta_aberta = request.GET.get('meta', '')
+    if not (meta_aberta.isdigit() and any(m.id == int(meta_aberta) for m in metas)):
+        meta_aberta = ''
+ 
     return render(request, 'dashboard/tabela_atividades.html', {
-        'metas': metas,
-        'meta_selecionada': meta_selecionada,
+        'faixas': faixas,
+        'pode_criar_atividade': pode(request, 'meta.criar'),
+        'meta_aberta': meta_aberta,
         'hoje': timezone.localdate(),
     })
-
 
 @login_required
 @empresa_required
@@ -454,7 +478,7 @@ def criar_atividade(request):
         status='A_FAZER'  # Sempre inicia em "A Fazer"
     )
     messages.success(request, 'Atividade adicionada com sucesso!')
-    return redirect(f"{reverse('dashboard:visulizar_tabela')}?meta={meta.id}")
+    return redirect(f"{reverse('dashboard:visualizar_tabela')}?meta={meta.id}")
 
 
 
@@ -466,7 +490,7 @@ def mover_atividade(request, atividade_id):
     exigir(request, 'meta.editar', atividade.meta)
     
     novo_status = request.POST.get('status')
-    if novo_status in dict(AtividadeMeta.STATUS_CHOICES):
+    if novo_status in dict(AtividadeMeta.KANBAM_CHOICES):
         atividade.status = novo_status
         atividade.save(update_fields=['status'])
         return JsonResponse({'status': 'sucesso', 'novo_status': novo_status, 'em_atraso': atividade.em_atraso})
