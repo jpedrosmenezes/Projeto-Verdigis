@@ -21,7 +21,7 @@ from .models import Meta, RelatoSocialVerdigis
 
 from django.http import JsonResponse
 from .models import AtividadeMeta
-
+from .models import ESGMetricas,ESGAtividade
 SENTIMENTOS = ('POSITIVO', 'NEGATIVO', 'NEUTRO')
 
 
@@ -496,3 +496,25 @@ def mover_atividade(request, atividade_id):
         return JsonResponse({'status': 'sucesso', 'novo_status': novo_status, 'em_atraso': atividade.em_atraso})
     
     return JsonResponse({'status': 'erro', 'mensagem': 'Status inválido'}, status=400)
+
+def esg_dashboard(request):
+    
+    for pilar_code, _ in ESGMetricas.PILAR_CHOICES:
+        ESGMetricas.objects.get_or_create(pilar=pilar_code)
+
+    metricas = ESGMetricas.objects.all()
+    atividades_recentes = ESGAtividade.objects.order_by('-data_realizacao')[:10]
+
+    
+    dados_graficos = {
+        'E': ESGMetricas.objects.get(pilar='E').pontuacao_total,
+        'S': ESGMetricas.objects.get(pilar='S').pontuacao_total,
+        'G': ESGMetricas.objects.get(pilar='G').pontuacao_total,
+    }
+
+    context = {
+        'metricas': metricas,
+        'atividades': atividades_recentes,
+        'dados_graficos': dados_graficos,
+    }
+    return render(request, 'esg_dashboard.html', context)

@@ -268,3 +268,35 @@ class AtividadeMeta(models.Model):
 
     def __str__(self):
         return f'{self.nome} [{self.get_status_display()}]'
+
+class ESGMetricas(models.Model):
+    PILAR_CHOICES = [
+        ('E', 'Ambiental (Environmental)'),
+        ('S', 'Social (Social)'),
+        ('G', 'Governança (Governance)'),
+    ]
+
+    pilar = models.CharField(max_length=1, choices=PILAR_CHOICES, unique=True)
+    pontuacao_total = models.FloatField(default=0.0)
+    ultima_atualizacao = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.get_pilar_display()} - {self.pontuacao_total} pts"
+
+class ESGAtividade(models.Model):
+    pilar = models.CharField(max_length=1, choices=ESGMetricas.PILAR_CHOICES)
+    descricao = models.CharField(max_length=255)
+    valor_incremento = models.FloatField()
+    data_realizacao = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            
+            metric, _ = ESGMetricas.objects.get_or_create(pilar=self.pilar)
+            metric.pontuacao_total += self.valor_incremento
+            metric.save()
+
+    def __str__(self):
+        return f"[{self.pilar}] {self.descricao} (+{self.valor_incremento})"
