@@ -1,26 +1,167 @@
 {% extends "forum/base.html" %}
 {% load static %}
 
-{% block title %} Verdigis - Atividades ESG {% endblock %}
+{% comment %}
+  Atividades ESG (view visualizar_tabela).
+  Contexto: faixas (lista de {pilar, nome, metas}, sempre na ordem E, S, G; metas já ordenadas
+  por prioridade), pode_criar_atividade, meta_aberta (id vindo de ?meta=) e hoje.
+  Por meta: pode_editar (atualizar atividades).
+  Ao clicar numa meta, js/atividades.js preenche #meta-detalhe (dados vêm dos data-* do card)
+  e busca as atividades via fetch em {% url 'dashboard:preencher_tabela' 0 %}.
+  Criar atividade: POST em {% url 'dashboard:criar_atividade' %}.
+  Mover atividade: POST em {% url 'dashboard:mover_atividade' 0 %}.
+{% endcomment %}
+
+{% block title %}Verdigis - Quadro de Tarefas{% endblock %}
 {% block fundo %}fundo-5{% endblock %}
 
-{% block head %}<h1 class="dash-banner">ATIVIDADES ESG</h1>{% endblock head %}
+{% block head %}<h1 class="dash-banner">QUADRO DE TAREFAS</h1>{% endblock head %}
 
 {% block content %}
 <div class="moldura-vidro">
-  <section class="dash-corpo fm-corpo">
+  <section class="dash-corpo fm-corpo ca-corpo"
+           id="ca-pagina"
+           data-url-atividades="{% url 'dashboard:preencher_tabela' 0 %}"
+           data-url-mover="{% url 'dashboard:mover_atividade' 0 %}"
+           data-meta-aberta="{{ meta_aberta|default:'' }}">
+
     <div class="av-topo">
-        <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
-          <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
-        </a>
+      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
     </div>
-    {% for meta in metas%}
-        <div class="carrossel">
-            <div class="carrossel__item">
-                <div class="carrossel__item__titulo">{{ meta.nome }}</div>
-                <a href="{% url 'dashboard:atividades_meta' meta.id %}" class="carrossel__item__link">Ver atividades</a>
+
+    {# ---------- Detalhes da meta (abre acima dos carrosséis) ---------- #}
+    <article class="av-detalhe ca-detalhe" id="meta-detalhe" hidden aria-live="polite">
+      <button type="button" class="av-detalhe__voltar ca-fechar" data-fechar-detalhe aria-label="Fechar detalhes">×</button>
+
+      <p class="av-detalhe__meta">
+        <span class="av-selo" id="detalhe-pilar"></span>
+        <span id="detalhe-prazo"></span>
+        <span id="detalhe-prioridade"></span>
+        <span id="detalhe-tipo"></span>
+        <span id="detalhe-responsavel"></span>
+        <span class="fm-tag fm-tag--atraso" id="detalhe-situacao" hidden></span>
+      </p>
+
+      <h2 class="ca-detalhe__titulo" id="detalhe-nome"></h2>
+      <div class="ca-detalhe__resumo" id="detalhe-resumo"></div>
+
+      {% if pode_criar_atividade %}
+      <div class="ca-detalhe__acoes">
+        <button type="button" class="eq-botao-pequeno" data-abrir-modal="modal-atividade">+ Nova atividade</button>
+      </div>
+      {% endif %}
+
+      {# 4 colunas do kanban; os cards são montados pelo JS #}
+      <div class="ca-kanban" id="ca-kanban">
+        <section class="ca-coluna" data-status="A_FAZER">
+          <h3 class="ca-coluna__titulo">A Fazer</h3>
+          <div class="ca-coluna__lista"></div>
+        </section>
+        <section class="ca-coluna" data-status="EM_ANDAMENTO">
+          <h3 class="ca-coluna__titulo">Em Andamento</h3>
+          <div class="ca-coluna__lista"></div>
+        </section>
+        <section class="ca-coluna" data-status="REVISAO">
+          <h3 class="ca-coluna__titulo">Em Revisão</h3>
+          <div class="ca-coluna__lista"></div>
+        </section>
+        <section class="ca-coluna" data-status="FEITO">
+          <h3 class="ca-coluna__titulo">Feito</h3>
+          <div class="ca-coluna__lista"></div>
+        </section>
+      </div>
+    </article>
+
+    {# ---------- Carrosséis: E em cima, S no meio, G embaixo ---------- #}
+    <div class="ca-faixas">
+      {% for faixa in faixas %}
+        <section class="ca-faixa" aria-labelledby="faixa-{{ faixa.pilar }}">
+          <header class="ca-faixa__topo">
+            <span class="fm-badge" title="{{ faixa.nome }}">{{ faixa.pilar }}</span>
+            <h2 class="ca-faixa__titulo" id="faixa-{{ faixa.pilar }}">{{ faixa.nome }}</h2>
+            <div class="ca-setas">
+              <button type="button" class="eq-botao-pequeno" data-rolar="-1" aria-label="Metas anteriores">‹</button>
+              <button type="button" class="eq-botao-pequeno" data-rolar="1" aria-label="Próximas metas">›</button>
             </div>
-            
+          </header>
+
+          <div class="ca-trilho">
+            {% for meta in faixa.metas %}
+              <button type="button"
+                      class="fm-card fm-card--{{ meta.prioridade|lower }}{% if meta.completo %} fm-card--concluida{% endif %} ca-card"
+                      data-meta-id="{{ meta.id }}"
+                      data-nome="{{ meta.nome }}"
+                      data-pilar="{{ meta.pilar_esg }}"
+                      data-pilar-nome="{{ meta.get_pilar_esg_display }}"
+                      data-prazo="{{ meta.deadline|date:'d/m/Y' }}"
+                      data-prioridade="{{ meta.get_prioridade_display }}"
+                      data-tipo="{{ meta.get_tipo_display }}"
+                      data-responsavel="{% if meta.funcionario %}{{ meta.funcionario.user.nome }}{% endif %}"
+                      data-resumo="{{ meta.resumo }}"
+                      data-concluida="{{ meta.completo|yesno:'1,0' }}"
+                      data-atrasada="{% if not meta.completo and meta.deadline < hoje %}1{% else %}0{% endif %}"
+                      data-pode-editar="{{ meta.pode_editar|yesno:'1,0' }}">
+                <span class="fm-card__titulo">{{ meta.nome }}</span>
+              </button>
+            {% empty %}
+              <p class="fm-vazio">Nenhuma meta neste pilar.</p>
+            {% endfor %}
+          </div>
+        </section>
+      {% endfor %}
+    </div>
   </section>
 </div>
+
+{% if pode_criar_atividade %}
+<dialog id="modal-atividade" class="fm-modal">
+  <h2 class="fm-modal__topo">Nova atividade</h2>
+
+  <form method="post" class="fm-modal__corpo" id="form-atividade" action="{% url 'dashboard:criar_atividade' %}">
+    {% csrf_token %}
+    <input type="hidden" name="meta_id" id="atividade-meta-id" value="">
+
+    <div class="fm-esg" role="radiogroup" aria-label="Pilar ESG">
+      <input type="radio" name="pilar_esg" id="ativ-esg-E" value="E" required>
+      <label for="ativ-esg-E" title="Ambiental">E</label>
+      <input type="radio" name="pilar_esg" id="ativ-esg-S" value="S">
+      <label for="ativ-esg-S" title="Social">S</label>
+      <input type="radio" name="pilar_esg" id="ativ-esg-G" value="G">
+      <label for="ativ-esg-G" title="Governança">G</label>
+    </div>
+    <p class="fm-dica">Escolha o pilar da atividade!</p>
+
+    <div class="form-group">
+      <label for="ativ-nome">Nome da atividade</label>
+      <input type="text" name="nome" id="ativ-nome" maxlength="255" required>
+    </div>
+    <div class="form-group">
+      <label for="ativ-descricao">Descrição</label>
+      <textarea name="descricao" id="ativ-descricao" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="ativ-prazo">Prazo</label>
+      <input type="date" name="prazo" id="ativ-prazo">
+    </div>
+    <div class="form-group">
+      <label for="ativ-prioridade">Prioridade</label>
+      <select name="prioridade" id="ativ-prioridade">
+        <option value="BAIXA">Baixa</option>
+        <option value="MEDIA" selected>Média</option>
+        <option value="ALTA">Alta</option>
+      </select>
+    </div>
+
+    <div class="fm-modal__acoes">
+      <button type="submit">Adicionar</button>
+      <button type="button" class="fm-cancelar" data-fechar-modal>Cancelar</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+
+<script src="{% static 'js/metas.js' %}"></script>
+<script src="{% static 'js/atividades.js' %}"></script>
 {% endblock %}
