@@ -45,5 +45,6 @@ urlpatterns = [
     path('metas/<int:meta_id>/atividades/', views.preencher_tabela, name='preencher_tabela'),
     path('atividades/nova/', views.criar_atividade, name='criar_atividade'),
     path('atividades/<int:atividade_id>/mover/', views.mover_atividade, name='mover_atividade'),
-
+    # Análise de desempenho e Gráfico ESG
+    path('esg/dashboard/',views.esg_dashboard , name= 'esg_dashboard'),
 ]
