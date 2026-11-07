@@ -18,7 +18,7 @@
   <section class="secao-conteudo">
   <h2 class="pc-filtro__titulo pc-intro">Escolha um eixo para encontrar empresas parceiras compatíveis com o seu perfil.</h2>
     {% if not perfil_completo %}
-      <p class="alert alert-warning">
+      <p class="alert alert-warning" data-testid="aviso-perfil">
         Seu perfil de parceria ainda não tem qualidades.
         <a href="{% url 'dashboard:parcerias_perfil' %}">Completar perfil</a>
       </p>

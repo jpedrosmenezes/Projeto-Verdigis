@@ -1566,6 +1566,8 @@ form.av-item__seta { font-size: 0.8rem; }
 }
 
 .alert-warning a { color: inherit; font-weight: bold; }
+/* Anula o max-width de .secao-conteudo p:first-of-type */
+.secao-conteudo p.alert { max-width: none; }
 
 .pc-rodape { justify-content: center; margin-top: 24px; }
 
