@@ -93,6 +93,7 @@ Critérios de aceitação:
 Deve mostrar de forma simplificada quantas mensagens que abordam determinado conteúdo foram enviadas
 Filtrar a avaliação dos funcionários, verificando se é algo positivo ou negativo, buscando fazer com que o empresário vá atrás de mudanças.
 
+
 ### Issue/Bug Tracker
 ![Print do Bug Tracker](./issues/issue.bugtracker.jpeg)
 
@@ -100,5 +101,8 @@ Filtrar a avaliação dos funcionários, verificando se é algo positivo ou nega
 
 <a id="entrega-04"></a>
 ## Entrega 04
+
+Testes automatizados:
+- Testes unitários em `dashboard/tests.py` e testes de navegador com Selenium em `tests/` (Chrome headless), cobrindo login, o fluxo do #111 de ponta a ponta, o quadro no painel do funcionário, o cancelar da avaliação, o voltar das parcerias e checagens de layout. Como rodar: veja a seção "Testes" do [README](../README.md#testes).
 
 *Em breve.*

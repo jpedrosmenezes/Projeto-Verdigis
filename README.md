@@ -55,6 +55,9 @@ Detalhes técnicos (permissões, fluxos e comandos) em [ARQUITETURA.md](./ARQUIT
 | `/dashboard/equipe/` | Pedidos de entrada, funcionários e consultores |
 | `/dashboard/metas/` | Fábrica de metas |
 | `/dashboard/avaliacao/` | Central de avaliações (relatos da equipe) |
+| `/dashboard/visualizar_tabela/` | Quadro de tarefas (atividades de cada meta) |
+| `/dashboard/esg/dashboard/` | Desempenho ESG (pontos por pilar e atividades recentes) |
+| `/dashboard/parcerias/` | Painel de Parcerias |
 | `/admin/` | Painel administrativo |
 
 ---
@@ -103,6 +106,18 @@ Sem os dados de demonstração, crie o superusuário com `python manage.py creat
 A aplicação ficará disponível em http://127.0.0.1:8000. O conteúdo das páginas é cadastrado em http://127.0.0.1:8000/admin/.
 
 > Se o `.env` tiver `DATABASE_URL`, o projeto usa esse PostgreSQL mesmo em desenvolvimento. Para usar o SQLite local, deixe a variável fora do `.env`.
+
+### Testes
+
+Os testes ficam em `dashboard/tests.py` (unitários) e em `tests/` (Selenium, ponta a ponta). Os de Selenium sobem o site num servidor de teste e o abrem no **Google Chrome em modo headless**, então o Chrome precisa estar instalado. O driver é baixado sozinho pelo Selenium Manager na primeira execução (precisa de internet nessa hora). Sem o Chrome, os testes de Selenium são pulados e os demais rodam normalmente.
+
+```bash
+python manage.py test               # todos os testes
+python manage.py test tests         # só os de Selenium
+python manage.py test dashboard     # só os unitários
+```
+
+Os testes usam um banco temporário e criam os dados com o `popular_demo`; não mexem no seu `db.sqlite3`. Com o `.env` acima (`ENVIRONMENT=development`) não é preciso configurar mais nada. Para achar elementos na tela, os testes usam atributos `data-testid` nos templates; mantenha-os ao alterar o HTML.
 
 ### Usuários de demonstração
 
