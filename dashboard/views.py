@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Case, Count, IntegerField, Value, When
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -17,10 +18,8 @@ from accounts.permissions import empresa_required, exigir, pode
 
 from . import services
 from .forms import FormMetaFuncionario, FormsMetas, OcultarRelatoForm, RelatoSocialForm
-from .models import Meta, RelatoSocialVerdigis
+from .models import AtividadeMeta, Meta, RelatoSocialVerdigis
 
-from django.http import JsonResponse
-from .models import AtividadeMeta
 SENTIMENTOS = ('POSITIVO', 'NEGATIVO', 'NEUTRO')
 
 
@@ -446,16 +445,11 @@ def preencher_tabela(request, meta_id):
     meta = _meta_da_empresa(request, meta_id)
     exigir(request, 'meta.ver')
     
-    atividades = meta.atividades.all()
-    
-    dados = {
-        'meta_id': meta.id,
-        'meta_nome': meta.nome,
-        'a_fazer': list(atividades.filter(status='A_FAZER').values('id', 'nome', 'descricao', 'pilar_esg', 'prazo', 'prioridade')),
-        'em_andamento': list(atividades.filter(status='EM_ANDAMENTO').values('id', 'nome', 'descricao', 'pilar_esg', 'prazo', 'prioridade')),
-        'revisao': list(atividades.filter(status='REVISAO').values('id', 'nome', 'descricao', 'pilar_esg', 'prazo', 'prioridade')),
-        'feito': list(atividades.filter(status='FEITO').values('id', 'nome', 'descricao', 'pilar_esg', 'prazo', 'prioridade')),
-    }
+    dados = {'meta_id': meta.id, 'meta_nome': meta.nome}
+    for status, _ in AtividadeMeta.KANBAM_CHOICES:
+        dados[status.lower()] = []
+    for atividade in meta.atividades.values('id', 'nome', 'descricao', 'pilar_esg', 'prazo', 'prioridade', 'status'):
+        dados[atividade.pop('status').lower()].append(atividade)
     return JsonResponse(dados)
 
 

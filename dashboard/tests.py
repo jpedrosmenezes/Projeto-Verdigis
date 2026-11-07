@@ -47,3 +47,20 @@ class PainelFuncionarioTests(TestCase):
         self.client.force_login(User.objects.get(email='funcionario@demo.com'))
         self.assertContains(self.client.get(reverse('dashboard:dashboard')), reverse('dashboard:visualizar_tabela'))
         self.assertEqual(self.client.get(reverse('dashboard:visualizar_tabela')).status_code, 200)
+
+
+class PreencherTabelaTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        popular_demo()
+
+    def test_agrupa_atividades_por_coluna(self):
+        meta = Meta.objects.get(nome='Reduzir o consumo de papel')
+        meta.atividades.create(nome='A', pilar_esg='E')
+        meta.atividades.create(nome='B', pilar_esg='E', status='FEITO')
+        self.client.force_login(User.objects.get(email='empresa@demo.com'))
+        dados = self.client.get(reverse('dashboard:preencher_tabela', args=[meta.id])).json()
+        self.assertEqual([a['nome'] for a in dados['a_fazer']], ['A'])
+        self.assertEqual([a['nome'] for a in dados['feito']], ['B'])
+        self.assertEqual(dados['em_andamento'], [])
+        self.assertEqual(dados['revisao'], [])
