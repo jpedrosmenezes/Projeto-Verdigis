@@ -16,7 +16,12 @@
 {% block content %}
 <div class="moldura-vidro">
   <section class="secao-conteudo">
-  <h2 class="pc-filtro__titulo pc-intro">Escolha um eixo para encontrar empresas parceiras compatíveis com o seu perfil.</h2>
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard" data-testid="parcerias-voltar">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+    <h2 class="pc-filtro__titulo pc-intro">Escolha um eixo para encontrar empresas parceiras compatíveis com o seu perfil.</h2>
     {% if not perfil_completo %}
       <p class="alert alert-warning" data-testid="aviso-perfil">
         Seu perfil de parceria ainda não tem qualidades.
