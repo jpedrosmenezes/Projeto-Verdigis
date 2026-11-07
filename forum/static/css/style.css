@@ -1246,14 +1246,16 @@ a.fm-cancelar {
    Modelo 3D do dashboard (antes estava inline no dashboard.html)
    ===================================================================== */
 .dash-folha {
-    width: 280px;
-    height: 320px;
+    flex: 1;
+    align-self: stretch;
+    min-height: 420px;
     background: transparent;
     --poster-color: transparent;
 }
 @media (max-width: 800px) {
-    .dash-folha { width: 100%; height: 260px; }
+    .dash-folha { width: 100%; min-height: 320px; }
 }
+.dash-folha::part(default-progress-bar) { display: none; }
 
 
 /* =====================================================================
