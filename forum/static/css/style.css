@@ -1752,7 +1752,7 @@ button,
     margin: 0;
     color: #111;
     font-size: 1.1rem;
-    font-weight: 500;
+    font-weight: 700;
 }
  
 .ca-setas {
@@ -1805,6 +1805,7 @@ button,
 }
  
 .ca-card .fm-card__titulo {
+    font-weight: 700;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
@@ -1846,11 +1847,12 @@ button,
 .ca-fechar:hover { color: #000; opacity: 0.6; }
 .ca-fechar:focus-visible { outline: 3px solid var(--text-color); outline-offset: 3px; }
  
+.ca-detalhe .av-selo { font-weight: 700; }
 .ca-detalhe__titulo {
     margin: 0 0 1rem;
     color: #111;
     font-size: 1.5rem;
-    font-weight: 500;
+    font-weight: 700;
     text-align: center;
 }
  
@@ -1898,7 +1900,7 @@ button,
     background: var(--text-color);
     color: #fff;
     font-size: 0.95rem;
-    font-weight: 500;
+    font-weight: 700;
     text-align: center;
 }
  

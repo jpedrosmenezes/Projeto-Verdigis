@@ -62,6 +62,14 @@
     return e;
   }
 
+  /* Preenche e com "<b>nome:</b> valor" */
+  function rotulado(e, nome, valor) {
+    e.textContent = '';
+    e.appendChild(el('b', null, nome + ':'));
+    e.appendChild(document.createTextNode(' ' + valor));
+    return e;
+  }
+
   /* Mensagem de carregamento/erro, criada uma vez acima do kanban */
   var aviso = el('p', 'fm-dica');
   aviso.setAttribute('role', 'status');
@@ -112,8 +120,8 @@
     var tags = el('div', 'fm-card__tags');
     var selo = el('span', 'fm-badge', a.pilar_esg);
     tags.appendChild(selo);
-    if (a.prazo) tags.appendChild(el('span', 'fm-tag', 'Prazo: ' + formatarData(a.prazo)));
-    tags.appendChild(el('span', 'fm-tag', 'Prioridade: ' + (ROTULOS_PRIORIDADE[a.prioridade] || a.prioridade).toLowerCase()));
+    if (a.prazo) tags.appendChild(rotulado(el('span', 'fm-tag'), 'Prazo', formatarData(a.prazo)));
+    tags.appendChild(rotulado(el('span', 'fm-tag'), 'Prioridade', (ROTULOS_PRIORIDADE[a.prioridade] || a.prioridade).toLowerCase()));
     var atraso = el('span', 'fm-tag fm-tag--atraso ca-atividade__atraso', 'Atrasada');
     atraso.hidden = !(a.prazo && status !== 'FEITO' && a.prazo < hojeISO());
     tags.appendChild(atraso);
@@ -195,8 +203,8 @@
   function preencherDetalhe(card) {
     var d = card.dataset;
     texto('detalhe-pilar', d.pilarNome);
-    texto('detalhe-prazo', 'Prazo: ' + d.prazo);
-    texto('detalhe-prioridade', 'Prioridade: ' + d.prioridade.toLowerCase());
+    rotulado(document.getElementById('detalhe-prazo'), 'Prazo', d.prazo).hidden = false;
+    rotulado(document.getElementById('detalhe-prioridade'), 'Prioridade', d.prioridade.toLowerCase()).hidden = false;
     texto('detalhe-tipo', d.tipo);
     texto('detalhe-responsavel', d.responsavel);
     texto('detalhe-nome', d.nome);
