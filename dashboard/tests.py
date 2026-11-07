@@ -36,3 +36,14 @@ class DesempenhoESGTests(TestCase):
         meta.atividades.create(nome='Atividade privada', pilar_esg='E')
         self.client.force_login(User.objects.get(email='pendente@demo.com'))
         self.assertNotEqual(self.client.get(reverse('dashboard:esg_dashboard')).status_code, 200)
+
+
+class PainelFuncionarioTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        popular_demo()
+
+    def test_funcionario_ve_quadro_de_tarefas(self):
+        self.client.force_login(User.objects.get(email='funcionario@demo.com'))
+        self.assertContains(self.client.get(reverse('dashboard:dashboard')), reverse('dashboard:visualizar_tabela'))
+        self.assertEqual(self.client.get(reverse('dashboard:visualizar_tabela')).status_code, 200)

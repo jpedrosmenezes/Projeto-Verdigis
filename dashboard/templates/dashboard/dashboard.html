@@ -59,6 +59,7 @@
           {% endif %}
           {% if pode_ver_metas %}
             <a class="dash-botao" href="{% url 'dashboard:fabrica_metas' %}">Fábrica de metas</a>
+            <a class="dash-botao" href="{% url 'dashboard:visualizar_tabela' %}" data-testid="link-quadro-tarefas">Quadro de tarefas</a>
           {% endif %}
           {% if user.papel != 'EMPRESA' %}
             <a class="dash-botao" href="{% url 'accounts:meus_vinculos' %}">Meus vínculos</a>
@@ -66,7 +67,6 @@
           {% if user.papel == 'EMPRESA' %}
             <a class="dash-botao" href="#">Diagnóstico de compatibilidade</a>
             <a class="dash-botao" href="#">Práticas da empresa</a>
-            <a class="dash-botao" href="{% url 'dashboard:visualizar_tabela' %}">Quadro de tarefas</a>
           {% endif %}
           <a class="dash-botao" href="{% url 'dashboard:parcerias' %}">Painel de Parcerias</a>
           <a class="dash-botao" href="{% url 'dashboard:esg_dashboard' %}">Desempenho ESG</a>
