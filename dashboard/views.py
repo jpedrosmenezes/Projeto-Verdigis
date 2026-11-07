@@ -21,7 +21,6 @@ from .models import Meta, RelatoSocialVerdigis
 
 from django.http import JsonResponse
 from .models import AtividadeMeta
-from .models import ESGMetricas,ESGAtividade
 SENTIMENTOS = ('POSITIVO', 'NEGATIVO', 'NEUTRO')
 
 
@@ -498,23 +497,22 @@ def mover_atividade(request, atividade_id):
     return JsonResponse({'status': 'erro', 'mensagem': 'Status inválido'}, status=400)
 
 @login_required
+@empresa_required
 def esg_dashboard(request):
-    """Desempenho ESG: pontuação acumulada por pilar (gráfico) e as últimas atividades registradas."""
-    for pilar_code, _ in ESGMetricas.PILAR_CHOICES:
-        ESGMetricas.objects.get_or_create(pilar=pilar_code)
-
-    ordem = [codigo for codigo, _ in ESGMetricas.PILAR_CHOICES]
-    metricas = sorted(ESGMetricas.objects.all(), key=lambda m: ordem.index(m.pilar))
-    atividades_recentes = ESGAtividade.objects.order_by('-data_realizacao')[:10]
-
-    dados_graficos = {m.pilar: m.pontuacao_total for m in metricas}
-
-    context = {
+    """Pontos por pilar e atividades recentes das metas visíveis."""
+    exigir(request, 'meta.ver')
+    atividades = list(
+        AtividadeMeta.objects.filter(meta__in=services.metas_visiveis(request))
+        .select_related('meta').order_by('-data_criacao')
+    )
+    metricas = [
+        {'pilar': codigo, 'nome': nome, 'pontos': sum(a.pontos for a in atividades if a.pilar_esg == codigo)}
+        for codigo, nome in Meta.ESG_ESCOLHA
+    ]
+    return render(request, 'dashboard/desempenho_esg.html', {
         'metricas': metricas,
-        'atividades': atividades_recentes,
-        'dados_graficos': dados_graficos,
-        'pontuacao_geral': sum(dados_graficos.values()),
+        'atividades': atividades[:10],
+        'pontuacao_geral': sum(m['pontos'] for m in metricas),
         # Referência das barras: o pilar com mais pontos ocupa a barra inteira
-        'maior_pontuacao': max(dados_graficos.values(), default=0),
-    }
-    return render(request, 'dashboard/desempenho_esg.html', context)
+        'maior_pontuacao': max(m['pontos'] for m in metricas),
+    })

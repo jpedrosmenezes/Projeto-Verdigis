@@ -3,9 +3,8 @@
 {% comment %}
   Desempenho ESG (dashboard.views.esg_dashboard). Método: GET. Exige login.
   URL: {% url 'dashboard:esg_dashboard' %}
-  Contexto: metricas (ESGMetricas na ordem E, S, G), atividades (as 10 ESGAtividade mais recentes),
-  dados_graficos ({'E': pts, 'S': pts, 'G': pts}), pontuacao_geral e maior_pontuacao (referência das barras).
-  As atividades são lançadas pelo painel administrativo; cada uma soma pontos ao seu pilar.
+  Contexto: metricas ({pilar, nome, pontos} em E, S, G), atividades (10 mais recentes),
+  pontuacao_geral e maior_pontuacao (referência das barras).
 {% endcomment %}
 
 {% block title %}Desempenho ESG - Verdigis{% endblock %}
@@ -20,11 +19,10 @@
 
     <div class="pc-eixos esg-cartoes">
       {% for m in metricas %}
-        <article class="av-tema">
+        <article class="av-tema" data-testid="esg-pilar-{{ m.pilar }}">
           <p class="av-tema__titulo esg-sigla">{{ m.pilar }}</p>
-          <p class="av-tema__total">{{ m.pontuacao_total|floatformat:"-1" }} pts</p>
-          <p class="pc-info">{{ m.get_pilar_display }}</p>
-          <p class="pc-info esg-data">Atualizado em {{ m.ultima_atualizacao|date:"d/m/Y H:i" }}</p>
+          <p class="av-tema__total" data-testid="esg-pontos-{{ m.pilar }}">{{ m.pontos }} pts</p>
+          <p class="pc-info">{{ m.nome }}</p>
         </article>
       {% endfor %}
     </div>
@@ -32,24 +30,24 @@
     <div class="esg-grafico" role="img" aria-label="Gráfico de barras da pontuação de cada pilar ESG">
       {% for m in metricas %}
         <div class="esg-barra">
-          <span class="esg-barra__rotulo">{{ m.get_pilar_display }}</span>
+          <span class="esg-barra__rotulo">{{ m.nome }}</span>
           <div class="esg-barra__trilho">
-            <div class="esg-barra__preenchimento esg-barra__preenchimento--{{ m.pilar|lower }}" style="width: {% widthratio m.pontuacao_total maior_pontuacao 100 %}%"></div>
+            <div class="esg-barra__preenchimento esg-barra__preenchimento--{{ m.pilar|lower }}" style="width: {% widthratio m.pontos maior_pontuacao 100 %}%"></div>
           </div>
-          <span class="esg-barra__valor">{{ m.pontuacao_total|floatformat:"-1" }}</span>
+          <span class="esg-barra__valor">{{ m.pontos }}</span>
         </div>
       {% endfor %}
-      <p class="esg-total">Pontuação geral: <strong>{{ pontuacao_geral|floatformat:"-1" }} pts</strong></p>
+      <p class="esg-total">Pontuação geral: <strong data-testid="esg-total">{{ pontuacao_geral }} pts</strong></p>
     </div>
 
     <div class="av-painel av-painel--positivo esg-atividades">
       <h2 class="av-painel__titulo">Atividades recentes</h2>
       <div class="av-painel__corpo">
-        <div class="av-itens">
+        <div class="av-itens" data-testid="esg-atividades">
           {% for a in atividades %}
             <div class="av-item">
-              <span class="av-item__autor">[{{ a.pilar }}] {{ a.descricao }}</span>
-              <span class="av-item__texto">+{{ a.valor_incremento|floatformat:"-1" }} pts | {{ a.data_realizacao|date:"d/m/Y H:i" }}</span>
+              <span class="av-item__autor">[{{ a.pilar_esg }}] {{ a.nome }}</span>
+              <span class="av-item__texto">{{ a.meta.nome }} | +{{ a.pontos }} pts | {{ a.data_criacao|date:"d/m/Y H:i" }}</span>
             </div>
           {% empty %}
             <p class="av-vazio">Nenhuma atividade ESG registrada ainda.</p>

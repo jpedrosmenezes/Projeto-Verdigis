@@ -259,6 +259,13 @@ class AtividadeMeta(models.Model):
         verbose_name_plural = 'Atividades da Meta'
         ordering = ['prazo', 'id']
 
+    # Pontos que a atividade soma ao pilar no Desempenho ESG.
+    PONTOS_PRIORIDADE = {'BAIXA': 1, 'MEDIA': 2, 'ALTA': 3}
+
+    @property
+    def pontos(self):
+        return self.PONTOS_PRIORIDADE.get(self.prioridade, 0)
+
     @property
     def em_atraso(self):
         """Retorna True se tiver prazo definido, não estiver em 'FEITO' e a data já venceu."""
