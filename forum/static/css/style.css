@@ -1408,6 +1408,10 @@ a.fm-cancelar {
 }
 .eq-botoes .btn-submit-2 { margin-left: 0; }
 .eq-botoes form { margin: 0; }
+/* Iguala os links e o <button> "Sair" */
+.profile-card .eq-botoes { margin-top: 20px; }
+.profile-card .eq-botoes .btn-submit,
+.profile-card .eq-botoes .btn-submit-2 { margin: 0; font-family: inherit; line-height: 1.2; }
 .eq-botao-claro {
     display: inline-flex;
     height: auto;
