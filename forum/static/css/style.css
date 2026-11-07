@@ -1287,6 +1287,7 @@ a.fm-cancelar {
     text-align: center;
 }
 .nt-painel { max-width: 640px; }
+.nt-painel .eq-centro { margin: 0 0 16px; }
 .av-item.nt-item--nova { border-left: 6px solid var(--primary-color); }
 .nt-selo {
     padding: 1px 8px;
