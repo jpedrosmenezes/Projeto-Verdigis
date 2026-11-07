@@ -24,7 +24,7 @@
 
     <div class="fm-lista eq-lista">
       {% for vinculo in vinculos %}
-        <article class="fm-card fm-card--baixa">
+        <article class="fm-card fm-card--baixa eq-vinculo" data-testid="vinculo-card">
           <h2 class="fm-card__titulo">{{ vinculo.company.nome_fantasia }}</h2>
           <div class="fm-card__corpo">
             <div class="fm-card__tags">
