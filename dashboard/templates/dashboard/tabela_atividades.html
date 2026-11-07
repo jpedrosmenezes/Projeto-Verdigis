@@ -49,7 +49,7 @@
 
       {% if pode_criar_atividade %}
       <div class="ca-detalhe__acoes">
-        <button type="button" class="eq-botao-pequeno" data-abrir-modal="modal-atividade">+ Nova atividade</button>
+        <button type="button" class="eq-botao-pequeno" data-abrir-modal="modal-atividade" data-testid="nova-atividade">+ Nova atividade</button>
       </div>
       {% endif %}
 
@@ -75,7 +75,7 @@
     </article>
 
     {# ---------- Carrosséis: E em cima, S no meio, G embaixo ---------- #}
-    <div class="ca-faixas">
+    <div class="ca-faixas" data-testid="quadro-faixas">
       {% for faixa in faixas %}
         <section class="ca-faixa" aria-labelledby="faixa-{{ faixa.pilar }}">
           <header class="ca-faixa__topo">
