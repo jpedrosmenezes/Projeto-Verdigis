@@ -781,6 +781,15 @@ textarea::placeholder {
 }
  
 .fm-cancelar:hover { background: #c9c9c6; }
+
+/* Link "Cancelar" com cara de botão */
+a.fm-cancelar {
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+.secao-form a.fm-cancelar { color: #333; text-decoration: none; }
  
 .dash-banner + .secao-form {
     margin-top: 2rem;
