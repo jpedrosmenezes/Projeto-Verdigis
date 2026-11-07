@@ -27,7 +27,7 @@
       </div>
 
     {% if colaboradores is not None %}
-      <form method="get" class="eq-filtro" action="{% url 'dashboard:fabrica_metas' %}">
+      <form method="get" class="eq-filtro" data-testid="filtro-metas" action="{% url 'dashboard:fabrica_metas' %}">
         <label for="id_colaborador">Filtrar por colaborador</label>
         <select name="colaborador" id="id_colaborador" data-enviar-ao-mudar>
           <option value="">Todas as metas</option>

@@ -1059,7 +1059,7 @@ a.fm-cancelar {
 
 @media (max-width: 640px) {
     /* o .dash-corpo usa column-reverse no celular; isto mantém o botão no topo */
-    .fm-corpo > .av-topo { order: 1; }
+    .fm-corpo > .av-topo { order: 2; }
 }
  
 .av-detalhe__meta {
@@ -1498,6 +1498,7 @@ form.av-item__seta { font-size: 0.8rem; }
     gap: 8px;
 }
 .eq-filtro label { font-weight: 600; color: var(--primary-color); }
+.eq-filtro .eq-botao-pequeno { align-self: stretch; }
 
 /* Telas de formulário logo abaixo do banner */
 .eq-moldura-topo { margin-top: 2.5rem; }
