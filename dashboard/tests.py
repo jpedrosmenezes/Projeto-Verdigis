@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from accounts.models import User
-from dashboard.models import Meta
+from dashboard.models import AtividadeMeta, Meta
 
 
 def popular_demo():
@@ -18,7 +18,7 @@ class DesempenhoESGTests(TestCase):
     def setUpTestData(cls):
         popular_demo()
 
-    def test_atividade_criada_aparece_e_soma_pontos(self):
+    def test_atividade_so_pontua_conforme_avanca_no_kanban(self):
         self.client.force_login(User.objects.get(email='empresa@demo.com'))
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')
         antes = self.client.get(reverse('dashboard:esg_dashboard')).context['metricas'][0]['pontos']
@@ -26,10 +26,18 @@ class DesempenhoESGTests(TestCase):
         self.client.post(reverse('dashboard:criar_atividade'), {
             'meta_id': meta.id, 'nome': 'Trocar lâmpadas', 'pilar_esg': 'E', 'prioridade': 'ALTA',
         })
+        atividade = AtividadeMeta.objects.get(nome='Trocar lâmpadas')
 
+        # Criada em "A Fazer", ainda não soma pontos.
         resposta = self.client.get(reverse('dashboard:esg_dashboard'))
         self.assertContains(resposta, 'Trocar lâmpadas')
-        self.assertEqual(resposta.context['metricas'][0]['pontos'], antes + 3)
+        self.assertEqual(resposta.context['metricas'][0]['pontos'], antes)
+
+        # Cada avanço no kanban libera uma parte dos 2 pontos finais.
+        for status, pontos in [('EM_ANDAMENTO', 0.5), ('REVISAO', 1), ('FEITO', 2)]:
+            self.client.post(reverse('dashboard:mover_atividade', args=[atividade.id]), {'status': status})
+            resposta = self.client.get(reverse('dashboard:esg_dashboard'))
+            self.assertEqual(resposta.context['metricas'][0]['pontos'], antes + pontos)
 
     def test_nao_mostra_atividades_de_outra_empresa(self):
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')

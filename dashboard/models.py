@@ -260,11 +260,18 @@ class AtividadeMeta(models.Model):
         ordering = ['prazo', 'id']
 
     # Pontos que a atividade soma ao pilar no Desempenho ESG.
-    PONTOS_PRIORIDADE = {'BAIXA': 1, 'MEDIA': 2, 'ALTA': 3}
+    # A atividade só pontua conforme avança no kanban;
+    PONTOS_FINAIS = 2
+    PONTOS_POR_STATUS = {
+        'A_FAZER': 0,
+        'EM_ANDAMENTO': 0.5,
+        'REVISAO': 1,
+        'FEITO': PONTOS_FINAIS,
+    }
 
     @property
     def pontos(self):
-        return self.PONTOS_PRIORIDADE.get(self.prioridade, 0)
+        return self.PONTOS_POR_STATUS.get(self.status, 0)
 
     @property
     def em_atraso(self):

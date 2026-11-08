@@ -66,7 +66,7 @@ Ação desconhecida levanta `KeyError`. `ACOES_NAO_DELEGAVEIS` (`equipe.gerir`, 
 
 **Exclusões.** Apagar empresa pede senha e o código da empresa, avisa membros e solicitantes (`EMPRESA_ENCERRADA`), apaga em cascata vínculos, pedidos, metas e relatos e devolve o responsável à triagem. Excluir conta pede a senha; o responsável apaga a empresa junto; funcionário e consultor avisam cada empresa.
 
-**Quadro de tarefas e Desempenho ESG.** Cada meta tem atividades (`AtividadeMeta`) num kanban de 4 colunas. O quadro aparece para quem tem `meta.ver` (Empresa, consultor e funcionário, este só com as metas gerais e as suas). O Desempenho ESG lê as atividades das metas visíveis ao usuário: as 10 mais recentes e a soma de pontos por pilar, com peso pela prioridade (`AtividadeMeta.PONTOS_PRIORIDADE`: baixa 1, média 2, alta 3). Os modelos `ESGMetricas` e `ESGAtividade` (globais, lançados pelo admin) não são mais lidos pela tela.
+**Quadro de tarefas e Desempenho ESG.** Cada meta tem atividades (`AtividadeMeta`) num kanban de 4 colunas. O quadro aparece para quem tem `meta.ver` (Empresa, consultor e funcionário, este só com as metas gerais e as suas). O Desempenho ESG lê as atividades das metas visíveis ao usuário: as 10 mais recentes e a soma de pontos por pilar, conforme o avanço no kanban (`AtividadeMeta.PONTOS_POR_STATUS`: A Fazer 0, Em Andamento 0,5, Em Revisão 1, Feito 2). A prioridade não altera mais a pontuação. Os modelos `ESGMetricas` e `ESGAtividade` (globais, lançados pelo admin) não são mais lidos pela tela.
 
 ## Notificações
 
