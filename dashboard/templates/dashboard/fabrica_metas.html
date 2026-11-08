@@ -29,16 +29,18 @@
     {% if colaboradores is not None %}
       <form method="get" class="eq-filtro" data-testid="filtro-metas" action="{% url 'dashboard:fabrica_metas' %}">
         <label for="id_colaborador">Filtrar por colaborador</label>
-        <select name="colaborador" id="id_colaborador" data-enviar-ao-mudar>
-          <option value="">Todas as metas</option>
+        <select name="colaborador" id="id_colaborador">
+          <option value=""{% if not colaborador_atual %} selected{% endif %}>Todas as metas</option>
           {% for v in colaboradores %}
             <option value="{{ v.id }}"{% if colaborador_atual == v.id|stringformat:"s" %} selected{% endif %}>{{ v.user.nome }}</option>
           {% endfor %}
-          <option value="sem"{% if colaborador_atual == 'sem' %} selected{% endif %}>Sem responsável</option>
+          <option value="geral"{% if colaborador_atual == 'geral' %} selected{% endif %}>Meta Geral</option>
         </select>
         <button type="submit" class="eq-botao-pequeno">Filtrar</button>
       </form>
     {% endif %}
+
+
 
     <div class="fm-lista">
       {% for meta in metas %}

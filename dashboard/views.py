@@ -165,18 +165,22 @@ def _form_meta(request, data=None, instance=None):
 
 
 def _filtrar_por_colaborador(request, metas):
-    """Filtro da Empresa e do consultor: um funcionário ou "sem responsável". Valor inválido é ignorado."""
-    valor = request.GET.get('colaborador', '')
+    """Filtro da Empresa e do consultor: um funcionário ou "Meta Geral". Valor inválido é ignorado."""
+    valor = request.GET.get('colaborador', '').strip()
     if not valor or request.user.papel == Papel.FUNCIONARIO:
         return metas, ''
-    if valor == 'sem':
-        return metas.filter(tipo='INDIVIDUAL', funcionario__isnull=True), valor
+    
+    if valor == 'geral':
+        return metas.filter(tipo='GERAL'), valor
+
     if valor.isdigit() and Vinculo.objects.filter(
         id=valor, company=request.empresa, tipo=TipoVinculo.FUNCIONARIO,
     ).exists():
         return metas.filter(funcionario_id=int(valor)), valor
+
     messages.warning(request, 'Colaborador inválido; mostrando todas as metas.')
     return metas, ''
+
 
 
 @login_required
