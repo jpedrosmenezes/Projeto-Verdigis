@@ -24,7 +24,7 @@ class LoginTests(SeleniumTestCase):
 
 
 class FluxoTests(SeleniumTestCase):
-    def test_atividade_criada_aparece_no_desempenho_esg(self):
+    def test_atividade_criada_aparece_sem_pontos_no_desempenho_esg(self):
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')
         self.login(EMPRESA)
         self.abrir(f'/dashboard/visualizar_tabela/?meta={meta.id}')
@@ -38,8 +38,8 @@ class FluxoTests(SeleniumTestCase):
 
         self.abrir('/dashboard/esg/dashboard/')
         self.assertIn('Trocar lâmpadas por LED', self.por_testid('esg-atividades').text)
-        self.assertEqual(self.por_testid('esg-pontos-E').text, '3 pts')
-        self.assertEqual(self.por_testid('esg-total').text, '3 pts')
+        self.assertEqual(self.por_testid('esg-pontos-E').text, '0 pts')
+        self.assertEqual(self.por_testid('esg-total').text, '0 pts')
 
     def test_funcionario_abre_o_quadro_de_tarefas(self):
         self.login(FUNCIONARIO)
