@@ -1,0 +1,42 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% comment %}
+  Apagar empresa (view apagar_empresa). Só a Empresa (empresa.apagar). Métodos: GET e POST.
+  URL: {% url 'dashboard:apagar_empresa' %}
+  Contexto: form (ConfirmarSenhaForm: password e codigo), company, total_membros, total_metas e total_relatos.
+  Apaga a empresa em cascata, avisa a equipe (EMPRESA_ENCERRADA) e devolve o responsável à triagem.
+{% endcomment %}
+
+{% block title %}Apagar empresa - Verdigis{% endblock %}
+{% block fundo %}fundo-2{% endblock %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="secao-form">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'accounts:profile' %}" aria-label="Voltar para o perfil">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+    <h1>APAGAR EMPRESA</h1>
+    <div class="alert alert-error" role="alert">
+      <b>Esta ação é irreversível.</b> Tudo o que pertence a {{ company.nome_fantasia }} será apagado.
+    </div>
+    <ul class="eq-acoes">
+      <li>{{ total_membros }} membro{{ total_membros|pluralize }} da equipe perderão o vínculo (as contas deles continuam existindo)</li>
+      <li>{{ total_metas }} meta{{ total_metas|pluralize }}</li>
+      <li>{{ total_relatos }} relato{{ total_relatos|pluralize }}</li>
+    </ul>
+    <p>Depois disso, sua conta continua ativa e você volta para a escolha de papel.</p>
+
+    <form method="post" action="{% url 'dashboard:apagar_empresa' %}" class="form-contato">
+      {% csrf_token %}
+      {% for field in form %}
+        {% include 'accounts/_campo.html' with field=field %}
+      {% endfor %}
+      <button class="btn-submit btn-excluir" type="submit">Apagar empresa definitivamente</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

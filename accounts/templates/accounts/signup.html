@@ -1,4 +1,10 @@
 {% extends 'forum/base.html' %}
+{% comment %}
+  Cadastro (accounts.views.signup). Métodos: GET e POST.
+  URL: {% url 'accounts:signup' %}
+  Contexto: form (SignupForm: nome, email, password1, password2).
+  Depois do cadastro o usuário entra direto na triagem ({% url 'accounts:onboarding' %}).
+{% endcomment %}
 
 {% block title %}Criar Conta - Verdigis{% endblock %}
 {% block fundo %}fundo-1{% endblock %}
@@ -7,37 +13,23 @@
 <div class="moldura-vidro">
 <section class="secao-form">
     <h1>CRIAR CONTA</h1>
-    <p>Escolha como você vai usar a plataforma.</p>
-
-    {% include 'accounts/_seletor_tipo.html' with pagina='signup' ativo='empresa' %}
-
-    <p>Crie a sua conta. Depois, use o botão "Cadastrar empresa" do menu para informar os dados da empresa.</p>
+    <p>Crie sua conta com o seu e-mail. No próximo passo você conta se é empresa, funcionário ou consultor.</p>
 
     {% if form.non_field_errors %}
         <div class="alert alert-error" role="alert">
-            {% for error in form.non_field_errors %}
-                <p>{{ error }}</p>
-            {% endfor %}
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
         </div>
     {% endif %}
 
-    <form method="POST" action="{% url 'signup' %}" class="form-contato">
+    <form method="post" action="{% url 'accounts:signup' %}" class="form-contato">
         {% csrf_token %}
-
         {% for field in form %}
-            {% if field.name == 'cnpj' %}
-                {% include 'accounts/_campo.html' with field=field dica='Opcional. Os dados completos da empresa ficam para a próxima etapa.' %}
-            {% elif field.name != 'funcionario' %}
-                {% include 'accounts/_campo.html' with field=field %}
-            {% endif %}
+            {% include 'accounts/_campo.html' with field=field %}
         {% endfor %}
-
         <button type="submit" class="btn-submit">Criar Conta</button>
     </form>
 
-    <p class="auth-switch">Já tem uma conta? <a href="{% url 'login' %}">Entrar</a></p>
+    <p class="auth-switch">Já tem uma conta? <a href="{% url 'accounts:login' %}">Entrar</a></p>
 </section>
 </div>
-{% load static %}
-<script src="{% static 'js/masks.js' %}"></script>
 {% endblock content %}

@@ -33,17 +33,31 @@ Perda de contratos, crédito mais caro, exposição reputacional e dificuldade d
 
 ## Funcionalidades
 
-- Páginas institucionais: início, quem somos, sobre o projeto e fale conosco
+- Páginas institucionais: início, sobre o projeto e fale conosco
 - Apresentação dos pilares ESG (Ambiental, Social e Governança) com práticas associadas a cada um
 - Formulário de contato com registro das mensagens no banco de dados
 - Conteúdo, equipe, pilares e tecnologias editáveis pelo painel administrativo do Django, sem alteração de código
+- Contas com login por e-mail e escolha de papel: empresa, funcionário ou consultor
+- Equipe da empresa: entrada pelo código da empresa, aprovação de pedidos e permissões por consultor
+- Fábrica de metas com regras por papel e relatos da equipe com anonimato e moderação
+- Notificações dentro do site
+
+Detalhes técnicos (permissões, fluxos e comandos) em [ARQUITETURA.md](./ARQUITETURA.md).
 
 | Rota | Descrição |
 | --- | --- |
 | `/` | Página inicial |
-| `/quem-somos/` | Equipe e apresentação do grupo |
-| `/sobre-projeto/` | Objetivos, pilares, práticas e tecnologias |
+| `/sobre/` | Objetivos, pilares, práticas e tecnologias |
 | `/fale-conosco/` | Formulário de contato |
+| `/account/signup/` e `/account/login/` | Cadastro e login por e-mail |
+| `/account/onboarding/` | Escolha do papel (empresa, funcionário ou consultor) |
+| `/dashboard/` | Painel da empresa, com o menu de cada papel |
+| `/dashboard/equipe/` | Pedidos de entrada, funcionários e consultores |
+| `/dashboard/metas/` | Fábrica de metas |
+| `/dashboard/avaliacao/` | Central de avaliações (relatos da equipe) |
+| `/dashboard/visualizar_tabela/` | Quadro de tarefas (atividades de cada meta) |
+| `/dashboard/esg/dashboard/` | Desempenho ESG (pontos por pilar e atividades recentes) |
+| `/dashboard/parcerias/` | Painel de Parcerias |
 | `/admin/` | Painel administrativo |
 
 ---
@@ -79,27 +93,57 @@ SECRET_KEY=<uma-chave-secreta-qualquer>
 ENVIRONMENT=development
 ```
 
-Aplique as migrações, crie um superusuário e inicie o servidor:
+Aplique as migrações, carregue os dados de demonstração (opcional) e inicie o servidor:
 
 ```bash
 python manage.py migrate
-python manage.py createsuperuser
+python manage.py popular_demo      # usuários, empresa, metas e relatos de exemplo
 python manage.py runserver
 ```
 
+Sem os dados de demonstração, crie o superusuário com `python manage.py createsuperuser` (pede e-mail, nome e senha).
+
 A aplicação ficará disponível em http://127.0.0.1:8000. O conteúdo das páginas é cadastrado em http://127.0.0.1:8000/admin/.
+
+> Se o `.env` tiver `DATABASE_URL`, o projeto usa esse PostgreSQL mesmo em desenvolvimento. Para usar o SQLite local, deixe a variável fora do `.env`.
+
+### Testes
+
+Os testes ficam em `dashboard/tests.py` (unitários) e em `tests/` (Selenium, ponta a ponta). Os de Selenium sobem o site num servidor de teste e o abrem no **Google Chrome em modo headless**, então o Chrome precisa estar instalado. O driver é baixado sozinho pelo Selenium Manager na primeira execução (precisa de internet nessa hora). Sem o Chrome, os testes de Selenium são pulados e os demais rodam normalmente.
+
+```bash
+python manage.py test               # todos os testes
+python manage.py test tests         # só os de Selenium
+python manage.py test dashboard     # só os unitários
+```
+
+Os testes usam um banco temporário e criam os dados com o `popular_demo`; não mexem no seu `db.sqlite3`. Com o `.env` acima (`ENVIRONMENT=development`) não é preciso configurar mais nada. Para achar elementos na tela, os testes usam atributos `data-testid` nos templates; mantenha-os ao alterar o HTML.
+
+### Usuários de demonstração
+
+Senha de todos: `verdigis123`.
+
+| E-mail | Papel |
+| --- | --- |
+| `admin@demo.com` | Superusuário |
+| `empresa@demo.com` | Empresa "Farmácia Vida Verde [DEMO]" |
+| `funcionario@demo.com` e `funcionario2@demo.com` | Funcionários da empresa |
+| `consultor@demo.com` | Consultor da empresa, com permissão para criar metas |
+| `pendente@demo.com` | Funcionário com pedido de entrada pendente |
 
 ### Variáveis de ambiente
 
 | Variável | Obrigatória | Descrição |
 | --- | --- | --- |
 | `SECRET_KEY` | Sim | Chave secreta do Django |
-| `ENVIRONMENT` | Sim | `development` usa SQLite local; qualquer outro valor usa PostgreSQL |
-| `DATABASE_URL` | Em produção | URL de conexão do PostgreSQL |
+| `ENVIRONMENT` | Sim | `development` liga o modo de depuração e, sem `DATABASE_URL`, usa SQLite local |
+| `DATABASE_URL` | Em produção | URL de conexão do PostgreSQL. Quando definida, é usada em qualquer ambiente |
+| `DJANGO_SUPERUSER_EMAIL` e `DJANGO_SUPERUSER_PASSWORD` | Não | Criam o superusuário durante o build (o Render gratuito não tem shell) |
+| `CARREGAR_DEMO` | Não | `sim` carrega os dados de demonstração no build |
 
 ## Deploy
 
-O deploy é feito no Render. O script `build.sh` instala as dependências, coleta os arquivos estáticos e aplica as migrações:
+O deploy é feito no Render (plano gratuito). O script `build.sh` instala as dependências, coleta os arquivos estáticos, prepara o banco, aplica as migrações e cria o superusuário:
 
 ```bash
 ./build.sh
@@ -107,18 +151,22 @@ O deploy é feito no Render. O script `build.sh` instala as dependências, colet
 
 Configure `SECRET_KEY`, `ENVIRONMENT` e `DATABASE_URL` como variáveis de ambiente do serviço e use `gunicorn verdigis.wsgi` como comando de inicialização.
 
+No plano gratuito o disco é apagado a cada deploy ou reinício (fotos de perfil enviadas se perdem e o avatar padrão volta a aparecer) e o serviço hiberna após 15 minutos sem acesso.
+
 ---
 
 ## Estrutura do repositório
 
 ```
 .
-├── verdigis/       
-├── forum/          
+├── verdigis/
+├── forum/
 ├── accounts/
 ├── dashboard/
-├── docs/           
-├── build.sh        
+├── templates/
+├── docs/
+├── ARQUITETURA.md
+├── build.sh
 ├── manage.py
 ├── .gitignore
 └── requirements.txt

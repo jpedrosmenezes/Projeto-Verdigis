@@ -1,0 +1,25 @@
+{% extends "forum/base.html" %}
+{% load static %}
+{% comment %}
+  Pedido para entrar numa empresa (accounts.views.entrar_empresa). Métodos: GET e POST.
+  URL: {% url 'accounts:entrar_empresa' %}  |  Só funcionário e consultor.
+  Contexto: form (EntrarEmpresaForm: codigo, cargo, setor, mensagem).
+{% endcomment %}
+
+{% block title %}Entrar em uma empresa - Verdigis{% endblock %}
+{% block fundo %}fundo-3{% endblock %}
+
+{% block content %}
+<div class="moldura-vidro">
+<section class="secao-form">
+    <div class="av-topo">
+        <a class="av-voltar" href="{% url 'accounts:meus_vinculos' %}" aria-label="Voltar para meus vínculos">
+            <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+        </a>
+    </div>
+    <h1>ENTRAR EM UMA EMPRESA</h1>
+    <p>Peça o código da empresa ao responsável. Ele tem o formato XXXXX-XXXXX.</p>
+    {% include 'accounts/_form_entrar.html' with form=form %}
+</section>
+</div>
+{% endblock %}

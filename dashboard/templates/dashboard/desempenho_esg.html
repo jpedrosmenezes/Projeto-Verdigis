@@ -1,0 +1,64 @@
+{% extends "forum/base.html" %}
+
+{% comment %}
+  Desempenho ESG (dashboard.views.esg_dashboard). Método: GET. Exige login.
+  URL: {% url 'dashboard:esg_dashboard' %}
+  Contexto: metricas ({pilar, nome, pontos} em E, S, G), atividades (10 mais recentes),
+  pontuacao_geral e maior_pontuacao (referência das barras).
+{% endcomment %}
+
+{% block title %}Desempenho ESG - Verdigis{% endblock %}
+{% block fundo %}fundo-4{% endblock %}
+
+{% block head %}<h1 class="dash-banner">DESEMPENHO ESG</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="secao-conteudo">
+    <h2 class="pc-filtro__titulo pc-intro">Pontuação acumulada em cada pilar ESG</h2>
+
+    <div class="pc-eixos esg-cartoes">
+      {% for m in metricas %}
+        <article class="av-tema" data-testid="esg-pilar-{{ m.pilar }}">
+          <p class="av-tema__titulo esg-sigla">{{ m.pilar }}</p>
+          <p class="av-tema__total" data-testid="esg-pontos-{{ m.pilar }}">{{ m.pontos }} pts</p>
+          <p class="pc-info">{{ m.nome }}</p>
+        </article>
+      {% endfor %}
+    </div>
+
+    <div class="esg-grafico" role="img" aria-label="Gráfico de barras da pontuação de cada pilar ESG">
+      {% for m in metricas %}
+        <div class="esg-barra">
+          <span class="esg-barra__rotulo">{{ m.nome }}</span>
+          <div class="esg-barra__trilho">
+            <div class="esg-barra__preenchimento esg-barra__preenchimento--{{ m.pilar|lower }}" style="width: {% widthratio m.pontos maior_pontuacao 100 %}%"></div>
+          </div>
+          <span class="esg-barra__valor">{{ m.pontos }}</span>
+        </div>
+      {% endfor %}
+      <p class="esg-total">Pontuação geral: <strong data-testid="esg-total">{{ pontuacao_geral }} pts</strong></p>
+    </div>
+
+    <div class="av-painel av-painel--positivo esg-atividades">
+      <h2 class="av-painel__titulo">Atividades recentes</h2>
+      <div class="av-painel__corpo">
+        <div class="av-itens" data-testid="esg-atividades">
+          {% for a in atividades %}
+            <div class="av-item">
+              <span class="av-item__autor">[{{ a.pilar_esg }}] {{ a.nome }}</span>
+              <span class="av-item__texto">{{ a.meta.nome }} | +{{ a.pontos }} pts | {{ a.data_criacao|date:"d/m/Y H:i" }}</span>
+            </div>
+          {% empty %}
+            <p class="av-vazio">Nenhuma atividade ESG registrada ainda.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="eq-botoes pc-rodape">
+      <a class="btn-submit-2 eq-link-botao" href="{% url 'dashboard:dashboard' %}">Voltar ao dashboard</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

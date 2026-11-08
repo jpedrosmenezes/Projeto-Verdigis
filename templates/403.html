@@ -1,0 +1,14 @@
+{% extends "forum/base.html" %}
+{% comment %}
+  Página de acesso negado (403). Usada quando pode() nega uma ação.
+{% endcomment %}
+{% block title %}Acesso negado - Verdigis{% endblock %}
+{% block content %}
+<div class="moldura-vidro">
+  <section class="secao-form">
+    <h1>ACESSO NEGADO</h1>
+    <p>Você não tem permissão para fazer isso nesta empresa. Se acha que deveria ter, fale com o responsável pela empresa.</p>
+    <p><a href="{% url 'dashboard:dashboard' %}">Voltar ao dashboard</a></p>
+  </section>
+</div>
+{% endblock %}
