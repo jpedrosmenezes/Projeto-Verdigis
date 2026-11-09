@@ -4,7 +4,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 
 from accounts.models import TipoNotificacao, User
 from accounts.services import notificar
-from dashboard.models import Meta
+from dashboard.models import AtividadeMeta, Meta
 
 from .base import EMPRESA, FUNCIONARIO, SeleniumTestCase
 
@@ -41,6 +41,34 @@ class FluxoTests(SeleniumTestCase):
         self.assertEqual(self.por_testid('esg-pontos-E').text, '0 pts')
         self.assertEqual(self.por_testid('esg-total').text, '0 pts')
 
+    def test_atividade_pontua_conforme_avanca_no_kanban(self):
+        meta = Meta.objects.get(nome='Reduzir o consumo de papel')
+        self.login(EMPRESA)
+        self.abrir(f'/dashboard/visualizar_tabela/?meta={meta.id}')
+
+        self.por_testid('nova-atividade').click()
+        self.driver.find_element(By.ID, 'ativ-nome').send_keys('Instalar torneiras automáticas')
+        self.driver.find_element(By.CSS_SELECTOR, '#form-atividade button[type="submit"]').click()
+        WebDriverWait(self.driver, 10).until(
+            lambda d: meta.atividades.filter(nome='Instalar torneiras automáticas').exists(),
+        )
+        atividade = AtividadeMeta.objects.get(nome='Instalar torneiras automáticas')
+
+        # Cada coluna do kanban libera uma parte dos 2 pontos finais (#116).
+        for status, pontos in [('EM_ANDAMENTO', '0,5 pts'), ('REVISAO', '1 pts'), ('FEITO', '2 pts')]:
+            self.abrir(f'/dashboard/visualizar_tabela/?meta={meta.id}')
+            seletor = Select(self.por_testid('atividade').find_element(
+                By.CSS_SELECTOR, '[data-testid="atividade-status"]',
+            ))
+            seletor.select_by_value(status)
+            WebDriverWait(self.driver, 10).until(
+                lambda d: AtividadeMeta.objects.get(pk=atividade.pk).status == status,
+            )
+
+            self.abrir('/dashboard/esg/dashboard/')
+            self.assertEqual(self.por_testid('esg-pontos-E').text, pontos)
+            self.assertEqual(self.por_testid('esg-total').text, pontos)
+
     def test_funcionario_abre_o_quadro_de_tarefas(self):
         self.login(FUNCIONARIO)
         self.abrir('/dashboard/')
@@ -61,6 +89,32 @@ class FluxoTests(SeleniumTestCase):
         self.abrir('/dashboard/parcerias/')
         self.por_testid('parcerias-voltar').click()
         self.esperar_url('/dashboard/')
+
+
+class FabricaMetasTests(SeleniumTestCase):
+    def test_filtro_meta_geral_mostra_apenas_metas_gerais(self):
+        self.login(EMPRESA)
+        self.abrir('/dashboard/metas/')
+
+        Select(self.por_testid('filtro-colaborador')).select_by_value('geral')
+        self.por_testid('filtro-metas').find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
+        self.esperar_url_contem('colaborador=geral')
+
+        esperadas = set(Meta.objects.filter(tipo='GERAL').values_list('nome', flat=True))
+        WebDriverWait(self.driver, 10).until(
+            lambda d: {
+                c.find_element(By.CLASS_NAME, 'fm-card__titulo').text
+                for c in d.find_elements(By.CSS_SELECTOR, '[data-testid="meta-card"]')
+            } == esperadas,
+        )
+        cartoes = self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="meta-card"]')
+        self.assertEqual({c.get_attribute('data-meta-tipo') for c in cartoes}, {'GERAL'})
+        self.assertEqual({c.find_element(By.CLASS_NAME, 'fm-card__titulo').text for c in cartoes}, esperadas)
+
+    def test_funcionario_nao_ve_o_filtro_de_colaborador(self):
+        self.login(FUNCIONARIO)
+        self.abrir('/dashboard/metas/')
+        self.assertEqual(self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="filtro-metas"]'), [])
 
 
 class LayoutTests(SeleniumTestCase):

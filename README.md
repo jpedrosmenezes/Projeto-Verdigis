@@ -119,6 +119,15 @@ python manage.py test dashboard     # só os unitários
 
 Os testes usam um banco temporário e criam os dados com o `popular_demo`; não mexem no seu `db.sqlite3`. Com o `.env` acima (`ENVIRONMENT=development`) não é preciso configurar mais nada. Para achar elementos na tela, os testes usam atributos `data-testid` nos templates; mantenha-os ao alterar o HTML.
 
+### Integração contínua e deploy (GitHub Actions)
+
+O repositório tem dois workflows em `.github/workflows/`:
+
+- **`ci.yml`** roda `python manage.py check` e toda a suíte (`python manage.py test`) em cada push para `main` e em pull requests. O Chrome já vem instalado no runner `ubuntu-latest`, então os testes Selenium rodam em modo headless.
+- **`deploy.yml`** é disparado quando o `ci.yml` termina com sucesso na `main` e chama o deploy hook do Render. Também pode ser executado manualmente em **Actions → CD → Run workflow**.
+
+Para ativar o deploy automático, cadastre o segredo `RENDER_DEPLOY_HOOK_URL` em **Settings → Secrets and variables → Actions** com a URL do deploy hook do serviço no Render (**Settings → Deploy Hook**). Sem o segredo, o CD só emite um aviso e não falha. O build no Render continua sendo feito pelo `build.sh`.
+
 ### Usuários de demonstração
 
 Senha de todos: `verdigis123`.

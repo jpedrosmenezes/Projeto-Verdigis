@@ -52,6 +52,9 @@ class SeleniumTestCase(StaticLiveServerTestCase):
     def esperar_url(self, caminho):
         WebDriverWait(self.driver, 10).until(EC.url_to_be(self.live_server_url + caminho))
 
+    def esperar_url_contem(self, trecho):
+        WebDriverWait(self.driver, 10).until(EC.url_contains(trecho))
+
     def login(self, email, senha=SENHA):
         self.abrir('/account/login/')
         self.driver.find_element(By.NAME, 'username').send_keys(email)
