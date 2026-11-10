@@ -81,6 +81,12 @@
     aviso.hidden = !texto;
   }
 
+  function definirBotaoNova(pode) {
+    detalhe.querySelectorAll('[data-abrir-modal="modal-atividade"]').forEach(function (b) {
+      b.hidden = !pode;
+    });
+  }
+
   /* ---------- kanban ---------- */
 
   function listaDaColuna(status) {
@@ -110,27 +116,23 @@
     if (tag) tag.hidden = !emAtraso;
   }
 
-  function criarCardAtividade(a, status, podeEditar) {
+  function criarCardAtividade(a, status, podeMover) {
     var card = el('article', 'ca-atividade ca-atividade--' + String(a.prioridade).toLowerCase());
     card.dataset.atividadeId = a.id;
-    card.dataset.testid = 'atividade';
 
     card.appendChild(el('h4', 'ca-atividade__nome', a.nome));
     if (a.descricao) card.appendChild(el('p', 'fm-item', a.descricao));
 
     var tags = el('div', 'fm-card__tags');
-    var selo = el('span', 'fm-badge', a.pilar_esg);
-    tags.appendChild(selo);
-    if (a.prazo) tags.appendChild(rotulado(el('span', 'fm-tag'), 'Prazo', formatarData(a.prazo)));
-    tags.appendChild(rotulado(el('span', 'fm-tag'), 'Prioridade', (ROTULOS_PRIORIDADE[a.prioridade] || a.prioridade).toLowerCase()));
+    if (a.prazo) tags.appendChild(el('span', 'fm-tag', 'Prazo: ' + formatarData(a.prazo)));
+    tags.appendChild(el('span', 'fm-tag', 'Prioridade: ' + (ROTULOS_PRIORIDADE[a.prioridade] || a.prioridade).toLowerCase()));
     var atraso = el('span', 'fm-tag fm-tag--atraso ca-atividade__atraso', 'Atrasada');
     atraso.hidden = !(a.prazo && status !== 'FEITO' && a.prazo < hojeISO());
     tags.appendChild(atraso);
     card.appendChild(tags);
 
-    if (podeEditar) {
+    if (podeMover) {
       var select = el('select', 'ca-atividade__status');
-      select.dataset.testid = 'atividade-status';
       select.setAttribute('aria-label', 'Mover "' + a.nome + '" para outra coluna');
       Object.keys(ROTULOS_STATUS).forEach(function (valor) {
         var op = el('option', '', ROTULOS_STATUS[valor]);
@@ -144,12 +146,12 @@
     return card;
   }
 
-  function preencherKanban(dados, podeEditar) {
+  function preencherKanban(dados, podeMover) {
     limparKanban();
     Object.keys(COLUNAS).forEach(function (status) {
       var lista = listaDaColuna(status);
       (dados[COLUNAS[status]] || []).forEach(function (a) {
-        lista.appendChild(criarCardAtividade(a, status, podeEditar));
+        lista.appendChild(criarCardAtividade(a, status, podeMover));
       });
     });
     atualizarVazios();
@@ -198,6 +200,7 @@
 
   function texto(id, valor) {
     var e = document.getElementById(id);
+    if (!e) return;
     e.textContent = valor || '';
     e.hidden = !valor;
   }
@@ -205,8 +208,8 @@
   function preencherDetalhe(card) {
     var d = card.dataset;
     texto('detalhe-pilar', d.pilarNome);
-    rotulado(document.getElementById('detalhe-prazo'), 'Prazo', d.prazo).hidden = false;
-    rotulado(document.getElementById('detalhe-prioridade'), 'Prioridade', d.prioridade.toLowerCase()).hidden = false;
+    texto('detalhe-prazo', 'Prazo: ' + d.prazo);
+    texto('detalhe-prioridade', 'Prioridade: ' + String(d.prioridade || '').toLowerCase());
     texto('detalhe-tipo', d.tipo);
     texto('detalhe-responsavel', d.responsavel);
     texto('detalhe-nome', d.nome);
@@ -248,12 +251,12 @@
 
     preencherDetalhe(card);
     limparKanban();
+    definirBotaoNova(false);
     mostrarAviso('Carregando atividades…');
     detalhe.hidden = false;
     detalhe.scrollIntoView({ behavior: reduzMovimento ? 'auto' : 'smooth', block: 'start' });
 
     var meu = ++pedido;
-    var podeEditar = card.dataset.podeEditar === '1';
 
     fetch(urlComId(URL_ATIVIDADES, card.dataset.metaId), {
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -265,7 +268,8 @@
       })
       .then(function (dados) {
         if (meu !== pedido) return;
-        preencherKanban(dados, podeEditar);
+        preencherKanban(dados, dados.pode_mover);
+        definirBotaoNova(dados.pode_criar);
         mostrarAviso('');
       })
       .catch(function () {

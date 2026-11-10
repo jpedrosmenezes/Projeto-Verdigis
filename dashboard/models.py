@@ -238,7 +238,6 @@ class AtividadeMeta(models.Model):
     )
     nome = models.CharField(max_length=255, verbose_name='Nome da atividade')
     descricao = models.TextField(blank=True, verbose_name='Descrição')
-    pilar_esg = models.CharField(max_length=1, choices=Meta.ESG_ESCOLHA, verbose_name='Pilar ESG')
     prazo = models.DateField(null=True, blank=True, verbose_name='Prazo')
     prioridade = models.CharField(
         max_length=5,

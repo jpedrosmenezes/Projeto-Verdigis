@@ -47,11 +47,9 @@
       <h2 class="ca-detalhe__titulo" id="detalhe-nome"></h2>
       <div class="ca-detalhe__resumo" id="detalhe-resumo"></div>
 
-      {% if pode_criar_atividade %}
       <div class="ca-detalhe__acoes">
-        <button type="button" class="eq-botao-pequeno" data-abrir-modal="modal-atividade" data-testid="nova-atividade">+ Nova atividade</button>
+        <button type="button" class="eq-botao-pequeno" data-abrir-modal="modal-atividade">+ Nova atividade</button>
       </div>
-      {% endif %}
 
       {# 4 colunas do kanban; os cards são montados pelo JS #}
       <div class="ca-kanban" id="ca-kanban">
@@ -122,16 +120,6 @@
   <form method="post" class="fm-modal__corpo" id="form-atividade" action="{% url 'dashboard:criar_atividade' %}">
     {% csrf_token %}
     <input type="hidden" name="meta_id" id="atividade-meta-id" value="">
-
-    <div class="fm-esg" role="radiogroup" aria-label="Pilar ESG">
-      <input type="radio" name="pilar_esg" id="ativ-esg-E" value="E" required>
-      <label for="ativ-esg-E" title="Ambiental">E</label>
-      <input type="radio" name="pilar_esg" id="ativ-esg-S" value="S">
-      <label for="ativ-esg-S" title="Social">S</label>
-      <input type="radio" name="pilar_esg" id="ativ-esg-G" value="G">
-      <label for="ativ-esg-G" title="Governança">G</label>
-    </div>
-    <p class="fm-dica">Escolha o pilar da atividade!</p>
 
     <div class="form-group">
       <label for="ativ-nome">Nome da atividade</label>
