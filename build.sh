@@ -11,6 +11,9 @@ python manage.py collectstatic --no-input
 python manage.py preparar_banco
 python manage.py migrate --no-input
 
+# Catálogo do Painel de Parcerias (qualidades ESG e acessibilidade). Pode rodar sempre, não duplica.
+python manage.py seed_parcerias
+
 # Superusuário a partir de DJANGO_SUPERUSER_EMAIL e DJANGO_SUPERUSER_PASSWORD.
 python manage.py garantir_superusuario
 
