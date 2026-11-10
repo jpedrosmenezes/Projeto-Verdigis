@@ -465,7 +465,7 @@ textarea::placeholder {
 
 .dash-menu {
     display: grid;
-    grid-template-columns: repeat(2, 130px);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     margin: 0;
     max-width: none;
