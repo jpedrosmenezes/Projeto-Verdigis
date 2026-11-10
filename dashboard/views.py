@@ -525,14 +525,20 @@ def esg_dashboard(request):
         AtividadeMeta.objects.filter(meta__in=services.metas_visiveis(request))
         .select_related('meta').order_by('-data_criacao')
     )
+    
+    # CORREÇÃO: Usar a.meta.pilar_esg em vez de a.pilar_esg
     metricas = [
-        {'pilar': codigo, 'nome': nome, 'pontos': sum(a.pontos for a in atividades if a.pilar_esg == codigo)}
+        {'pilar': codigo, 'nome': nome, 'pontos': sum(a.pontos for a in atividades if a.meta.pilar_esg == codigo)}
         for codigo, nome in Meta.ESG_ESCOLHA
     ]
+    
+    # Proteção para evitar erro de max() com sequência vazia
+    pontos_lista = [m['pontos'] for m in metricas]
+    maior_pontuacao = max(pontos_lista) if pontos_lista else 0
+
     return render(request, 'dashboard/desempenho_esg.html', {
         'metricas': metricas,
         'atividades': atividades[:10],
-        'pontuacao_geral': sum(m['pontos'] for m in metricas),
-        # Referência das barras: o pilar com mais pontos ocupa a barra inteira
-        'maior_pontuacao': max(m['pontos'] for m in metricas),
+        'pontuacao_geral': sum(pontos_lista),
+        'maior_pontuacao': maior_pontuacao,
     })
