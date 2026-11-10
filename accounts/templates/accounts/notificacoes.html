@@ -25,7 +25,7 @@
       <h2 class="av-painel__titulo">Suas notificações</h2>
       <div class="av-painel__corpo">
         {% if notificacoes_nao_lidas %}
-          <form method="post" action="{% url 'accounts:marcar_todas_lidas' %}" class="eq-centro">
+          <form method="post" action="{% url 'accounts:marcar_todas_lidas' %}" class="eq-centro" data-testid="marcar-lidas">
             {% csrf_token %}
             <button type="submit" class="fm-cancelar eq-botao-pequeno">Marcar todas como lidas</button>
           </form>

@@ -26,8 +26,8 @@
   };
   var ROTULOS_PRIORIDADE = { BAIXA: 'Baixa', MEDIA: 'Média', ALTA: 'Alta' };
 
-  var metaAtual = null;
-  var pedido = 0;
+  var metaAtual = null;   // card (botão) da meta aberta
+  var pedido = 0;         // descarta respostas antigas se o usuário clicar rápido em outra meta
 
   /* ---------- utilidades ---------- */
 
@@ -62,6 +62,15 @@
     return e;
   }
 
+  /* Preenche e com "<b>nome:</b> valor" */
+  function rotulado(e, nome, valor) {
+    e.textContent = '';
+    e.appendChild(el('b', null, nome + ':'));
+    e.appendChild(document.createTextNode(' ' + valor));
+    return e;
+  }
+
+  /* Mensagem de carregamento/erro, criada uma vez acima do kanban */
   var aviso = el('p', 'fm-dica');
   aviso.setAttribute('role', 'status');
   aviso.hidden = true;
@@ -148,6 +157,7 @@
     atualizarVazios();
   }
 
+  /* Mover atividade: muda no servidor e só então reposiciona o card */
   kanban.addEventListener('change', function (ev) {
     var select = ev.target.closest('.ca-atividade__status');
     if (!select) return;
@@ -223,6 +233,7 @@
       if (linha.trim()) resumo.appendChild(el('p', 'fm-item', linha));
     });
 
+    /* Modal de nova atividade já sabe a qual meta pertence e sugere o pilar dela */
     var campoMeta = document.getElementById('atividade-meta-id');
     if (campoMeta) campoMeta.value = d.metaId;
     var radio = document.getElementById('ativ-esg-' + d.pilar);
@@ -304,7 +315,7 @@
     });
   });
 
-  /* ---------- abrir meta vinda de ?meta= ---------- */
+  /* ---------- abrir meta vinda de ?meta= (depois de criar atividade) ---------- */
 
   if (pagina.dataset.metaAberta) {
     var inicial = document.querySelector('.ca-card[data-meta-id="' + pagina.dataset.metaAberta + '"]');

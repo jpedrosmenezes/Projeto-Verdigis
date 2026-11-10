@@ -66,6 +66,8 @@ Ação desconhecida levanta `KeyError`. `ACOES_NAO_DELEGAVEIS` (`equipe.gerir`, 
 
 **Exclusões.** Apagar empresa pede senha e o código da empresa, avisa membros e solicitantes (`EMPRESA_ENCERRADA`), apaga em cascata vínculos, pedidos, metas e relatos e devolve o responsável à triagem. Excluir conta pede a senha; o responsável apaga a empresa junto; funcionário e consultor avisam cada empresa.
 
+**Quadro de tarefas e Desempenho ESG.** Cada meta tem atividades (`AtividadeMeta`) num kanban de 4 colunas. O quadro aparece para quem tem `meta.ver` (Empresa, consultor e funcionário, este só com as metas gerais e as suas). O Desempenho ESG lê as atividades das metas visíveis ao usuário: as 10 mais recentes e a soma de pontos por pilar, conforme o avanço no kanban (`AtividadeMeta.PONTOS_POR_STATUS`: A Fazer 0, Em Andamento 0,5, Em Revisão 1, Feito 2). A prioridade não altera mais a pontuação. Os modelos `ESGMetricas` e `ESGAtividade` (globais, lançados pelo admin) não são mais lidos pela tela.
+
 ## Notificações
 
 Só `accounts.services.notificar()` cria notificações. Tipos: `SOLICITACAO_RECEBIDA`, `SOLICITACAO_ACEITA`, `SOLICITACAO_RECUSADA`, `VINCULO_REMOVIDO`, `MEMBRO_SAIU`, `PERMISSOES_ALTERADAS`, `EMPRESA_ENCERRADA`. Abrir uma notificação a marca como lida e leva ao link dela (só links internos). Nenhum e-mail é enviado.
@@ -91,4 +93,4 @@ Usuários de demonstração e senha: veja o [README](./README.md#usuários-de-de
 
 - O `forum` continua sem `app_name` (as rotas `index`, `sobre` e `fale_conosco` são usadas sem namespace).
 - O papel escolhido na triagem não pode ser trocado; para mudar, a pessoa exclui a conta (ou, se for Empresa, apaga a empresa e volta à triagem).
-- Os botões "Diagnóstico de compatibilidade", "Práticas da empresa" e "Quadro de tarefas" continuam reservados, visíveis só para a Empresa.
+- Os botões "Diagnóstico de compatibilidade" e "Práticas da empresa" continuam reservados, visíveis só para a Empresa.

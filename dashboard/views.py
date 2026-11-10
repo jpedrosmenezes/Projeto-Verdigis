@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Case, Count, IntegerField, Value, When
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -17,10 +18,7 @@ from accounts.permissions import empresa_required, exigir, pode
 
 from . import services
 from .forms import FormMetaFuncionario, FormsMetas, OcultarRelatoForm, RelatoSocialForm
-from .models import Meta, RelatoSocialVerdigis
-
-from django.http import JsonResponse
-from .models import AtividadeMeta
+from .models import AtividadeMeta, Meta, RelatoSocialVerdigis
 
 SENTIMENTOS = ('POSITIVO', 'NEGATIVO', 'NEUTRO')
 
@@ -167,18 +165,22 @@ def _form_meta(request, data=None, instance=None):
 
 
 def _filtrar_por_colaborador(request, metas):
-    """Filtro da Empresa e do consultor: um funcionário ou "sem responsável". Valor inválido é ignorado."""
-    valor = request.GET.get('colaborador', '')
+    """Filtro da Empresa e do consultor: um funcionário ou "Meta Geral". Valor inválido é ignorado."""
+    valor = request.GET.get('colaborador', '').strip()
     if not valor or request.user.papel == Papel.FUNCIONARIO:
         return metas, ''
-    if valor == 'sem':
-        return metas.filter(tipo='INDIVIDUAL', funcionario__isnull=True), valor
+    
+    if valor == 'geral':
+        return metas.filter(tipo='GERAL'), valor
+
     if valor.isdigit() and Vinculo.objects.filter(
         id=valor, company=request.empresa, tipo=TipoVinculo.FUNCIONARIO,
     ).exists():
         return metas.filter(funcionario_id=int(valor)), valor
+
     messages.warning(request, 'Colaborador inválido; mostrando todas as metas.')
     return metas, ''
+
 
 
 @login_required
@@ -511,5 +513,26 @@ def mover_atividade(request, atividade_id):
         atividade.status = novo_status
         atividade.save(update_fields=['status'])
         return JsonResponse({'status': 'sucesso', 'novo_status': novo_status, 'em_atraso': atividade.em_atraso})
-
+    
     return JsonResponse({'status': 'erro', 'mensagem': 'Status inválido'}, status=400)
+
+@login_required
+@empresa_required
+def esg_dashboard(request):
+    """Pontos por pilar e atividades recentes das metas visíveis."""
+    exigir(request, 'meta.ver')
+    atividades = list(
+        AtividadeMeta.objects.filter(meta__in=services.metas_visiveis(request))
+        .select_related('meta').order_by('-data_criacao')
+    )
+    metricas = [
+        {'pilar': codigo, 'nome': nome, 'pontos': sum(a.pontos for a in atividades if a.pilar_esg == codigo)}
+        for codigo, nome in Meta.ESG_ESCOLHA
+    ]
+    return render(request, 'dashboard/desempenho_esg.html', {
+        'metricas': metricas,
+        'atividades': atividades[:10],
+        'pontuacao_geral': sum(m['pontos'] for m in metricas),
+        # Referência das barras: o pilar com mais pontos ocupa a barra inteira
+        'maior_pontuacao': max(m['pontos'] for m in metricas),
+    })

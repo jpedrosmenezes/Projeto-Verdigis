@@ -77,7 +77,7 @@
     </div>
   </dl>
 
-  <div class="eq-botoes">
+  <div class="eq-botoes" data-testid="perfil-botoes">
     <a class="btn-submit eq-link-botao" href="{% url 'accounts:edit_profile' %}">Editar Perfil</a>
     <a class="btn-submit-2 eq-link-botao" href="{% url 'accounts:password_change' %}">Trocar senha</a>
     {% if user.papel == 'FUNCIONARIO' or user.papel == 'CONSULTOR' %}

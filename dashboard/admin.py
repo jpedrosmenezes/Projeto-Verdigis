@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (
-    InteresseParceria, Meta, PerfilParceria, QualidadeESG, RecursoAcessibilidade, RelatoSocialVerdigis,
+    ESGAtividade, ESGMetricas, InteresseParceria, Meta, PerfilParceria, QualidadeESG, RecursoAcessibilidade, RelatoSocialVerdigis,
 )
 
 
@@ -45,3 +45,15 @@ class InteresseParceriaAdmin(admin.ModelAdmin):
     list_display = ('origem', 'destino', 'pilar', 'criado_em')
     list_filter = ('pilar',)
     date_hierarchy = 'criado_em'
+
+
+@admin.register(ESGAtividade)
+class ESGAtividadeAdmin(admin.ModelAdmin):
+    list_display = ('descricao', 'pilar', 'valor_incremento', 'data_realizacao')
+    list_filter = ('pilar',)
+    search_fields = ('descricao',)
+
+
+@admin.register(ESGMetricas)
+class ESGMetricasAdmin(admin.ModelAdmin):
+    list_display = ('pilar', 'pontuacao_total', 'ultima_atualizacao')

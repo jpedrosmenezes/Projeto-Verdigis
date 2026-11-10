@@ -1,0 +1,91 @@
+{% extends "forum/base.html" %}
+{% load static %}
+
+{% comment %}
+  Meus matches (dashboard.views_parcerias.meus_matches). Método: GET. Só o gestor da empresa.
+  URL: {% url 'dashboard:parcerias_matches' %}
+  Contexto: mutuos, enviados e recebidos. Cada item tem company, pilar (nome), codigo_pilar, criado_em e visivel.
+  Só dá para abrir o "Saber mais" quando visivel é verdadeiro.
+{% endcomment %}
+
+{% block title %}Meus matches - Verdigis{% endblock %}
+{% block fundo %}fundo-6{% endblock %}
+
+{% block head %}<h1 class="dash-banner">MEUS MATCHES</h1>{% endblock head %}
+
+{% block content %}
+<div class="moldura-vidro">
+  <section class="dash-corpo av-corpo">
+    <div class="av-topo">
+      <a class="av-voltar" href="{% url 'dashboard:parcerias' %}" aria-label="Voltar para o painel">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+      </a>
+    </div>
+
+    <div class="pc-matches">
+      <div class="av-painel av-painel--positivo">
+        <h2 class="av-painel__titulo">Matches mútuos ({{ mutuos|length }})</h2>
+        <div class="av-painel__corpo">
+          <div class="av-itens">
+            {% for item in mutuos %}
+              <div class="av-item eq-item">
+                <span class="av-item__autor">{{ item.company.nome_fantasia }}</span>
+                <span class="av-item__texto">Eixo {{ item.pilar }} · {{ item.criado_em|date:"d/m/Y" }}</span>
+                {% if item.visivel %}
+                  <div class="eq-botoes">
+                    <a class="eq-botao-pequeno eq-link-botao btn-submit-2" href="{% url 'dashboard:parcerias_detalhe' item.company.pk %}?pilar={{ item.codigo_pilar }}">Saber mais</a>
+                  </div>
+                {% endif %}
+              </div>
+            {% empty %}
+              <p class="av-vazio">Nenhum match mútuo ainda.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="av-painel av-painel--neutro">
+        <h2 class="av-painel__titulo">Aguardando resposta ({{ enviados|length }})</h2>
+        <div class="av-painel__corpo">
+          <div class="av-itens">
+            {% for item in enviados %}
+              <div class="av-item eq-item">
+                <span class="av-item__autor">{{ item.company.nome_fantasia }}</span>
+                <span class="av-item__texto">Eixo {{ item.pilar }} · {{ item.criado_em|date:"d/m/Y" }}</span>
+                {% if item.visivel %}
+                  <div class="eq-botoes">
+                    <a class="eq-botao-pequeno eq-link-botao btn-submit-2" href="{% url 'dashboard:parcerias_detalhe' item.company.pk %}?pilar={{ item.codigo_pilar }}">Saber mais</a>
+                  </div>
+                {% endif %}
+              </div>
+            {% empty %}
+              <p class="av-vazio">Você não tem matches aguardando resposta.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="av-painel av-painel--neutro">
+        <h2 class="av-painel__titulo">Interessadas em você ({{ recebidos|length }})</h2>
+        <div class="av-painel__corpo">
+          <div class="av-itens">
+            {% for item in recebidos %}
+              <div class="av-item eq-item">
+                <span class="av-item__autor">{{ item.company.nome_fantasia }}</span>
+                <span class="av-item__texto">Eixo {{ item.pilar }} · {{ item.criado_em|date:"d/m/Y" }}</span>
+                {% if item.visivel %}
+                  <div class="eq-botoes">
+                    <a class="eq-botao-pequeno eq-link-botao btn-submit-2" href="{% url 'dashboard:parcerias_detalhe' item.company.pk %}?pilar={{ item.codigo_pilar }}">Saber mais</a>
+                  </div>
+                {% endif %}
+              </div>
+            {% empty %}
+              <p class="av-vazio">Nenhuma empresa demonstrou interesse ainda.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
