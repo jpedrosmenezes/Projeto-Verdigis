@@ -66,8 +66,8 @@
           {% if user.papel == 'EMPRESA' %}
             <a class="dash-botao" href="#">Diagnóstico de compatibilidade</a>
             <a class="dash-botao" href="#">Práticas da empresa</a>
-            <a class="dash-botao" href="{% url 'dashboard:visualizar_tabela' %}">Quadro de tarefas</a>
           {% endif %}
+          <a class="dash-botao" href="{% url 'dashboard:visualizar_tabela' %}">Quadro de tarefas</a>
         </nav>
 
         {% if user.papel == 'EMPRESA' %}
