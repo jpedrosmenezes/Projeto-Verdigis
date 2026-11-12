@@ -1749,6 +1749,7 @@ button,
     align-items: center;
     gap: 12px;
     margin-bottom: 10px;
+    border-radius: 10px;
 }
  
 .ca-faixa__titulo {
