@@ -23,7 +23,9 @@ class SeleniumTestCase(StaticLiveServerTestCase):
     def setUpClass(cls):
         super().setUpClass()
         opcoes = webdriver.ChromeOptions()
-        for arg in ('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--window-size=1280,1000'):
+        # Comente a linha abaixo para ver os testes rodando no navegador.
+        opcoes.add_argument('--headless=new')
+        for arg in ('--no-sandbox', '--disable-dev-shm-usage', '--window-size=1280,1000'):
             opcoes.add_argument(arg)
         try:
             cls.driver = webdriver.Chrome(options=opcoes)
