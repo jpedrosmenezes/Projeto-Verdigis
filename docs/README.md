@@ -54,7 +54,7 @@ Repositório: [`Projeto-Verdigis`](https://github.com/jpedrosmenezes/Projeto-Ver
 ![Print do Backlog](./backlogs/backlog-3.jpeg)
 
 ### Quadro do 3º Sprint
-![Print do Quadro do 2º Sprint](./sprints/sprint3.jpeg)
+![Print do Quadro do 3º Sprint](./sprints/sprint3.jpeg)
 
 ### Site
 - [Acessar o site](https://projeto-verdigis.onrender.com)
@@ -105,4 +105,35 @@ Filtrar a avaliação dos funcionários, verificando se é algo positivo ou nega
 Testes automatizados:
 - Testes unitários em `dashboard/tests.py` e testes de navegador com Selenium em `tests/` (Chrome headless), cobrindo login, cadastro, logout, criação de meta, envio de avaliação, o fluxo do #111 de ponta a ponta, a pontuação do #116 conforme a atividade avança no kanban, o filtro "Meta Geral" do #118, o quadro no painel do funcionário, o cancelar da avaliação, o voltar das parcerias e checagens de layout. O `ci.yml` roda tudo automaticamente no GitHub Actions. Como rodar: veja a seção "Testes" do [README](../README.md#testes).
 
-*Em breve.*
+### Histórias Implementadas
+
+#### *História 01 :*
+
+##### *Painel de Atividades de uma empresa*
+Deve ser implementado um painel, no estilo Kanban, para que o gestor tenha controle total sobre a forma como as suas metas estão a ser tratadas, além de receber notificações sobre atividades em atraso.
+
+#### *História 02 :*
+##### *Painel de Parcerias*
+Deve ser implementado um painel no qual a empresa possa procurar parceiros de ESG de acordo com o seu perfil e as suas necessidades. Deve tratar-se de uma listagem de empresas, separadas pelos três pilares, na qual a empresa poderá dar um match de acordo com o que preferir.
+
+#### *História 03 :*
+##### *Análise de Desempenho e Gráfico ESG*
+Deve ser implementada uma aba com uma análise detalhada de como a empresa está a progredir em cada pilar ESG. Deve existir um cadastro inicial das métricas ESG e, para cada atividade cumprida num pilar, o seu valor correspondente deve ser incrementado nas métricas. Paralelamente a isso, deve ser implementado um sistema de pontuação, que vai computando ao longo da conclusão das metas cadastradas pela empresa.
+
+### Backlog
+![Print do Backlog](./backlogs/backlog-4.jpeg)
+
+### Quadro do 4º Sprint
+![Print do Quadro do 4º Sprint](./sprints/sprint.4.jpeg)
+
+### Site
+- [Acessar o site](https://projeto-verdigis.onrender.com)
+
+### Screencast de explicação do código Django e Frontend
+- [Assistir no YouTube]()
+
+### Screencast do Deployment
+- [Assistir no YouTube]()
+
+### Issue/Bug Tracker
+![Print do Bug Tracker](./issues/issue.bugtracker4.jpeg)
