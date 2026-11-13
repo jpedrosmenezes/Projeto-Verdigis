@@ -119,6 +119,7 @@
   function criarCardAtividade(a, status, podeMover) {
     var card = el('article', 'ca-atividade ca-atividade--' + String(a.prioridade).toLowerCase());
     card.dataset.atividadeId = a.id;
+    card.dataset.testid = 'atividade';
 
     card.appendChild(el('h4', 'ca-atividade__nome', a.nome));
     if (a.descricao) card.appendChild(el('p', 'fm-item', a.descricao));
@@ -133,6 +134,7 @@
 
     if (podeMover) {
       var select = el('select', 'ca-atividade__status');
+      select.dataset.testid = 'atividade-status';
       select.setAttribute('aria-label', 'Mover "' + a.nome + '" para outra coluna');
       Object.keys(ROTULOS_STATUS).forEach(function (valor) {
         var op = el('option', '', ROTULOS_STATUS[valor]);

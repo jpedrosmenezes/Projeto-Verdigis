@@ -30,7 +30,6 @@ class FluxoTests(SeleniumTestCase):
         self.abrir(f'/dashboard/visualizar_tabela/?meta={meta.id}')
 
         self.por_testid('nova-atividade').click()
-        self.driver.find_element(By.CSS_SELECTOR, 'label[for="ativ-esg-E"]').click()
         self.driver.find_element(By.ID, 'ativ-nome').send_keys('Trocar lâmpadas por LED')
         Select(self.driver.find_element(By.ID, 'ativ-prioridade')).select_by_value('ALTA')
         self.driver.find_element(By.CSS_SELECTOR, '#form-atividade button[type="submit"]').click()
