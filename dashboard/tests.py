@@ -24,7 +24,7 @@ class DesempenhoESGTests(TestCase):
         antes = self.client.get(reverse('dashboard:esg_dashboard')).context['metricas'][0]['pontos']
 
         self.client.post(reverse('dashboard:criar_atividade'), {
-            'meta_id': meta.id, 'nome': 'Trocar lâmpadas', 'pilar_esg': 'E', 'prioridade': 'ALTA',
+            'meta_id': meta.id, 'nome': 'Trocar lâmpadas', 'prioridade': 'ALTA',
         })
         atividade = AtividadeMeta.objects.get(nome='Trocar lâmpadas')
 
@@ -41,7 +41,7 @@ class DesempenhoESGTests(TestCase):
 
     def test_nao_mostra_atividades_de_outra_empresa(self):
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')
-        meta.atividades.create(nome='Atividade privada', pilar_esg='E')
+        meta.atividades.create(nome='Atividade privada')
         self.client.force_login(User.objects.get(email='pendente@demo.com'))
         self.assertNotEqual(self.client.get(reverse('dashboard:esg_dashboard')).status_code, 200)
 
@@ -64,8 +64,8 @@ class PreencherTabelaTests(TestCase):
 
     def test_agrupa_atividades_por_coluna(self):
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')
-        meta.atividades.create(nome='A', pilar_esg='E')
-        meta.atividades.create(nome='B', pilar_esg='E', status='FEITO')
+        meta.atividades.create(nome='A')
+        meta.atividades.create(nome='B', status='FEITO')
         self.client.force_login(User.objects.get(email='empresa@demo.com'))
         dados = self.client.get(reverse('dashboard:preencher_tabela', args=[meta.id])).json()
         self.assertEqual([a['nome'] for a in dados['a_fazer']], ['A'])
