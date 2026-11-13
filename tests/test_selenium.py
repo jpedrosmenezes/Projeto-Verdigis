@@ -4,7 +4,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 
 from accounts.models import TipoNotificacao, User
 from accounts.services import notificar
-from dashboard.models import AtividadeMeta, Meta
+from dashboard.models import AtividadeMeta, Meta, RelatoSocialVerdigis
 
 from .base import EMPRESA, FUNCIONARIO, SeleniumTestCase
 
@@ -21,6 +21,24 @@ class LoginTests(SeleniumTestCase):
         self.driver.find_element(By.NAME, 'password').send_keys('errada')
         self.driver.find_element(By.CSS_SELECTOR, 'form button[type="submit"]').click()
         self.assertIn('/account/login/', self.driver.current_url)
+
+    def test_cadastro_leva_a_triagem(self):
+        self.abrir('/account/signup/')
+        self.driver.find_element(By.NAME, 'nome').send_keys('Pessoa Nova')
+        self.driver.find_element(By.NAME, 'email').send_keys('nova@teste.com')
+        self.driver.find_element(By.NAME, 'password1').send_keys('SenhaForte#2026')
+        self.driver.find_element(By.NAME, 'password2').send_keys('SenhaForte#2026')
+        self.driver.find_element(By.CSS_SELECTOR, 'form button[type="submit"]').click()
+        self.esperar_url('/account/onboarding/')
+        self.assertTrue(User.objects.filter(email='nova@teste.com').exists())
+
+    def test_logout_pelo_perfil(self):
+        self.login(FUNCIONARIO)
+        self.abrir('/account/profile/')
+        self.driver.find_element(By.CLASS_NAME, 'btn-logout').click()
+        WebDriverWait(self.driver, 10).until(lambda d: '/account/profile/' not in d.current_url)
+        self.abrir('/dashboard/')
+        self.esperar_url_contem('/account/login/')
 
 
 class FluxoTests(SeleniumTestCase):
@@ -114,6 +132,37 @@ class FabricaMetasTests(SeleniumTestCase):
         self.login(FUNCIONARIO)
         self.abrir('/dashboard/metas/')
         self.assertEqual(self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="filtro-metas"]'), [])
+
+
+    def test_funcionario_cria_meta_individual(self):
+        self.login(FUNCIONARIO)
+        self.abrir('/dashboard/metas/')
+        self.driver.find_element(By.CSS_SELECTOR, '[data-abrir-modal="modal-meta"]').click()
+        self.driver.find_element(By.CSS_SELECTOR, 'label[for="esg-S"]').click()
+        self.driver.find_element(By.ID, 'id_nome').send_keys('Pausas para alongamento')
+        # Campo date varia com o idioma do Chrome; o valor ISO é definido direto.
+        self.driver.execute_script("arguments[0].value = '2030-12-31'", self.driver.find_element(By.ID, 'id_deadline'))
+        self.driver.find_element(By.ID, 'id_resumo').send_keys('Duas pausas por dia.')
+        self.driver.find_element(By.CSS_SELECTOR, '#form-meta button[type="submit"]').click()
+
+        WebDriverWait(self.driver, 10).until(lambda d: Meta.objects.filter(nome='Pausas para alongamento').exists())
+        meta = Meta.objects.get(nome='Pausas para alongamento')
+        self.assertEqual((meta.tipo, meta.pilar_esg, meta.funcionario.user.email), ('INDIVIDUAL', 'S', FUNCIONARIO))
+
+
+class AvaliacaoTests(SeleniumTestCase):
+    def test_funcionario_envia_avaliacao(self):
+        self.login(FUNCIONARIO)
+        self.abrir('/dashboard/avaliacao/nova/')
+        Select(self.driver.find_element(By.NAME, 'tema_esg')).select_by_value('SAUDE_MENTAL')
+        Select(self.driver.find_element(By.NAME, 'sentimento')).select_by_value('POSITIVO')
+        self.driver.find_element(By.NAME, 'mensagem').send_keys('Gostei do novo programa de bem-estar.')
+        self.driver.find_element(By.CSS_SELECTOR, 'form.form-contato button[type="submit"]').click()
+
+        WebDriverWait(self.driver, 10).until(
+            lambda d: RelatoSocialVerdigis.objects.filter(mensagem='Gostei do novo programa de bem-estar.').exists(),
+        )
+        self.assertIn('Enviado', self.driver.find_element(By.TAG_NAME, 'body').text)
 
 
 class LayoutTests(SeleniumTestCase):

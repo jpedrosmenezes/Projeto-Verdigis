@@ -103,6 +103,6 @@ Filtrar a avaliação dos funcionários, verificando se é algo positivo ou nega
 ## Entrega 04
 
 Testes automatizados:
-- Testes unitários em `dashboard/tests.py` e testes de navegador com Selenium em `tests/` (Chrome headless), cobrindo login, o fluxo do #111 de ponta a ponta, a pontuação do #116 conforme a atividade avança no kanban, o filtro "Meta Geral" do #118, o quadro no painel do funcionário, o cancelar da avaliação, o voltar das parcerias e checagens de layout. O `ci.yml` roda tudo automaticamente no GitHub Actions. Como rodar: veja a seção "Testes" do [README](../README.md#testes).
+- Testes unitários em `dashboard/tests.py` e testes de navegador com Selenium em `tests/` (Chrome headless), cobrindo login, cadastro, logout, criação de meta, envio de avaliação, o fluxo do #111 de ponta a ponta, a pontuação do #116 conforme a atividade avança no kanban, o filtro "Meta Geral" do #118, o quadro no painel do funcionário, o cancelar da avaliação, o voltar das parcerias e checagens de layout. O `ci.yml` roda tudo automaticamente no GitHub Actions. Como rodar: veja a seção "Testes" do [README](../README.md#testes).
 
 *Em breve.*
