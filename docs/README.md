@@ -65,14 +65,7 @@ Repositório: [`Projeto-Verdigis`](https://github.com/jpedrosmenezes/Projeto-Ver
 ### Screencast do Deployment
 - [Assistir no YouTube](https://youtu.be/b2IN5Jz2a6U)
 
-### Screencast do Front-End e Back-End
-- [Assistir no YouTube](https://youtu.be/4qkoctXl6BY)
 
-### Screencast dos testes
-- [Assistir no Youtube](https://youtu.be/l2WLd680l3I)
-
-### Screencast CI/CD
-- [Assistir no Youtube](https://youtu.be/On9BI8n3060)
 
 ### Histórias Implementadas:
 
@@ -138,11 +131,14 @@ Deve ser implementada uma aba com uma análise detalhada de como a empresa está
 ### Site
 - [Acessar o site](https://projeto-verdigis.onrender.com)
 
-### Screencast de explicação do código Django e Frontend
-- [Assistir no YouTube]()
+### Screencast do Front-End e Back-End
+- [Assistir no YouTube](https://youtu.be/4qkoctXl6BY)
 
-### Screencast do Deployment
-- [Assistir no YouTube]()
+### Screencast dos testes
+- [Assistir no Youtube](https://youtu.be/l2WLd680l3I)
+
+### Screencast CI/CD
+- [Assistir no Youtube](https://youtu.be/On9BI8n3060)
 
 ### Issue/Bug Tracker
 ![Print do Bug Tracker](./issues/issue.bugtracker4.jpeg)
