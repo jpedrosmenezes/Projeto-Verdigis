@@ -65,6 +65,15 @@ Repositório: [`Projeto-Verdigis`](https://github.com/jpedrosmenezes/Projeto-Ver
 ### Screencast do Deployment
 - [Assistir no YouTube](https://youtu.be/b2IN5Jz2a6U)
 
+### Screencast do Front-End e Back-End
+- [Assistir no YouTube](https://youtu.be/4qkoctXl6BY)
+
+### Screencast dos testes
+- [Assistir no Youtube](https://youtu.be/l2WLd680l3I)
+
+### Screencast CI/CD
+- [Assistir no Youtube](https://youtu.be/On9BI8n3060)
+
 ### Histórias Implementadas:
 
 #### *História 01 :*
