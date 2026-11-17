@@ -1257,6 +1257,27 @@ a.fm-cancelar {
 }
 .dash-folha::part(default-progress-bar) { display: none; }
 
+/* Centraliza o V 3D no espaço branco à direita do menu do dashboard.
+   Os avisos ("Nova meta concluída!" etc.) ficam flutuando no canto de cima,
+   sem ocupar largura; assim o V ocupa todo o espaço livre e fica no meio dele,
+   e o menu da esquerda mantém o tamanho de sempre.
+   O :has() limita isto ao dashboard (o .dash-corpo também é usado em outras
+   páginas). No celular (até 640px) continua o layout em coluna de antes. */
+@media (min-width: 641px) {
+    .dash-corpo:has(> .dash-folha) { position: relative; }
+    .dash-corpo:has(> .dash-folha) > .dash-avisos {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        z-index: 1;
+    }
+}
+/* Botões do menu ocupam a largura toda da coluna, alinhados com o card
+   "Código da empresa" logo abaixo (antes eram 2 colunas fixas de 130px). */
+.dash-corpo:has(> .dash-folha) .dash-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 
 /* =====================================================================
    nt- Notificações: sino do menu e lista
@@ -2257,3 +2278,5 @@ button,
     .esg__painel { animation: none; }
     .esg__letra { transition: none; }
 }
+
+/* ==============================================================

@@ -1,10 +1,14 @@
 {% extends "forum/base.html" %}
+{% load static %}
 
 {% comment %}
   Desempenho ESG (dashboard.views.esg_dashboard). Método: GET. Exige login.
   URL: {% url 'dashboard:esg_dashboard' %}
   Contexto: metricas ({pilar, nome, pontos} em E, S, G), atividades (10 mais recentes),
   pontuacao_geral e maior_pontuacao (referência das barras).
+  Os pontos dependem da etapa no quadro (AtividadeMeta.pontos); o pilar vem da meta.
+  evolucao ({datas, geral, pilares: [{codigo, nome, pontos}]}): pontos acumulados por dia,
+  usado pelo gráfico de linha (Chart.js, em static/js/graficos.js).
 {% endcomment %}
 
 {% block title %}Desempenho ESG - Verdigis{% endblock %}
@@ -16,6 +20,7 @@
 <div class="moldura-vidro">
   <section class="secao-conteudo">
     <h2 class="pc-filtro__titulo pc-intro">Pontuação acumulada em cada pilar ESG</h2>
+    <p class="graf-nota">As atividades somam pontos conforme avançam no quadro: Em andamento 0,5 · Em revisão 1 · Feito 2.</p>
 
     <div class="pc-eixos esg-cartoes">
       {% for m in metricas %}
@@ -40,13 +45,27 @@
       <p class="esg-total">Pontuação geral: <strong data-testid="esg-total">{{ pontuacao_geral|floatformat:"-1" }} pts</strong></p>
     </div>
 
+    <div class="graf-bloco">
+      <h3 class="graf-bloco__titulo">Evolução da pontuação</h3>
+      {% if evolucao.datas %}
+        <p class="graf-bloco__dica">Clique na legenda para mostrar ou esconder uma linha.</p>
+        <div class="graf-linha">
+          <canvas id="grafico-evolucao" role="img"
+                  aria-label="Gráfico de linha com os pontos acumulados ao longo do tempo, no geral e em cada pilar ESG. Pontuação geral atual: {{ pontuacao_geral }} pontos."></canvas>
+        </div>
+        {{ evolucao|json_script:"dados-evolucao" }}
+      {% else %}
+        <p class="av-vazio">Ainda não há atividades concluídas para mostrar a evolução.</p>
+      {% endif %}
+    </div>
+
     <div class="av-painel av-painel--positivo esg-atividades">
       <h2 class="av-painel__titulo">Atividades recentes</h2>
       <div class="av-painel__corpo">
         <div class="av-itens" data-testid="esg-atividades">
           {% for a in atividades %}
             <div class="av-item">
-              <span class="av-item__autor">[{{ a.pilar_esg }}] {{ a.nome }}</span>
+              <span class="av-item__autor">[{{ a.meta.pilar_esg }}] {{ a.nome }}</span>
               <span class="av-item__texto">{{ a.meta.nome }} | {{ a.get_status_display }} | +{{ a.pontos|floatformat:"-1" }} pts | {{ a.data_criacao|date:"d/m/Y H:i" }}</span>
             </div>
           {% empty %}
@@ -61,4 +80,7 @@
     </div>
   </section>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="{% static 'js/graficos.js' %}" defer></script>
 {% endblock %}

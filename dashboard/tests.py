@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from accounts.models import User
-from dashboard.models import AtividadeMeta, Meta
+from dashboard.models import AtividadeMeta, Meta, RelatoSocialVerdigis
 
 
 def popular_demo():
@@ -38,6 +38,20 @@ class DesempenhoESGTests(TestCase):
             self.client.post(reverse('dashboard:mover_atividade', args=[atividade.id]), {'status': status})
             resposta = self.client.get(reverse('dashboard:esg_dashboard'))
             self.assertEqual(resposta.context['metricas'][0]['pontos'], antes + pontos)
+
+    def test_evolucao_bate_com_os_cartoes(self):
+        self.client.force_login(User.objects.get(email='empresa@demo.com'))
+        meta = Meta.objects.get(nome='Reduzir o consumo de papel')
+        meta.atividades.create(nome='Feita', status='FEITO')
+        meta.atividades.create(nome='Andando', status='EM_ANDAMENTO')
+
+        resposta = self.client.get(reverse('dashboard:esg_dashboard'))
+        evolucao = resposta.context['evolucao']
+        # O último ponto do gráfico bate com os totais dos cartões, no geral e no pilar da meta.
+        self.assertEqual(evolucao['geral'][-1], resposta.context['pontuacao_geral'])
+        indice = [codigo for codigo, _ in Meta.ESG_ESCOLHA].index(meta.pilar_esg)
+        self.assertEqual(evolucao['pilares'][indice]['pontos'][-1], resposta.context['metricas'][indice]['pontos'])
+        self.assertContains(resposta, 'id="dados-evolucao"')
 
     def test_nao_mostra_atividades_de_outra_empresa(self):
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')
@@ -72,3 +86,28 @@ class PreencherTabelaTests(TestCase):
         self.assertEqual([a['nome'] for a in dados['feito']], ['B'])
         self.assertEqual(dados['em_andamento'], [])
         self.assertEqual(dados['revisao'], [])
+
+
+class ResumoAvaliacoesTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        popular_demo()
+
+    def test_pizzas_contam_por_tema_e_sentimento(self):
+        empresa = User.objects.get(email='empresa@demo.com')
+        self.client.force_login(empresa)
+        company = Meta.objects.get(nome='Reduzir o consumo de papel').company
+        antes = self.client.get(reverse('dashboard:dashboard_social')).context['resumo_avaliacoes']
+
+        RelatoSocialVerdigis.objects.create(company=company, mensagem='Ótimo', tema_esg='SEGURANCA', sentimento='POSITIVO')
+        RelatoSocialVerdigis.objects.create(company=company, mensagem='Ruim', tema_esg='SEGURANCA', sentimento='NEGATIVO')
+
+        resumo = self.client.get(reverse('dashboard:dashboard_social')).context['resumo_avaliacoes']
+        geral = resumo[0]
+        seguranca = next(t for t in resumo if t['codigo'] == 'SEGURANCA')
+        seguranca_antes = next(t for t in antes if t['codigo'] == 'SEGURANCA')
+        self.assertEqual(geral['total'], antes[0]['total'] + 2)
+        self.assertEqual(seguranca['positivo'], seguranca_antes['positivo'] + 1)
+        self.assertEqual(seguranca['negativo'], seguranca_antes['negativo'] + 1)
+        # Um item para o total e um para cada tema
+        self.assertEqual(len(resumo), 1 + len(RelatoSocialVerdigis.TEMA_ESG_CHOICES))
