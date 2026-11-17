@@ -1,56 +1,73 @@
 {% extends 'forum/base.html' %}
+{% load static %}
 
 {% block title %}Início - Verdigis{% endblock %}
 {% block fundo %}fundo-1{% endblock %}
 
 {% block content %}
 
-{% if secoes %}
-    {% for secao in secoes %}
-        <section class="secao-conteudo">
-            <h2>{{ secao.titulo }}</h2>
-            <p>{{ secao.texto|linebreaksbr }}</p>
-        </section>
-    {% endfor %}
-{% else %}
-    <div class="moldura-vidro">
-        <section class="secao-conteudo">
-            <h1>BEM-VINDO À VERDIGIS</h1>
-            <p class="desc-index">A plataforma dedicada à gestão de práticas ESG e sustentabilidade para o setor farmacêutico, trazendo em uma plataforma b2b, alguns processos que auxiliam as empresas a implementar as medidas de ESG, com um esquema de parcerias com outras empresas para facilitar o processo.</p>
-        </section>
-    </div>
-{% endif %}
-
 <div class="moldura-vidro">
-    <section class="secao-pilares">
-        <h1>PILARES ESG & PRÁTICAS</h1>
-        <div class="pilares-grid">
-            {% for pilar in pilares %}
-                <div class="pilar-card">
-                    <span class="pilar-sigla">{{ pilar.sigla }}</span>
-                    <h3>{{ pilar.nome }}</h3>
-                    <p>{{ pilar.descricao }}</p>
-                    
-                    {% if pilar.praticas.all %}
-                        <hr style="border: 0; border-top: 1px solid #eee; margin: 1rem 0;">
-                        <h4>Práticas Associadas:</h4>
-                        <ul class="praticas-lista">
-                            {% for pratica in pilar.praticas.all %}
-                                <li>
-                                    <strong>{{ pratica.titulo }}:</strong> 
-                                    {{ pratica.descricao }}
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p><em>Sem práticas registadas para este pilar.</em></p>
-                    {% endif %}
-                </div>
-            {% empty %}
-                <p class="pilares-vazio">Ainda não existem pilares ESG registados na plataforma.</p>
-            {% endfor %}
+    <section class="hero" aria-labelledby="hero-titulo">
+        <div class="hero__imagem">
+            <img src="{% static 'img/v_florido.webp' %}" alt="" width="619" height="679">
+        </div>
+        <div class="hero__texto">
+            <h1 id="hero-titulo">Bem-vindo à&nbsp;Verdigis</h1>
+            <p class="hero__subtitulo">Soluções <em>inteligentes</em> em&nbsp;<strong>ESG</strong></p>
+            <p class="hero__descricao">A Verdigis ajuda pequenas e médias empresas do setor farmacêutico a transformar práticas ESG em vantagem competitiva real. Em um só lugar, você tem diagnóstico claro dos seus indicadores, engaja sua equipe com metas e avaliações, e se conecta aos parceiros certos por meio do nosso networking eco-comercial."</p>
+            <div class="hero__acoes">
+                {% if user.is_authenticated %}
+                    <a class="hero__botao hero__botao--principal" href="{% url 'dashboard:dashboard' %}">Ir para o dashboard</a>
+                {% else %}
+                    <a class="hero__botao hero__botao--principal" href="{% url 'accounts:signup' %}">Criar conta</a>
+                    <a class="hero__botao hero__botao--secundario" href="{% url 'accounts:login' %}">Entrar</a>
+                {% endif %}
+            </div>
         </div>
     </section>
 </div>
+
+{% for secao in secoes %}
+    <section class="secao-conteudo">
+        <h2>{{ secao.titulo }}</h2>
+        <p>{{ secao.texto|linebreaksbr }}</p>
+    </section>
+{% endfor %}
+
+<div class="moldura-vidro">
+    <section class="esg" aria-labelledby="esg-titulo">
+        <div class="esg__cabecalho">
+            <h2 id="esg-titulo">O QUE É ESG?</h2>
+        </div>
+        <div class="esg__letras">
+            <button type="button" class="esg__letra" id="letra-e" aria-expanded="true" aria-controls="painel-e">
+                <span class="esg__sigla">E</span>
+                <span class="esg__nome">Ambiental</span>
+            </button>
+            <button type="button" class="esg__letra" id="letra-s" aria-expanded="false" aria-controls="painel-s">
+                <span class="esg__sigla">S</span>
+                <span class="esg__nome">Social</span>
+            </button>
+            <button type="button" class="esg__letra" id="letra-g" aria-expanded="false" aria-controls="painel-g">
+                <span class="esg__sigla">G</span>
+                <span class="esg__nome">Governança</span>
+            </button>
+        </div>
+        <div class="esg__painel" id="painel-e" role="region" aria-labelledby="letra-e">
+            <h3>Ambiental</h3>
+            <p>Esqueça a ideia de que cuidar do meio ambiente é apenas cumprir tabela ou abraçar árvores. No setor farmacêutico, onde o descarte de resíduos e o uso de recursos são críticos, a gestão ambiental é inteligência de negócio: reduz desperdícios, corta custos ocultos e garante o selo de confiança que os grandes compradores exigem para fechar contrato com a sua empresa.</p>
+        </div>
+        <div class="esg__painel" id="painel-s" role="region" aria-labelledby="letra-s" hidden>
+            <h3>Social</h3>
+            <p>Não existe empresa sustentável com uma equipe estagnada. O pilar Social não é sobre caridade pontual — é sobre colocar quem faz o negócio acontecer no centro da estratégia. Quando você dá metas claras, ouve o time e alinha o crescimento individual aos princípios da empresa, o engajamento sobe, a retenção melhora e a operação inteira ganha tração.</p>
+        </div>
+        <div class="esg__painel" id="painel-g" role="region" aria-labelledby="letra-g" hidden>
+            <h3>Governança</h3>
+            <p>Governança não é burocracia para engessada, é a clareza que transforma uma boa empresa em um parceiro confiável. Ter indicadores organizados, processos transparentes e critérios éticos bem definidos tira sua gestão do improviso, blinda o negócio contra riscos e coloca sua empresa no radar das melhores conexões comerciais do mercado.</p>
+        </div>
+    </section>
+</div>
+
+<script src="{% static 'js/pilares.js' %}" defer></script>
 
 {% endblock content %}

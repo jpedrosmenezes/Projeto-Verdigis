@@ -1,0 +1,1 @@
+OK engine=BLENDER_EEVEE folhas_verts=96600 flores_verts=6440 glb_bytes=3203680 blender=5.1.2
