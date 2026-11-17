@@ -287,6 +287,8 @@ def dashboard_social_verdigis(request):
         for codigo, nome in RelatoSocialVerdigis.TEMA_ESG_CHOICES
     ]
 
+    resumo_avaliacoes = _resumo_avaliacoes(base)
+
     relatos = base.filter(sentimento=sentimento).select_related('usuario').order_by('-data_registro')
     if tema in nomes:
         relatos = relatos.filter(tema_esg=tema)
@@ -300,9 +302,29 @@ def dashboard_social_verdigis(request):
         'tema_atual_nome': nomes.get(tema, ''),
         'sentimento_atual': sentimento,
         'moderador': moderador,
+        'resumo_avaliacoes': resumo_avaliacoes,
         'total_ocultos': services.relatos_da_empresa(request, incluir_ocultos=True).filter(
             oculto_em__isnull=False).count() if moderador else 0,
     })
+
+
+def _resumo_avaliacoes(relatos):
+    """Quantas avaliações positivas, neutras e negativas há no total e em cada tema
+    (gráficos de pizza da Central de Avaliações). O primeiro item é o total geral."""
+    contagem = {}
+    for linha in relatos.values('tema_esg', 'sentimento').annotate(total=Count('id')):
+        contagem.setdefault(linha['tema_esg'], {})[linha['sentimento']] = linha['total']
+
+    def item(codigo, nome, por_sentimento):
+        positivo = por_sentimento.get('POSITIVO', 0)
+        neutro = por_sentimento.get('NEUTRO', 0)
+        negativo = por_sentimento.get('NEGATIVO', 0)
+        return {'codigo': codigo, 'nome': nome, 'positivo': positivo, 'neutro': neutro,
+                'negativo': negativo, 'total': positivo + neutro + negativo}
+
+    temas = [item(c, n, contagem.get(c, {})) for c, n in RelatoSocialVerdigis.TEMA_ESG_CHOICES]
+    geral = {s: sum(t[s.lower()] for t in temas) for s in SENTIMENTOS}
+    return [item('TODOS', 'Todas as avaliações', geral)] + temas
 
 
 def _relato_da_empresa(request, relato_id):
@@ -499,8 +521,10 @@ def esg_dashboard(request):
         AtividadeMeta.objects.filter(meta__in=services.metas_visiveis(request))
         .select_related('meta').order_by('-data_criacao')
     )
+    # Só as atividades concluídas (status "Feito") contam pontos.
+    feitas = [a for a in atividades if a.status == 'FEITO']
     metricas = [
-        {'pilar': codigo, 'nome': nome, 'pontos': sum(a.pontos for a in atividades if a.pilar_esg == codigo)}
+        {'pilar': codigo, 'nome': nome, 'pontos': sum(a.pontos for a in feitas if a.pilar_esg == codigo)}
         for codigo, nome in Meta.ESG_ESCOLHA
     ]
     return render(request, 'dashboard/desempenho_esg.html', {
@@ -509,4 +533,39 @@ def esg_dashboard(request):
         'pontuacao_geral': sum(m['pontos'] for m in metricas),
         # Referência das barras: o pilar com mais pontos ocupa a barra inteira
         'maior_pontuacao': max(m['pontos'] for m in metricas),
+        'evolucao': _evolucao_esg(feitas),
     })
+
+
+def _evolucao_esg(atividades):
+    """Pontos acumulados dia a dia, no geral e em cada pilar (gráfico de linha do Desempenho ESG).
+
+    Cada atividade entra no dia em que foi criada (o modelo não guarda a data de conclusão).
+    """
+    pilares = [codigo for codigo, _ in Meta.ESG_ESCOLHA]
+    por_dia = {}
+    for a in atividades:
+        if a.pilar_esg not in pilares:
+            continue
+        dia = timezone.localtime(a.data_criacao).date()
+        por_dia.setdefault(dia, dict.fromkeys(pilares, 0))[a.pilar_esg] += a.pontos
+
+    acumulado = dict.fromkeys(pilares, 0)
+    series = {p: [] for p in pilares}
+    datas, geral = [], []
+    for dia in sorted(por_dia):
+        for p in pilares:
+            acumulado[p] += por_dia[dia][p]
+            series[p].append(acumulado[p])
+        datas.append(dia.strftime('%d/%m/%Y'))
+        geral.append(sum(acumulado.values()))
+
+    return {
+        'datas': datas,
+        'geral': geral,
+        # "Ambiental (Environmental)" vira só "Ambiental" na legenda
+        'pilares': [
+            {'codigo': codigo, 'nome': nome.split(' (')[0], 'pontos': series[codigo]}
+            for codigo, nome in Meta.ESG_ESCOLHA
+        ],
+    }

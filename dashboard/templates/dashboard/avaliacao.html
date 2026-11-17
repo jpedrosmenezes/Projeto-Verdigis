@@ -11,6 +11,8 @@
   Cada relato leva para {% url 'dashboard:detalhe_relato' 0 %} (com o id do relato).
   Só a empresa da requisição; relatos ocultos ficam fora (aba ?aba=ocultos, só para quem modera).
   moderador (bool) e total_ocultos. O nome do autor vem sempre de {% nome_exibido relato %}.
+  resumo_avaliacoes: lista de {codigo, nome, positivo, neutro, negativo, total}; o primeiro item
+  é o total geral e os outros são os temas. Vira os gráficos de pizza (Chart.js, em static/js/graficos.js).
 {% endcomment %}
 
 {% block title %}Central de Avaliações - Verdigis{% endblock %}
@@ -19,6 +21,39 @@
 {% block head %}<h1 class="dash-banner">CENTRAL DE AVALIAÇÕES</h1>{% endblock head %}
 
 {% block content %}
+  <div class="moldura-vidro">
+    <section class="av-resumo" aria-labelledby="av-resumo-titulo">
+      <h2 id="av-resumo-titulo">Resumo das avaliações</h2>
+      <div class="av-resumo__legenda" aria-hidden="true">
+        <span class="av-resumo__cor av-resumo__cor--positivo">Positivas</span>
+        <span class="av-resumo__cor av-resumo__cor--neutro">Neutras</span>
+        <span class="av-resumo__cor av-resumo__cor--negativo">Negativas</span>
+      </div>
+
+      <div class="av-resumo__grade">
+        {% for item in resumo_avaliacoes %}
+          <div class="av-pizza{% if forloop.first %} av-pizza--geral{% endif %}">
+            <h3>{{ item.nome }}</h3>
+            {% if item.total %}
+              <div class="av-pizza__grafico">
+                <canvas data-pizza="{{ forloop.counter0 }}" role="img"
+                        aria-label="{{ item.nome }}: {{ item.positivo }} positivas, {{ item.neutro }} neutras e {{ item.negativo }} negativas"></canvas>
+              </div>
+            {% else %}
+              <p class="av-pizza__vazio">Nenhuma avaliação ainda</p>
+            {% endif %}
+            <p class="av-pizza__numeros">
+              {{ item.positivo }} positiva{{ item.positivo|pluralize }} ·
+              {{ item.neutro }} neutra{{ item.neutro|pluralize }} ·
+              {{ item.negativo }} negativa{{ item.negativo|pluralize }}
+            </p>
+          </div>
+        {% endfor %}
+      </div>
+      {{ resumo_avaliacoes|json_script:"dados-resumo-avaliacoes" }}
+    </section>
+  </div>
+
   <div class="moldura-vidro">
   <section class="dash-corpo av-corpo">
     <div class="av-topo">
@@ -86,4 +121,7 @@
     </div>
   </section>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="{% static 'js/graficos.js' %}" defer></script>
 {% endblock %}

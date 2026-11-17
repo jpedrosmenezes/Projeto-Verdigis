@@ -35,6 +35,8 @@ class FluxoTests(SeleniumTestCase):
         Select(self.driver.find_element(By.ID, 'ativ-prioridade')).select_by_value('ALTA')
         self.driver.find_element(By.CSS_SELECTOR, '#form-atividade button[type="submit"]').click()
         WebDriverWait(self.driver, 10).until(lambda d: meta.atividades.exists())
+        # Só atividades concluídas somam pontos no Desempenho ESG
+        meta.atividades.filter(nome='Trocar lâmpadas por LED').update(status='FEITO')
 
         self.abrir('/dashboard/esg/dashboard/')
         self.assertIn('Trocar lâmpadas por LED', self.por_testid('esg-atividades').text)
