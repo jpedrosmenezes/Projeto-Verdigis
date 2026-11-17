@@ -465,7 +465,7 @@ textarea::placeholder {
 
 .dash-menu {
     display: grid;
-    grid-template-columns: repeat(2, 130px);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     margin: 0;
     max-width: none;
@@ -1770,6 +1770,7 @@ button,
     align-items: center;
     gap: 12px;
     margin-bottom: 10px;
+    border-radius: 10px;
 }
  
 .ca-faixa__titulo {
@@ -2278,128 +2279,4 @@ button,
     .esg__letra { transition: none; }
 }
 
-/* =====================================================================
-   GRÁFICOS (Chart.js) — Desempenho ESG e Central de Avaliações
-   Os gráficos são montados em static/js/graficos.js.
-   ===================================================================== */
-/* Desempenho ESG: gráfico de linha da evolução */
-.graf-nota {
-    margin: -0.5rem 0 1.25rem;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #555;
-}
-.graf-bloco {
-    max-width: 820px;
-    margin: 2.5rem auto 0;
-}
-.graf-bloco__titulo {
-    margin: 0 0 0.25rem;
-    text-align: center;
-    font-size: 1.3rem;
-    color: var(--primary-color);
-}
-.graf-bloco__dica {
-    margin: 0 0 1rem;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #555;
-}
-.graf-linha {
-    position: relative;      /* o Chart.js precisa disso para se ajustar ao tamanho */
-    height: 340px;
-}
-
-/* Central de Avaliações: resumo com gráficos de pizza */
-.moldura-vidro:has(> .av-resumo) {
-    width: min(1150px, calc(100vw - 48px));
-    max-width: none;
-    margin-left: calc(50% - min(575px, 50vw - 24px));
-}
-.av-resumo {
-    box-sizing: border-box;
-    padding: clamp(1.5rem, 4vw, 2.75rem);
-    background: #fff;
-    border-radius: var(--card-raio, 32px);
-}
-.av-resumo h2 {
-    margin: 0 0 0.25rem;
-    text-align: center;
-    font-family: "helvetica-neue-lt-pro-cond", sans-serif;
-    font-size: clamp(1.6rem, 3vw, 2.2rem);
-    letter-spacing: -0.04em;
-    text-transform: uppercase;
-    color: var(--primary-color);
-}
-.av-resumo__legenda {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.5rem 1.25rem;
-    margin: 0.5rem 0 1.75rem;
-    font-size: 0.95rem;
-    color: #333;
-}
-.av-resumo__cor::before {
-    content: "";
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    margin-right: 6px;
-    border-radius: 3px;
-    vertical-align: -1px;
-    background: var(--cor);
-}
-.av-resumo__cor--positivo { --cor: #5f7234; }
-.av-resumo__cor--neutro   { --cor: #a7a9ac; }
-.av-resumo__cor--negativo { --cor: #c0392b; }
-
-.av-resumo__grade {
-    display: grid;
-    grid-template-columns: 1.3fr repeat(3, 1fr);
-    gap: 1.25rem;
-}
-.av-pizza {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem;
-    border-radius: 18px;
-    background: #f6f7f3;
-    text-align: center;
-}
-.av-pizza--geral {
-    grid-row: span 2;      /* a pizza do total ocupa duas linhas da grade */
-    justify-content: center;
-}
-.av-pizza h3 {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.4em;
-    margin: 0 0 0.6rem;
-    font-size: 0.92rem;
-    color: var(--text-color);
-}
-.av-pizza--geral h3 { min-height: 0; font-size: 1.15rem; }
-.av-pizza__grafico {
-    position: relative;
-    width: 100%;
-    max-width: 150px;
-}
-.av-pizza--geral .av-pizza__grafico { max-width: 260px; }
-.av-pizza__numeros {
-    margin: 0.6rem 0 0;
-    font-size: 0.8rem;
-    color: #555;
-}
-.av-pizza__vazio {
-    margin: 1.5rem 0;
-    font-size: 0.85rem;
-    color: #777;
-}
-
-@media (max-width: 800px) {
-    .av-resumo__grade { grid-template-columns: repeat(2, 1fr); }
-    .av-pizza--geral { grid-column: 1 / -1; grid-row: auto; }
-}
+/* ==============================================================

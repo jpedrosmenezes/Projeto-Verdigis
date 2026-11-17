@@ -18,42 +18,44 @@ class DesempenhoESGTests(TestCase):
     def setUpTestData(cls):
         popular_demo()
 
-    def test_atividade_criada_aparece_e_soma_pontos(self):
+    def test_atividade_so_pontua_conforme_avanca_no_kanban(self):
         self.client.force_login(User.objects.get(email='empresa@demo.com'))
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')
         antes = self.client.get(reverse('dashboard:esg_dashboard')).context['metricas'][0]['pontos']
 
         self.client.post(reverse('dashboard:criar_atividade'), {
-            'meta_id': meta.id, 'nome': 'Trocar lâmpadas', 'pilar_esg': 'E', 'prioridade': 'ALTA',
+            'meta_id': meta.id, 'nome': 'Trocar lâmpadas', 'prioridade': 'ALTA',
         })
+        atividade = AtividadeMeta.objects.get(nome='Trocar lâmpadas')
 
-        # Ainda não concluída: aparece na lista, mas não soma pontos.
+        # Criada em "A Fazer", ainda não soma pontos.
         resposta = self.client.get(reverse('dashboard:esg_dashboard'))
         self.assertContains(resposta, 'Trocar lâmpadas')
         self.assertEqual(resposta.context['metricas'][0]['pontos'], antes)
 
-        # Concluída ("Feito"): soma os 3 pontos da prioridade alta.
-        AtividadeMeta.objects.filter(meta=meta, nome='Trocar lâmpadas').update(status='FEITO')
-        resposta = self.client.get(reverse('dashboard:esg_dashboard'))
-        self.assertEqual(resposta.context['metricas'][0]['pontos'], antes + 3)
+        # Cada avanço no kanban libera uma parte dos 2 pontos finais.
+        for status, pontos in [('EM_ANDAMENTO', 0.5), ('REVISAO', 1), ('FEITO', 2)]:
+            self.client.post(reverse('dashboard:mover_atividade', args=[atividade.id]), {'status': status})
+            resposta = self.client.get(reverse('dashboard:esg_dashboard'))
+            self.assertEqual(resposta.context['metricas'][0]['pontos'], antes + pontos)
 
-    def test_evolucao_acumula_so_atividades_feitas(self):
+    def test_evolucao_bate_com_os_cartoes(self):
         self.client.force_login(User.objects.get(email='empresa@demo.com'))
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')
-        meta.atividades.create(nome='Feita', pilar_esg='S', prioridade='MEDIA', status='FEITO')
-        meta.atividades.create(nome='Pendente', pilar_esg='S', prioridade='ALTA')
+        meta.atividades.create(nome='Feita', status='FEITO')
+        meta.atividades.create(nome='Andando', status='EM_ANDAMENTO')
 
         resposta = self.client.get(reverse('dashboard:esg_dashboard'))
         evolucao = resposta.context['evolucao']
-        # O último ponto do gráfico bate com os totais dos cartões.
+        # O último ponto do gráfico bate com os totais dos cartões, no geral e no pilar da meta.
         self.assertEqual(evolucao['geral'][-1], resposta.context['pontuacao_geral'])
-        social = next(p for p in evolucao['pilares'] if p['codigo'] == 'S')
-        self.assertEqual(social['pontos'][-1], resposta.context['metricas'][1]['pontos'])
+        indice = [codigo for codigo, _ in Meta.ESG_ESCOLHA].index(meta.pilar_esg)
+        self.assertEqual(evolucao['pilares'][indice]['pontos'][-1], resposta.context['metricas'][indice]['pontos'])
         self.assertContains(resposta, 'id="dados-evolucao"')
 
     def test_nao_mostra_atividades_de_outra_empresa(self):
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')
-        meta.atividades.create(nome='Atividade privada', pilar_esg='E')
+        meta.atividades.create(nome='Atividade privada')
         self.client.force_login(User.objects.get(email='pendente@demo.com'))
         self.assertNotEqual(self.client.get(reverse('dashboard:esg_dashboard')).status_code, 200)
 
@@ -76,8 +78,8 @@ class PreencherTabelaTests(TestCase):
 
     def test_agrupa_atividades_por_coluna(self):
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')
-        meta.atividades.create(nome='A', pilar_esg='E')
-        meta.atividades.create(nome='B', pilar_esg='E', status='FEITO')
+        meta.atividades.create(nome='A')
+        meta.atividades.create(nome='B', status='FEITO')
         self.client.force_login(User.objects.get(email='empresa@demo.com'))
         dados = self.client.get(reverse('dashboard:preencher_tabela', args=[meta.id])).json()
         self.assertEqual([a['nome'] for a in dados['a_fazer']], ['A'])

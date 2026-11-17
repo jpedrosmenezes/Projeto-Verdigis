@@ -23,7 +23,9 @@ class SeleniumTestCase(StaticLiveServerTestCase):
     def setUpClass(cls):
         super().setUpClass()
         opcoes = webdriver.ChromeOptions()
-        for arg in ('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--window-size=1280,1000'):
+        # Comente a linha abaixo para ver os testes rodando no navegador.
+        opcoes.add_argument('--headless=new')
+        for arg in ('--no-sandbox', '--disable-dev-shm-usage', '--window-size=1280,1000'):
             opcoes.add_argument(arg)
         try:
             cls.driver = webdriver.Chrome(options=opcoes)
@@ -51,6 +53,9 @@ class SeleniumTestCase(StaticLiveServerTestCase):
 
     def esperar_url(self, caminho):
         WebDriverWait(self.driver, 10).until(EC.url_to_be(self.live_server_url + caminho))
+
+    def esperar_url_contem(self, trecho):
+        WebDriverWait(self.driver, 10).until(EC.url_contains(trecho))
 
     def login(self, email, senha=SENHA):
         self.abrir('/account/login/')

@@ -4,7 +4,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 
 from accounts.models import TipoNotificacao, User
 from accounts.services import notificar
-from dashboard.models import Meta
+from dashboard.models import AtividadeMeta, Meta, RelatoSocialVerdigis
 
 from .base import EMPRESA, FUNCIONARIO, SeleniumTestCase
 
@@ -22,26 +22,69 @@ class LoginTests(SeleniumTestCase):
         self.driver.find_element(By.CSS_SELECTOR, 'form button[type="submit"]').click()
         self.assertIn('/account/login/', self.driver.current_url)
 
+    def test_cadastro_leva_a_triagem(self):
+        self.abrir('/account/signup/')
+        self.driver.find_element(By.NAME, 'nome').send_keys('Pessoa Nova')
+        self.driver.find_element(By.NAME, 'email').send_keys('nova@teste.com')
+        self.driver.find_element(By.NAME, 'password1').send_keys('SenhaForte#2026')
+        self.driver.find_element(By.NAME, 'password2').send_keys('SenhaForte#2026')
+        self.driver.find_element(By.CSS_SELECTOR, 'form button[type="submit"]').click()
+        self.esperar_url('/account/onboarding/')
+        self.assertTrue(User.objects.filter(email='nova@teste.com').exists())
+
+    def test_logout_pelo_perfil(self):
+        self.login(FUNCIONARIO)
+        self.abrir('/account/profile/')
+        self.driver.find_element(By.CLASS_NAME, 'btn-logout').click()
+        WebDriverWait(self.driver, 10).until(lambda d: '/account/profile/' not in d.current_url)
+        self.abrir('/dashboard/')
+        self.esperar_url_contem('/account/login/')
+
 
 class FluxoTests(SeleniumTestCase):
-    def test_atividade_criada_aparece_no_desempenho_esg(self):
+    def test_atividade_criada_aparece_sem_pontos_no_desempenho_esg(self):
         meta = Meta.objects.get(nome='Reduzir o consumo de papel')
         self.login(EMPRESA)
         self.abrir(f'/dashboard/visualizar_tabela/?meta={meta.id}')
 
         self.por_testid('nova-atividade').click()
-        self.driver.find_element(By.CSS_SELECTOR, 'label[for="ativ-esg-E"]').click()
         self.driver.find_element(By.ID, 'ativ-nome').send_keys('Trocar lâmpadas por LED')
         Select(self.driver.find_element(By.ID, 'ativ-prioridade')).select_by_value('ALTA')
         self.driver.find_element(By.CSS_SELECTOR, '#form-atividade button[type="submit"]').click()
         WebDriverWait(self.driver, 10).until(lambda d: meta.atividades.exists())
-        # Só atividades concluídas somam pontos no Desempenho ESG
-        meta.atividades.filter(nome='Trocar lâmpadas por LED').update(status='FEITO')
 
         self.abrir('/dashboard/esg/dashboard/')
         self.assertIn('Trocar lâmpadas por LED', self.por_testid('esg-atividades').text)
-        self.assertEqual(self.por_testid('esg-pontos-E').text, '3 pts')
-        self.assertEqual(self.por_testid('esg-total').text, '3 pts')
+        self.assertEqual(self.por_testid('esg-pontos-E').text, '0 pts')
+        self.assertEqual(self.por_testid('esg-total').text, '0 pts')
+
+    def test_atividade_pontua_conforme_avanca_no_kanban(self):
+        meta = Meta.objects.get(nome='Reduzir o consumo de papel')
+        self.login(EMPRESA)
+        self.abrir(f'/dashboard/visualizar_tabela/?meta={meta.id}')
+
+        self.por_testid('nova-atividade').click()
+        self.driver.find_element(By.ID, 'ativ-nome').send_keys('Instalar torneiras automáticas')
+        self.driver.find_element(By.CSS_SELECTOR, '#form-atividade button[type="submit"]').click()
+        WebDriverWait(self.driver, 10).until(
+            lambda d: meta.atividades.filter(nome='Instalar torneiras automáticas').exists(),
+        )
+        atividade = AtividadeMeta.objects.get(nome='Instalar torneiras automáticas')
+
+        # Cada coluna do kanban libera uma parte dos 2 pontos finais (#116).
+        for status, pontos in [('EM_ANDAMENTO', '0,5 pts'), ('REVISAO', '1 pts'), ('FEITO', '2 pts')]:
+            self.abrir(f'/dashboard/visualizar_tabela/?meta={meta.id}')
+            seletor = Select(self.por_testid('atividade').find_element(
+                By.CSS_SELECTOR, '[data-testid="atividade-status"]',
+            ))
+            seletor.select_by_value(status)
+            WebDriverWait(self.driver, 10).until(
+                lambda d: AtividadeMeta.objects.get(pk=atividade.pk).status == status,
+            )
+
+            self.abrir('/dashboard/esg/dashboard/')
+            self.assertEqual(self.por_testid('esg-pontos-E').text, pontos)
+            self.assertEqual(self.por_testid('esg-total').text, pontos)
 
     def test_funcionario_abre_o_quadro_de_tarefas(self):
         self.login(FUNCIONARIO)
@@ -63,6 +106,63 @@ class FluxoTests(SeleniumTestCase):
         self.abrir('/dashboard/parcerias/')
         self.por_testid('parcerias-voltar').click()
         self.esperar_url('/dashboard/')
+
+
+class FabricaMetasTests(SeleniumTestCase):
+    def test_filtro_meta_geral_mostra_apenas_metas_gerais(self):
+        self.login(EMPRESA)
+        self.abrir('/dashboard/metas/')
+
+        Select(self.por_testid('filtro-colaborador')).select_by_value('geral')
+        self.por_testid('filtro-metas').find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
+        self.esperar_url_contem('colaborador=geral')
+
+        esperadas = set(Meta.objects.filter(tipo='GERAL').values_list('nome', flat=True))
+        WebDriverWait(self.driver, 10).until(
+            lambda d: {
+                c.find_element(By.CLASS_NAME, 'fm-card__titulo').text
+                for c in d.find_elements(By.CSS_SELECTOR, '[data-testid="meta-card"]')
+            } == esperadas,
+        )
+        cartoes = self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="meta-card"]')
+        self.assertEqual({c.get_attribute('data-meta-tipo') for c in cartoes}, {'GERAL'})
+        self.assertEqual({c.find_element(By.CLASS_NAME, 'fm-card__titulo').text for c in cartoes}, esperadas)
+
+    def test_funcionario_nao_ve_o_filtro_de_colaborador(self):
+        self.login(FUNCIONARIO)
+        self.abrir('/dashboard/metas/')
+        self.assertEqual(self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="filtro-metas"]'), [])
+
+
+    def test_funcionario_cria_meta_individual(self):
+        self.login(FUNCIONARIO)
+        self.abrir('/dashboard/metas/')
+        self.driver.find_element(By.CSS_SELECTOR, '[data-abrir-modal="modal-meta"]').click()
+        self.driver.find_element(By.CSS_SELECTOR, 'label[for="esg-S"]').click()
+        self.driver.find_element(By.ID, 'id_nome').send_keys('Pausas para alongamento')
+        # Campo date varia com o idioma do Chrome; o valor ISO é definido direto.
+        self.driver.execute_script("arguments[0].value = '2030-12-31'", self.driver.find_element(By.ID, 'id_deadline'))
+        self.driver.find_element(By.ID, 'id_resumo').send_keys('Duas pausas por dia.')
+        self.driver.find_element(By.CSS_SELECTOR, '#form-meta button[type="submit"]').click()
+
+        WebDriverWait(self.driver, 10).until(lambda d: Meta.objects.filter(nome='Pausas para alongamento').exists())
+        meta = Meta.objects.get(nome='Pausas para alongamento')
+        self.assertEqual((meta.tipo, meta.pilar_esg, meta.funcionario.user.email), ('INDIVIDUAL', 'S', FUNCIONARIO))
+
+
+class AvaliacaoTests(SeleniumTestCase):
+    def test_funcionario_envia_avaliacao(self):
+        self.login(FUNCIONARIO)
+        self.abrir('/dashboard/avaliacao/nova/')
+        Select(self.driver.find_element(By.NAME, 'tema_esg')).select_by_value('SAUDE_MENTAL')
+        Select(self.driver.find_element(By.NAME, 'sentimento')).select_by_value('POSITIVO')
+        self.driver.find_element(By.NAME, 'mensagem').send_keys('Gostei do novo programa de bem-estar.')
+        self.driver.find_element(By.CSS_SELECTOR, 'form.form-contato button[type="submit"]').click()
+
+        WebDriverWait(self.driver, 10).until(
+            lambda d: RelatoSocialVerdigis.objects.filter(mensagem='Gostei do novo programa de bem-estar.').exists(),
+        )
+        self.assertIn('Enviado', self.driver.find_element(By.TAG_NAME, 'body').text)
 
 
 class LayoutTests(SeleniumTestCase):

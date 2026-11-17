@@ -165,18 +165,22 @@ def _form_meta(request, data=None, instance=None):
 
 
 def _filtrar_por_colaborador(request, metas):
-    """Filtro da Empresa e do consultor: um funcionário ou "sem responsável". Valor inválido é ignorado."""
-    valor = request.GET.get('colaborador', '')
+    """Filtro da Empresa e do consultor: um funcionário ou "Meta Geral". Valor inválido é ignorado."""
+    valor = request.GET.get('colaborador', '').strip()
     if not valor or request.user.papel == Papel.FUNCIONARIO:
         return metas, ''
-    if valor == 'sem':
-        return metas.filter(tipo='INDIVIDUAL', funcionario__isnull=True), valor
+    
+    if valor == 'geral':
+        return metas.filter(tipo='GERAL'), valor
+
     if valor.isdigit() and Vinculo.objects.filter(
         id=valor, company=request.empresa, tipo=TipoVinculo.FUNCIONARIO,
     ).exists():
         return metas.filter(funcionario_id=int(valor)), valor
+
     messages.warning(request, 'Colaborador inválido; mostrando todas as metas.')
     return metas, ''
+
 
 
 @login_required
@@ -423,7 +427,21 @@ def apagar_empresa(request):
 # ---------- tabela de atividades ----------
 
 ORDEM_PILARES = (('E', 'Ambiental'), ('S', 'Social'), ('G', 'Governança'))
- 
+
+def _pode_criar_atividade(request, meta):
+    if request.user.papel == Papel.FUNCIONARIO:
+        # funcionário só cria atividade em meta que ele mesmo postou
+        return meta.usuario_id == request.user.id
+    return pode(request, 'meta.criar')
+
+
+def _pode_mover_atividade(request, meta):
+    if request.user.papel == Papel.FUNCIONARIO:
+        if meta.tipo == 'GERAL':
+            return True
+        # meta individual: só se for atribuída a ele
+        return meta.funcionario_id is not None and meta.funcionario.user_id == request.user.id
+    return pode(request, 'meta.editar', meta) 
  
 @login_required
 @empresa_required
@@ -463,47 +481,55 @@ def visualizar_tabela(request):
 @login_required
 @empresa_required
 def preencher_tabela(request, meta_id):
-    """Retorna os cards das 4 colunas para a meta selecionada no carrossel."""
     meta = _meta_da_empresa(request, meta_id)
     exigir(request, 'meta.ver')
-    
-    dados = {'meta_id': meta.id, 'meta_nome': meta.nome}
-    for status, _ in AtividadeMeta.KANBAM_CHOICES:
-        dados[status.lower()] = []
-    for atividade in meta.atividades.values('id', 'nome', 'descricao', 'pilar_esg', 'prazo', 'prioridade', 'status'):
-        dados[atividade.pop('status').lower()].append(atividade)
-    return JsonResponse(dados)
+
+    atividades = meta.atividades.all()
+    campos = ('id', 'nome', 'descricao', 'prazo', 'prioridade')
+
+    return JsonResponse({
+        'meta_id': meta.id,
+        'meta_nome': meta.nome,
+        'pode_criar': _pode_criar_atividade(request, meta),
+        'pode_mover': _pode_mover_atividade(request, meta),
+        'a_fazer': list(atividades.filter(status='A_FAZER').values(*campos)),
+        'em_andamento': list(atividades.filter(status='EM_ANDAMENTO').values(*campos)),
+        'revisao': list(atividades.filter(status='REVISAO').values(*campos)),
+        'feito': list(atividades.filter(status='FEITO').values(*campos)),
+    })
 
 
 @login_required
 @require_POST
 @empresa_required
 def criar_atividade(request):
-    exigir(request, 'meta.criar')
-    meta_id = request.POST.get('meta_id')
-    meta = _meta_da_empresa(request, meta_id)
+    meta = _meta_da_empresa(request, request.POST.get('meta_id'))
+    if not _pode_criar_atividade(request, meta):
+        raise PermissionDenied
 
     AtividadeMeta.objects.create(
         meta=meta,
         nome=request.POST.get('nome'),
         descricao=request.POST.get('descricao', ''),
-        pilar_esg=request.POST.get('pilar_esg'),
         prazo=request.POST.get('prazo') or None,
         prioridade=request.POST.get('prioridade', 'MEDIA'),
-        status='A_FAZER'  # Sempre inicia em "A Fazer"
+        status='A_FAZER',
     )
     messages.success(request, 'Atividade adicionada com sucesso!')
     return redirect(f"{reverse('dashboard:visualizar_tabela')}?meta={meta.id}")
-
 
 
 @login_required
 @require_POST
 @empresa_required
 def mover_atividade(request, atividade_id):
-    atividade = get_object_or_404(AtividadeMeta, id=atividade_id, meta__company=request.empresa)
-    exigir(request, 'meta.editar', atividade.meta)
-    
+    atividade = get_object_or_404(
+        AtividadeMeta.objects.select_related('meta__funcionario'),
+        id=atividade_id, meta__company=request.empresa,
+    )
+    if not _pode_mover_atividade(request, atividade.meta):
+        return JsonResponse({'status': 'erro', 'mensagem': 'Sem permissão'}, status=403)
+
     novo_status = request.POST.get('status')
     if novo_status in dict(AtividadeMeta.KANBAM_CHOICES):
         atividade.status = novo_status
@@ -521,34 +547,41 @@ def esg_dashboard(request):
         AtividadeMeta.objects.filter(meta__in=services.metas_visiveis(request))
         .select_related('meta').order_by('-data_criacao')
     )
-    # Só as atividades concluídas (status "Feito") contam pontos.
-    feitas = [a for a in atividades if a.status == 'FEITO']
+    
+    # CORREÇÃO: Usar a.meta.pilar_esg em vez de a.pilar_esg
     metricas = [
-        {'pilar': codigo, 'nome': nome, 'pontos': sum(a.pontos for a in feitas if a.pilar_esg == codigo)}
+        {'pilar': codigo, 'nome': nome, 'pontos': sum(a.pontos for a in atividades if a.meta.pilar_esg == codigo)}
         for codigo, nome in Meta.ESG_ESCOLHA
     ]
+    
+    # Proteção para evitar erro de max() com sequência vazia
+    pontos_lista = [m['pontos'] for m in metricas]
+    maior_pontuacao = max(pontos_lista) if pontos_lista else 0
+
     return render(request, 'dashboard/desempenho_esg.html', {
         'metricas': metricas,
         'atividades': atividades[:10],
-        'pontuacao_geral': sum(m['pontos'] for m in metricas),
-        # Referência das barras: o pilar com mais pontos ocupa a barra inteira
-        'maior_pontuacao': max(m['pontos'] for m in metricas),
-        'evolucao': _evolucao_esg(feitas),
+        'pontuacao_geral': sum(pontos_lista),
+        'maior_pontuacao': maior_pontuacao,
+        'evolucao': _evolucao_esg(atividades),
     })
 
 
 def _evolucao_esg(atividades):
     """Pontos acumulados dia a dia, no geral e em cada pilar (gráfico de linha do Desempenho ESG).
 
-    Cada atividade entra no dia em que foi criada (o modelo não guarda a data de conclusão).
+    Usa a mesma regra dos cartões: o pilar vem da meta e os pontos dependem da etapa
+    no quadro (AtividadeMeta.pontos). Cada atividade entra no dia em que foi criada,
+    porque o modelo não guarda quando ela mudou de etapa.
     """
     pilares = [codigo for codigo, _ in Meta.ESG_ESCOLHA]
     por_dia = {}
     for a in atividades:
-        if a.pilar_esg not in pilares:
+        pilar = a.meta.pilar_esg
+        if pilar not in pilares or not a.pontos:
             continue
         dia = timezone.localtime(a.data_criacao).date()
-        por_dia.setdefault(dia, dict.fromkeys(pilares, 0))[a.pilar_esg] += a.pontos
+        por_dia.setdefault(dia, dict.fromkeys(pilares, 0))[pilar] += a.pontos
 
     acumulado = dict.fromkeys(pilares, 0)
     series = {p: [] for p in pilares}
