@@ -64,10 +64,6 @@
           {% if user.papel != 'EMPRESA' %}
             <a class="dash-botao" href="{% url 'accounts:meus_vinculos' %}">Meus vínculos</a>
           {% endif %}
-          {% if user.papel == 'EMPRESA' %}
-            <a class="dash-botao" href="#">Diagnóstico de compatibilidade</a>
-            <a class="dash-botao" href="#">Práticas da empresa</a>
-          {% endif %}
           <a class="dash-botao" href="{% url 'dashboard:parcerias' %}">Painel de Parcerias</a>
           <a class="dash-botao" href="{% url 'dashboard:esg_dashboard' %}">Desempenho ESG</a>
         </nav>

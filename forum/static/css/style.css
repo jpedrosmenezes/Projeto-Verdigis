@@ -2279,6 +2279,7 @@ button,
     .esg__letra { transition: none; }
 }
 
+/* ==============================================================
 /* =====================================================================
    GRÁFICOS (Chart.js) — Desempenho ESG e Central de Avaliações
    Os gráficos são montados em static/js/graficos.js.

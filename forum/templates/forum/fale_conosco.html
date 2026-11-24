@@ -1,10 +1,16 @@
 {% extends 'forum/base.html' %}
+{% load static %}
 
 {% block title %}Fale Conosco - Verdigis{% endblock %}
 
 {% block content %}
 <div class="moldura-vidro">
 <section class="secao-form">
+    <div class="av-topo">
+    <a class="av-voltar" href="{% url 'index' %}" aria-label="Voltar para o início">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+    </a>
+    </div>
     <h1>FALE CONOSCO</h1>
     <h4>Preencha o formulário abaixo para entrar em contato com a nossa equipe.</h4>
 

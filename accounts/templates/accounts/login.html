@@ -1,4 +1,5 @@
 {% extends "forum/base.html" %}
+{% load static %}
 {% comment %}
   Login por e-mail (accounts.views.login). Métodos: GET e POST.
   URL: {% url 'accounts:login' %}
@@ -11,6 +12,11 @@
 {% block content %}
 <div class="moldura-vidro">
 <section class="secao-form">
+    <div class="av-topo">
+    <a class="av-voltar" href="{% url 'index' %}" aria-label="Voltar para o início">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+    </a>
+    </div>
     <h1>ENTRAR</h1>
     <p>Use o e-mail e a senha da sua conta.</p>
 
