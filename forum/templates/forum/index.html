@@ -68,6 +68,34 @@
     </section>
 </div>
 
+<div class="moldura-vidro">
+    <section class="aval" aria-labelledby="aval-titulo">
+        {% include 'forum/_flor_desenho.html' %}
+        <div class="aval__cabecalho">
+            <h2 id="aval-titulo">O que dizem sobre a Verdigis</h2>
+        </div>
+        <ul class="aval__lista">
+            {% for d in depoimentos %}
+                <li>
+                    <figure class="aval__card">
+                        <p class="aval__nota" aria-label="Nota {{ d.nota_texto }} de 5">
+                            <span class="aval__flores" aria-hidden="true">
+                                {% for estado in d.flores %}{% include 'forum/_flor.html' with estado=estado %}{% endfor %}
+                            </span>
+                            <span class="aval__numero" aria-hidden="true">{{ d.nota_texto }}</span>
+                        </p>
+                        <blockquote class="aval__texto">“{{ d.texto }}”</blockquote>
+                        <figcaption class="aval__autor">
+                            <span class="aval__nome">{{ d.nome }}</span>
+                            <span class="aval__empresa">{{ d.cargo }}</span>
+                        </figcaption>
+                    </figure>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+
 <script src="{% static 'js/pilares.js' %}" defer></script>
 
 {% endblock content %}

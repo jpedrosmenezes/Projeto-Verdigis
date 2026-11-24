@@ -1,0 +1,9 @@
+{% comment %}
+  Uma flor da nota. Uso: {% include 'forum/_flor.html' with estado='cheia' %}
+  estado: 'cheia', 'meia' ou 'vazia'. Precisa do _flor_desenho.html na página.
+  A cor vem do CSS (color da .flor).
+{% endcomment %}
+<svg class="flor flor--{{ estado }}" viewBox="-60 -60 1030.64 1014.8" aria-hidden="true" focusable="false">
+    {% if estado != 'vazia' %}<use href="#flor-forma" fill="currentColor" stroke="currentColor" stroke-width="100" stroke-linejoin="round"{% if estado == 'meia' %} clip-path="url(#flor-metade)"{% endif %}/>{% endif %}
+    <use href="#flor-forma" fill="none" stroke="currentColor" stroke-width="100" stroke-linejoin="round" mask="url(#flor-mascara-contorno)"/>
+</svg>

@@ -2279,7 +2279,6 @@ button,
     .esg__letra { transition: none; }
 }
 
-/* ==============================================================
 /* =====================================================================
    GRÁFICOS (Chart.js) — Desempenho ESG e Central de Avaliações
    Os gráficos são montados em static/js/graficos.js.
@@ -2404,4 +2403,114 @@ button,
 @media (max-width: 800px) {
     .av-resumo__grade { grid-template-columns: repeat(2, 1fr); }
     .av-pizza--geral { grid-column: 1 / -1; grid-row: auto; }
+}
+
+/* =====================================================================
+   LANDING PAGE — avaliações (depoimentos ilustrativos com nota em flores)
+   O desenho da flor fica em templates/forum/_flor_desenho.html.
+   ===================================================================== */
+.moldura-vidro:has(> .aval) {
+    width: min(1150px, calc(100vw - 48px));
+    max-width: none;
+    margin-left: calc(50% - min(575px, 50vw - 24px));
+}
+.aval {
+    box-sizing: border-box;
+    padding: clamp(1.75rem, 4.5vw, 3.5rem);
+    background: #fff;
+    border-radius: var(--card-raio, 32px);
+}
+/* o <svg> com o desenho não ocupa espaço na página */
+.flor-desenho {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.aval__cabecalho {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+.aval__cabecalho h2 {
+    margin: 0 0 0.5rem;
+    font-family: "helvetica-neue-lt-pro-cond", sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+    color: var(--primary-color);
+}
+.aval__aviso {
+    display: inline-block;
+    margin: 0;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    background: #eef0f8;
+    color: var(--text-color);
+    font-size: 0.85rem;
+}
+
+.aval__lista {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.aval__lista > li { display: flex; }   /* cards com a mesma altura */
+.aval__card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin: 0;
+    padding: 1.5rem;
+    border-radius: 20px;
+    background: #f6f7f3;
+}
+
+.aval__nota {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+.aval__flores {
+    display: flex;
+    gap: 3px;
+    color: var(--primary-color);   /* cor das flores */
+}
+.flor {
+    flex: none;
+    width: 24px;
+    height: 24px;
+}
+.aval__numero {
+    font-weight: 700;
+    color: #5f7234;
+}
+
+.aval__texto {
+    flex: 1;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #333;
+}
+.aval__autor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    font-size: 0.9rem;
+}
+.aval__nome {
+    font-weight: 700;
+    color: var(--text-color);
+}
+.aval__empresa { color: #666; }
+
+@media (max-width: 900px) {
+    .aval__lista { grid-template-columns: 1fr; }
 }
