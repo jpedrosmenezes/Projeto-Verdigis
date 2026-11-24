@@ -1,4 +1,5 @@
 {% extends 'forum/base.html' %}
+{% load static %}
 {% comment %}
   Cadastro (accounts.views.signup). Métodos: GET e POST.
   URL: {% url 'accounts:signup' %}
@@ -12,6 +13,11 @@
 {% block content %}
 <div class="moldura-vidro">
 <section class="secao-form">
+    <div class="av-topo">
+    <a class="av-voltar" href="{% url 'index' %}" aria-label="Voltar para o início">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+    </a>
+    </div>
     <h1>CRIAR CONTA</h1>
     <p>Crie sua conta com o seu e-mail. No próximo passo você conta se é empresa, funcionário ou consultor.</p>
 

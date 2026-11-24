@@ -23,6 +23,11 @@
 {% block content %}
   <div class="moldura-vidro">
     <section class="av-resumo" aria-labelledby="av-resumo-titulo">
+      <div class="av-topo">
+        <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+          <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+        </a>
+      </div>
       <h2 id="av-resumo-titulo">Resumo das avaliações</h2>
       <div class="av-resumo__legenda" aria-hidden="true">
         <span class="av-resumo__cor av-resumo__cor--positivo">Positivas</span>
@@ -56,11 +61,6 @@
 
   <div class="moldura-vidro">
   <section class="dash-corpo av-corpo">
-    <div class="av-topo">
-      <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
-        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
-      </a>
-    </div>
     <!-- Coluna dos temas (com um tema escolhido, só ele aparece) -->
     <div class="av-temas">
       {% if moderador %}

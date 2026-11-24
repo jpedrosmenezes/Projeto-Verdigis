@@ -1,4 +1,5 @@
 {% extends 'forum/base.html' %}
+{% load static %}
 
 {% block title %}Sobre a Empresa - Verdigis{% endblock %}
 {% block fundo %}fundo-2{% endblock %}
@@ -6,6 +7,11 @@
 {% block content %}
 <div class="moldura-vidro">
 <section class="secao-conteudo">
+    <div class="av-topo">
+    <a class="av-voltar" href="{% url 'index' %}" aria-label="Voltar para o início">
+        <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+    </a>
+    </div>
     <h1>SOBRE O PROJETO</h1>
     <p>
         Nossa equipe tem o intuito de trazer reconhecimento para as práticas de ESG e sua importância para o desenvolvimento sustentável das empresas.

@@ -1,4 +1,5 @@
 {% extends "forum/base.html" %}
+{% load static %}
 {% comment %}
   Exclusão de conta (accounts.views.delete). Métodos: GET (confirmação) e POST (exclui).
   URL: {% url 'accounts:delete' %}
@@ -12,6 +13,11 @@
 {% block content %}
 <div class="moldura-vidro">
   <section class="secao-form">
+    <div class="av-topo">
+    <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+      <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+    </a>
+  </div>
     <h1>EXCLUIR CONTA</h1>
     <p>Tem certeza que deseja excluir sua conta? Esta ação é definitiva e não pode ser desfeita.</p>
 

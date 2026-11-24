@@ -19,6 +19,11 @@
 {% block content %}
 <div class="moldura-vidro">
   <section class="secao-conteudo">
+    <div class="av-topo">
+    <a class="av-voltar" href="{% url 'dashboard:dashboard' %}" aria-label="Voltar para o dashboard">
+      <img class="av-voltar__icone" src="{% static 'img/icone-seta.svg' %}" alt="">
+    </a>
+  </div>
     <h2 class="pc-filtro__titulo pc-intro">Pontuação acumulada em cada pilar ESG</h2>
     <p class="graf-nota">As atividades somam pontos conforme avançam no quadro: Em andamento 0,5 · Em revisão 1 · Feito 2.</p>
 
